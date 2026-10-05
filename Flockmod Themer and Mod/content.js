@@ -15,7 +15,7 @@
             notes: [
                 "New Board view in the reference window: see, move and resize all your images at once. Requested by {pink:Leia}.",
                 "Backgrounds: add an image around the canvas. Requested by {blue:Thoth}.",
-                "New animated styles: Lucky days and Dark maid, drawn by nene2nd.",
+                "New animated styles: Lucky days and Dark maid.",
                 "Closing the menu with unsaved changes now asks first.",
                 "Reset is now Reset all, and asks before resetting.",
                 "The menu reopens where you left off. Ctrl+S applies.",
