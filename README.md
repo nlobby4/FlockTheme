@@ -1,5 +1,7 @@
 # FlockTheme
-A chrome extension made to mod flockmod and make it customizable
+A browser extension made to mod flockmod and make it customizable
+
+It will work with any browser that allows extensions. Firefox is more complicated.
 
 1. Click the Green button that says "<> Code"
 2. Click Download ZIP
