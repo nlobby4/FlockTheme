@@ -3,13 +3,41 @@
        WHAT'S NEW  <-- edit this list for every release
        Newest version goes FIRST. The "version" must match the
        "version" in manifest.json. Each note is one bullet point.
-       Credit someone with {pink:Name}, {blue:Name} or {orange:Name}
+       Credit someone with {pink:Name}, {blue:Name}, {teal:Name} or {orange:Name}
        (a glowing colored name).
+       spots: where the new things are in the mod menu. People who
+       update see a pink dot there (and on that tab) until they've
+       opened that tab once. Two kinds:
+         "Interface > Chat Notifications"  a whole section (tab > title)
+         "#themeModSaveSounds"             one setting (the id of its control)
        People who update see these once in a small pink card the
        next time they open the mod menu (General > What's new
        shows them again anytime).
        ========================================================= */
     const CHANGELOG = [
+        {
+            version: "1.6.3",
+            notes: [
+                "Saved themes keep your background images and sounds. Requested by {teal:Mazda}.",
+                "Draw with chat closed: new messages pop up beside the canvas, and you can reply right there. Requested by {blue:Anonymous}.",
+                "Mutes, kicks, bans and silences stand out, with the mod's name in their rank color.",
+                "Chat highlights: lines with your name light up (Interface).",
+                "A clock by the flower, with your time on FlockMod and a break reminder.",
+                "Safety: Show in list highlights the person's name.",
+                "13 new built-in sounds.",
+                "Section resets for Animations, Sounds, Safety and Backgrounds.",
+                "A pink dot on the flower when an update is out, and pink dots in the menu on what's new.",
+                "Report a bug fills in your mod version for you."
+            ],
+            spots: [
+                "Interface > Chat Notifications",
+                "Interface > Chat Highlights",
+                "Interface > Clock & Time",
+                "Colors > Chat Notifications",
+                "#themeModSaveImages",
+                "#themeModSaveSounds"
+            ]
+        },
         {
             version: "1.6.2",
             notes: [
@@ -420,13 +448,75 @@
         });
     }
 
+    /* v1.6.3: chat notification cards (Interface > Chat Notifications).
+       OFF = the card follows your theme: popup background, chat text
+       and Accent 1 (Simple coloring fills these in too). */
+    const CHATNOTIF_COLOR_SETTINGS = [
+        {
+            cls: "flockmodCnBackgroundActive",
+            cssVar: "--flockmod-custom-cn-background",
+            toggleId: "themeModCnBackgroundEnabled",
+            inputId: "themeModUICnBackground",
+            lsEnabled: "flockmodCustomCnBackgroundEnabled",
+            lsColor: "flockmodCustomCnBackgroundColor",
+            defaultColor: "#1f2226",
+            name: "Card Background",
+            description: "Behind each message. OFF = matches your popups."
+        },
+        {
+            cls: "flockmodCnTextActive",
+            cssVar: "--flockmod-custom-cn-text",
+            toggleId: "themeModCnTextEnabled",
+            inputId: "themeModUICnText",
+            lsEnabled: "flockmodCustomCnTextEnabled",
+            lsColor: "flockmodCustomCnTextColor",
+            defaultColor: "#dfe3e6",
+            name: "Card Text",
+            description: "Message text. Names keep their role colors."
+        },
+        {
+            cls: "flockmodCnPublicActive",
+            cssVar: "--flockmod-custom-cn-public",
+            toggleId: "themeModCnPublicEnabled",
+            inputId: "themeModUICnPublic",
+            lsEnabled: "flockmodCustomCnPublicEnabled",
+            lsColor: "flockmodCustomCnPublicColor",
+            defaultColor: "#f48fb1",
+            name: "Public Chat Color",
+            description: "Public messages and the reply buttons. OFF = your accent."
+        },
+        {
+            cls: "flockmodCnStaffActive",
+            cssVar: "--flockmod-custom-cn-staff",
+            toggleId: "themeModCnStaffEnabled",
+            inputId: "themeModUICnStaff",
+            lsEnabled: "flockmodCustomCnStaffEnabled",
+            lsColor: "flockmodCustomCnStaffColor",
+            defaultColor: "#6fd38a",
+            name: "Staff Chat Color",
+            description: "Staff chat messages. OFF = green."
+        },
+        {
+            cls: "flockmodCnPmActive",
+            cssVar: "--flockmod-custom-cn-pm",
+            toggleId: "themeModCnPmEnabled",
+            inputId: "themeModUICnPm",
+            lsEnabled: "flockmodCustomCnPmEnabled",
+            lsColor: "flockmodCustomCnPmColor",
+            defaultColor: "#d6b147",
+            name: "Private Message Color",
+            description: "Private messages. OFF = FlockMod's PM yellow."
+        }
+    ];
+
     /* Every toggle+picker color that shares the sidebar-style wiring
        (init / preview / apply / reset / close / load). */
     const TOGGLE_COLOR_SETTINGS = [
         ...SIDEBAR_COLOR_SETTINGS,
         ...POPUP_COLOR_SETTINGS,
         ...CHAT_COLOR_SETTINGS,
-        ...CANVAS_COLOR_SETTINGS
+        ...CANVAS_COLOR_SETTINGS,
+        ...CHATNOTIF_COLOR_SETTINGS
     ];
 
     function applySidebarColorPreview(setting, enabled, color) {
@@ -1054,6 +1144,11 @@ function applySimpleColors(values, sink) {
     set("flockmodChatMessageActive", "--flockmod-custom-chat-message", tx.enabled, tx.color);
     set("flockmodChatEventActive", "--flockmod-custom-chat-event", tx.enabled, mixHex(tx.color, bgColor, 0.5));
     set("flockmodChatTimestampActive", "--flockmod-custom-chat-timestamp", tx.enabled, mixHex(tx.color, bgColor, 0.45));
+
+    /* Chat notification cards (Staff / PM keep their own colors) */
+    set("flockmodCnBackgroundActive", "--flockmod-custom-cn-background", bg.enabled, bg.color);
+    set("flockmodCnTextActive", "--flockmod-custom-cn-text", tx.enabled, tx.color);
+    set("flockmodCnPublicActive", "--flockmod-custom-cn-public", ac.enabled, ac.color);
 
     /* Icons */
     set("flockmodSidebarIconActive", "--flockmod-custom-sidebar-icon", ic.enabled, ic.color);
@@ -2105,6 +2200,2733 @@ function buildSimpleColorRowsHTML() {
        Only boxes that are plain "display: block" with hidden overflow
        are changed (to flow-root + visible, which lays out the same);
        anything else (flex rows, scroll areas) is left alone. */
+
+    /* =========================================================
+       CHAT HIGHLIGHTS (v1.6.3, Interface > Chat Highlights)
+       Lines that mention your name (or the extra words from Sounds >
+       Your name mentioned) get a soft highlight, in chat (public,
+       staff, any channel) and in Messenger. Your own messages are
+       skipped. Only adds a class: FlockMod's messages aren't changed.
+       ========================================================= */
+    const HL_ENABLED_LS = "flockmodChatHighlightEnabled";
+    const HL_COLOR_LS = "flockmodChatHighlightColor";
+    const HL_DEFAULT_COLOR = "#f48fb1";
+    let liveHighlight = { enabled: true, color: HL_DEFAULT_COLOR };
+
+    function readSavedChatHighlight() {
+        const color = localStorage.getItem(HL_COLOR_LS);
+        return {
+            enabled: localStorage.getItem(HL_ENABLED_LS) !== "false",
+            color: /^#[0-9a-f]{6}$/i.test(color || "") ? color : HL_DEFAULT_COLOR
+        };
+    }
+
+    function applyChatHighlight(st) {
+        liveHighlight = st;
+        const root = document.documentElement;
+        root.classList.toggle("fmHlOn", st.enabled);
+        root.style.setProperty("--fm-hl-color", st.color);
+        chatHighlightRescanSoon();
+    }
+
+    function applySavedChatHighlight() {
+        applyChatHighlight(readSavedChatHighlight());
+    }
+
+    const HL_CHAT_LINES = '.messageBlock:not([data-type="MYMSG"]) .msgLine';
+    const HL_MSGR_ITEMS = ".offlineMessage:not(.offlineOwn)";
+
+    function hlCheck(el) {
+        const textEl = el.matches(".msgLine") ? el.querySelector(".msgText") : el;
+        const hit = Boolean(liveHighlight.enabled && textEl && isMention(textEl.textContent || ""));
+
+        if (el.classList.contains("fmHl") !== hit) {
+            el.classList.toggle("fmHl", hit);
+        }
+    }
+
+    let hlTimer = 0;
+    function chatHighlightRescanSoon() {
+        clearTimeout(hlTimer);
+        hlTimer = setTimeout(() => {
+            const chat = document.getElementById("chatMessages");
+            const msgr = document.getElementById("messengerConversation");
+
+            if (!liveHighlight.enabled) {
+                document.querySelectorAll(".fmHl").forEach((el) => el.classList.remove("fmHl"));
+                return;
+            }
+
+            chat?.querySelectorAll(HL_CHAT_LINES).forEach(hlCheck);
+            msgr?.querySelectorAll(HL_MSGR_ITEMS).forEach(hlCheck);
+        }, 150);
+    }
+
+    const hlWatches = { chat: { id: "chatMessages", el: null, obs: null }, msgr: { id: "messengerConversation", el: null, obs: null } };
+
+    /* From the 500ms loop: (re)attach when FlockMod makes or replaces the boxes */
+    function watchChatHighlight() {
+        Object.entries(hlWatches).forEach(([kind, w]) => {
+            const el = document.getElementById(w.id);
+
+            if (el === w.el) {
+                return;
+            }
+
+            w.obs?.disconnect();
+            w.el = el;
+            w.obs = null;
+
+            if (!el) {
+                return;
+            }
+
+            w.obs = new MutationObserver((records) => {
+                if (!liveHighlight.enabled) {
+                    return;
+                }
+
+                records.forEach((record) => record.addedNodes.forEach((node) => {
+                    if (node.nodeType !== 1) {
+                        return;
+                    }
+
+                    if (kind === "chat") {
+                        if (node.closest('.messageBlock[data-type="MYMSG"]')) return;
+                        if (node.matches(".msgLine")) hlCheck(node);
+                        else node.querySelectorAll?.(".msgLine").forEach((line) => {
+                            if (!line.closest('.messageBlock[data-type="MYMSG"]')) hlCheck(line);
+                        });
+                    } else {
+                        const item = node.matches(HL_MSGR_ITEMS) ? node : node.closest?.(HL_MSGR_ITEMS);
+                        if (item) hlCheck(item);
+                        else node.querySelectorAll?.(HL_MSGR_ITEMS).forEach(hlCheck);
+                    }
+                }));
+            });
+            w.obs.observe(el, { childList: true, subtree: true });
+            chatHighlightRescanSoon();
+        });
+    }
+
+    function buildChatHighlightRowsHTML() {
+        return `
+<div class="themeModSubsectionTitle themeModSpacingSubsection">
+    Chat Highlights
+</div>
+
+<div class="themeModSetting themeModNoDivider">
+    <div class="themeModSettingText">
+        <div class="themeModSettingName">Highlight mentions</div>
+        <div class="themeModSettingDescription">
+            Lines with your name light up in chat and Messenger. Add more words in Sounds &gt; Your name mentioned.
+        </div>
+    </div>
+    <label class="themeModToggle" style="margin-right: 10px;">
+        <input type="checkbox" id="themeModChatHighlight" data-default="true" checked>
+        <span class="themeModToggleTrack">
+            <span class="themeModToggleOption themeModToggleOff">OFF</span>
+            <span class="themeModToggleOption themeModToggleOn">ON</span>
+            <span class="themeModToggleThumb"></span>
+        </span>
+    </label>
+    <input type="color" id="themeModChatHighlightColor" value="${HL_DEFAULT_COLOR}" data-default="${HL_DEFAULT_COLOR}" title="Highlight color">
+</div>`;
+    }
+
+    function setupChatHighlight(dialog) {
+        const toggle = dialog.querySelector("#themeModChatHighlight");
+        const color = dialog.querySelector("#themeModChatHighlightColor");
+
+        if (!toggle || !color) {
+            return;
+        }
+
+        const fill = (st) => {
+            toggle.checked = st.enabled;
+            color.value = st.color;
+        };
+        const read = () => ({ enabled: toggle.checked, color: color.value });
+        const preview = () => applyChatHighlight(read());
+
+        fill(readSavedChatHighlight());
+        toggle.addEventListener("change", preview);
+        color.addEventListener("input", preview);
+
+        dialog.querySelector(".themeModApplyButton").addEventListener("click", () => {
+            const st = read();
+            localStorage.setItem(HL_ENABLED_LS, String(st.enabled));
+            localStorage.setItem(HL_COLOR_LS, st.color);
+        });
+
+        dialog.querySelector(".themeModResetButton").addEventListener("click", () => {
+            localStorage.setItem(HL_ENABLED_LS, "true");
+            localStorage.setItem(HL_COLOR_LS, HL_DEFAULT_COLOR);
+            fill(readSavedChatHighlight());
+            preview();
+        });
+
+        dialog.querySelector(".closeButton").addEventListener("click", applySavedChatHighlight);
+    }
+
+
+    /* =========================================================
+       CHAT NOTIFICATIONS (v1.6.3, Interface > Chat Notifications)
+       New chat messages pop up as small cards on the side of the
+       canvas AWAY from the sidebar, so you can draw with the chat
+       closed. Hover the cards (or the pill) for a reply box and a
+       Public / Staff / PM switcher. PMs get one card per person and
+       name chips (5 most recent, "+N" opens FlockMod's own chat).
+       Replies are typed into FlockMod's own chat box and sent with
+       its own Send button: nothing new is sent to the server.
+       One MutationObserver on #chatMessages; nothing runs while
+       no messages arrive.
+       ========================================================= */
+    const CN_LS = {
+        on: "flockmodChatNotifEnabled",
+        closedOnly: "flockmodChatNotifClosedOnly",
+        ownRight: "flockmodChatNotifOwnRight",
+        size: "flockmodChatNotifSize",
+        stay: "flockmodChatNotifStay",
+        width: "flockmodChatNotifWidth",
+        hidden: "flockmodChatNotifHidden"
+    };
+    const CN_DEFAULTS = { on: true, closedOnly: true, ownRight: true, size: 100, stay: 8 };
+    /* v1.6.3: the chat overlay starts ON for everyone, once. Anyone who
+       switched it off or hid it while it was being tested gets it back;
+       after that, their own choice sticks. */
+    try {
+        if (!localStorage.getItem("flockmodChatNotifOnByDefault")) {
+            localStorage.removeItem(CN_LS.on);
+            localStorage.removeItem(CN_LS.hidden);
+            localStorage.setItem("flockmodChatNotifOnByDefault", "1");
+        }
+    } catch (err) { /* storage blocked: defaults apply anyway */ }
+    const CN_MAX_CARDS = 5;
+    const CN_MAX_CHIPS = 5;
+    const CN_MAX_LINES = 3;   /* lines shown per card */
+    const CN_WIDTH_DEFAULT = 260;
+    const CN_SELECTOR = ".fmCnStack";
+
+    let liveCn = { ...CN_DEFAULTS };
+    let cnStack = null;
+    let cnTarget = { kind: "public", channel: "#public" };   /* where you reply AND which chat the cards show */
+    const cnViewUnread = new Set();   /* "public", "staff", "@Name": new messages you haven't viewed */
+    const cnRecent = new Map();       /* each chat -> its last few messages (yours too) */
+    const cnMissed = new Map();       /* each chat -> how many of those you haven't seen */
+    const CN_MAX_RECENT = 50;         /* per chat, since you joined the room (scroll up to see them) */
+    const CN_CONTEXT = 2;             /* already-read messages shown again when you come back */
+    let cnNextId = 1;
+
+    function cnRemember(view, m) {
+        const list = cnRecent.get(view) || [];
+        const entry = { ...m, id: cnNextId++, time: m.time || cnClock() };
+        list.push(entry);
+        while (list.length > CN_MAX_RECENT) list.shift();
+        cnRecent.set(view, list);
+        return entry;
+    }
+
+    /* A message you couldn't see yet (another tab, or "Hide chat") */
+    function cnKeepPending(view) {
+        cnMissed.set(view, (cnMissed.get(view) || 0) + 1);
+    }
+
+    /* Opening a chat shows what you missed there plus the last couple of
+       messages before it, so you know what you're replying to */
+    function cnShowPending(view, context = CN_CONTEXT) {
+        const want = Math.min(CN_MAX_CARDS, (cnMissed.get(view) || 0) + context);
+        cnMissed.delete(view);
+        const list = cnRecent.get(view) || [];
+        /* count messages only: events in between come along but don't use up the count */
+        let start = list.length, got = 0;
+        while (start > 0 && got < want) {
+            start--;
+            if (!list[start].event) got++;
+        }
+        list.slice(start).forEach((m) => cnAddCard({ ...m, replay: true, noAnim: true }));
+    }
+
+    /* Scrolling up past the top card brings back that chat's earlier messages */
+    function cnLoadEarlier() {
+        const list = cnStack?.querySelector(".fmCnList");
+        if (!list) return;
+        const view = cnViewKey(cnTarget.kind, cnTarget.channel);
+        const entries = cnRecent.get(view) || [];
+        const first = [...list.children].find((c) => c.dataset.mid && !c.classList.contains("fmCnOut"));
+        const idx = first ? entries.findIndex((e) => String(e.id) === first.dataset.mid) : entries.length;
+
+        if (idx <= 0) return;
+
+        const before = list.scrollHeight;
+        entries.slice(Math.max(0, idx - 8), idx).reverse()
+            .forEach((m) => cnAddCard({ ...m, replay: true, noAnim: true, prepend: true, earlier: true }));
+        list.scrollTop += list.scrollHeight - before;   /* keep what you were looking at in place */
+    }
+    let cnUnread = 0;
+    const cnRecentPm = [];          /* "@Name", newest first */
+    const cnWatch = { el: null, obs: null, armedAt: 0 };
+
+    function readSavedChatNotif() {
+        const int = (key, min, max, def) => {
+            const n = Number(localStorage.getItem(key));
+            return Number.isInteger(n) && n >= min && n <= max ? n : def;
+        };
+        return {
+            on: localStorage.getItem(CN_LS.on) !== "false",
+            closedOnly: localStorage.getItem(CN_LS.closedOnly) !== "false",
+            ownRight: localStorage.getItem(CN_LS.ownRight) !== "false",   /* default ON */
+            size: int(CN_LS.size, 70, 150, CN_DEFAULTS.size),
+            stay: int(CN_LS.stay, 3, 30, CN_DEFAULTS.stay)
+        };
+    }
+
+    function applyChatNotif(st) {
+        liveCn = st;
+        document.documentElement.classList.toggle("fmCnOn", st.on);
+        document.documentElement.classList.toggle("fmCnOwnRight", st.ownRight !== false);
+
+        if (st.on) {
+            buildCnStack();
+            cnStack.style.setProperty("--fmcn-s", String(st.size / 100));
+            cnPlace();
+        } else if (cnStack) {
+            cnStack.querySelector(".fmCnList").textContent = "";
+        }
+    }
+
+    function applySavedChatNotif() {
+        applyChatNotif(readSavedChatNotif());
+    }
+
+    /* ---------- FlockMod's chat window ---------- */
+
+    function cnChatDialog() {
+        return document.querySelector('.dialog[name="chat"]');
+    }
+
+    function cnChatIsOpen() {
+        const d = cnChatDialog();
+        return Boolean(d && !d.classList.contains("dialogInvisible") &&
+            d.classList.contains("dialogVisible") && d.getClientRects().length);
+    }
+
+    function cnTitles() {
+        const d = cnChatDialog();
+        return d ? [...d.querySelectorAll(".channelTitle")] : [];
+    }
+
+    function cnTitleFor(channel) {
+        return cnTitles().find((t) => t.getAttribute("name") === channel) || null;
+    }
+
+    function cnKindOf(channel) {
+        if (channel === "#staff") return "staff";
+        return channel.startsWith("@") ? "pm" : "public";
+    }
+
+    function cnCanUseStaff() {
+        const t = cnTitleFor("#staff");
+        /* FlockMod only shows #staff to staff. Its lock icon just means
+           "staff only", not that you can't post there. */
+        return Boolean(t);
+    }
+
+    function cnPmChannels() {
+        const open = cnTitles()
+            .filter((t) => t.dataset.type === "user")
+            .map((t) => t.getAttribute("name"));
+        /* most recent first, then the rest in the chat's own order */
+        return [...cnRecentPm.filter((c) => open.includes(c)), ...open.filter((c) => !cnRecentPm.includes(c))];
+    }
+
+    function cnHasUnread(channel) {
+        const t = cnTitleFor(channel);
+        return Boolean(t && t.querySelector(".channelIcons .badge"));
+    }
+
+    /* Opens FlockMod's chat (top bar button), optionally on a channel */
+    function cnOpenChat(channel) {
+        if (!cnChatIsOpen()) {
+            const button = [...document.querySelectorAll(".topbarButtons .nav-link")].find((a) =>
+                a.querySelector(".fa-comment, .fa-comments, .fa-comment-dots") || /chat/i.test(a.textContent || ""));
+            button?.click();
+        }
+
+        if (channel) {
+            setTimeout(() => cnSelectChannel(cnTitleFor(channel)), 50);
+        }
+    }
+
+    function cnSelectChannel(title) {
+        if (!title || title.classList.contains("selected")) {
+            return;
+        }
+
+        title.click();
+
+        if (!title.classList.contains("selected")) {
+            ["mousedown", "mouseup"].forEach((type) =>
+                title.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window })));
+        }
+    }
+
+    const cnWait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    async function cnWaitSelected(title, ms) {
+        for (let t = 0; t < ms; t += 40) {
+            if (title.classList.contains("selected")) return true;
+            await cnWait(40);
+        }
+        return title.classList.contains("selected");
+    }
+
+    function cnPokeTitle(title) {
+        const caption = title.querySelector(".channelCaption") || title;
+        caption.click();
+        ["pointerdown", "mousedown", "pointerup", "mouseup"].forEach((type) => {
+            const Ev = type.startsWith("pointer") && window.PointerEvent ? PointerEvent : MouseEvent;
+            caption.dispatchEvent(new Ev(type, { bubbles: true, cancelable: true, view: window, button: 0 }));
+        });
+    }
+
+    /* With its chat closed, FlockMod ignores channel switches. So for a
+       moment the chat is "open" but invisible (nothing shows, nothing can
+       be clicked), we switch and send, then it goes back to closed. */
+    function cnRevealChat(d) {
+        if (!d.classList.contains("dialogInvisible")) {
+            return () => {};
+        }
+
+        const cls = d.className;
+        const vis = d.style.visibility;
+        const pe = d.style.pointerEvents;
+        d.style.visibility = "hidden";
+        d.style.pointerEvents = "none";
+        d.classList.remove("dialogInvisible");
+        d.classList.add("dialogVisible");
+
+        return () => {
+            d.className = cls;
+            d.style.visibility = vis;
+            d.style.pointerEvents = pe;
+        };
+    }
+
+    /* Sends with FlockMod's own chat box + Send button. Resolves true when
+       sent, false if FlockMod wouldn't switch (then nothing is sent). */
+    let cnSending = Promise.resolve();
+
+    function cnSend(channel, text, file) {
+        const job = cnSending.then(() => cnSendNow(channel, text, file));
+        cnSending = job.catch(() => false);
+        return job;
+    }
+
+    async function cnSendNow(channel, text, file) {
+        const d = cnChatDialog();
+        const title = cnTitleFor(channel);
+        const input = d?.querySelector('.chatTextGroup input[name="text"]');
+        const button = d?.querySelector('.chatTextGroup button[name="submit"]');
+
+        if (!title || !input || !button) {
+            return false;
+        }
+
+        const before = d.querySelector(".channelTitle.selected");
+        const draft = input.value;
+        let restore = () => {};
+
+        try {
+            if (!title.classList.contains("selected")) {
+                title.click();
+
+                if (!await cnWaitSelected(title, 120)) {
+                    cnPokeTitle(title);
+                }
+                if (!await cnWaitSelected(title, 120)) {
+                    restore = cnRevealChat(d);
+                    title.click();
+                    if (!await cnWaitSelected(title, 200)) cnPokeTitle(title);
+                }
+
+                /* Never send into the wrong channel: if FlockMod didn't switch, stop */
+                if (!await cnWaitSelected(title, 300)) {
+                    cnDebug("couldn't switch to", channel);
+                    return false;
+                }
+            }
+
+            input.value = text;
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            lastSentAt = Date.now();   /* so your own message doesn't ding */
+
+            if (file) {
+                /* The same as pasting the picture into FlockMod's chat box:
+                   FlockMod shows its preview, then Send sends it. */
+                const preview = d.querySelector("#imagePreviewContainer");
+                const empty = preview ? preview.innerHTML : "";
+                const shows = () => preview && preview.innerHTML !== empty;
+                const waitFor = async (test, ms) => {
+                    for (let t = 0; t < ms; t += 50) {
+                        if (test()) return true;
+                        await cnWait(50);
+                    }
+                    return test();
+                };
+                const dt = new DataTransfer();
+                dt.items.add(file);
+
+                /* First: FlockMod's own chat "attach picture" box (the chat's
+                   picture button), which only goes to the chat */
+                const picker = d.querySelector('input[type="file"][name="imageFile"]');
+                if (picker) {
+                    picker.files = dt.files;
+                    picker.dispatchEvent(new Event("change", { bubbles: true }));
+                }
+
+                if (!await waitFor(shows, 1500)) {
+                    /* Else a paste into the chat box, stopped at the chat window
+                       so FlockMod's board never sees it */
+                    const paste = new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true });
+                    const fence = (event) => { if (event === paste) event.stopPropagation(); };
+                    d.addEventListener("paste", fence);
+                    input.dispatchEvent(paste);
+                    d.removeEventListener("paste", fence);
+                }
+
+                if (!await waitFor(shows, 2500)) {
+                    cnDebug("FlockMod didn't show a preview for the picture");
+                    input.value = draft;
+                    return "image";
+                }
+
+                button.click();
+                const gone = await waitFor(() => !shows(), 4000);
+                if (draft && !input.value) input.value = draft;
+                if (before && before !== title) {
+                    before.click();
+                    if (!await cnWaitSelected(before, 120)) cnPokeTitle(before);
+                }
+                return gone ? true : "image";
+            }
+
+            button.click();
+            await cnWait(60);
+
+            /* Send button didn't take it: try Enter in the box */
+            if (input.value === text) {
+                ["keydown", "keypress", "keyup"].forEach((type) => input.dispatchEvent(
+                    new KeyboardEvent(type, { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true, cancelable: true })));
+                await cnWait(80);
+            }
+
+            const sent = input.value !== text ? true : false;
+
+            if (draft && !input.value) {
+                input.value = draft;   /* give back what was typed in the real chat */
+            }
+
+            /* go back to the channel you were looking at in FlockMod's chat */
+            if (before && before !== title) {
+                before.click();
+                if (!await cnWaitSelected(before, 120)) cnPokeTitle(before);
+            }
+
+            return sent;
+        } finally {
+            restore();
+        }
+    }
+
+    /* ---------- The cards ---------- */
+
+    /* ---------- Emoji: FlockMod's own allowed set ----------
+       Read from FlockMod's emoji picker (category by category), so the
+       cards only offer emoji FlockMod accepts. Read once, then kept. */
+    let cnEmojiCache = null;
+
+    function cnEmojiFont(el) {
+        const font = el ? getComputedStyle(el).fontFamily : "";
+        if (font && cnStack) cnStack.style.setProperty("--fmcn-emoji-font", font);
+    }
+
+    async function cnReadEmojiPicker(box) {
+        const cats = [...box.querySelectorAll(".categories a[name]")];
+        const was = box.querySelector(".categories a.selected");
+        const list = () => [...box.querySelectorAll(".emojis .os-content > a, .emojis a")]
+            .map((a) => (a.textContent || "").trim()).filter(Boolean);
+        const stopJump = (event) => event.preventDefault();
+        const out = [];
+
+        cnEmojiFont(box.querySelector(".emojis a"));
+
+        for (const cat of cats) {
+            cat.addEventListener("click", stopJump, { capture: true, once: true });
+            cat.click();
+            await cnWait(30);
+            const items = [...new Set(list())];
+            if (items.length) {
+                out.push({ name: cat.getAttribute("name"), icon: (cat.textContent || "").trim(), items });
+            }
+        }
+
+        if (was && was !== box.querySelector(".categories a.selected")) {
+            was.addEventListener("click", stopJump, { capture: true, once: true });
+            was.click();
+        }
+        return out;
+    }
+
+    async function cnLoadEmoji() {
+        if (cnEmojiCache) return cnEmojiCache;
+
+        let box = document.querySelector(".emojiContainer");
+        let undo = () => {};
+
+        if (!box) {
+            /* FlockMod builds its picker the first time it's opened: open it
+               out of sight for a moment, read it, close it again */
+            const d = cnChatDialog();
+            const btn = d?.querySelector('button[name="emoji"], .newEmoji');
+            if (!btn) return [];
+            const hide = document.createElement("style");
+            hide.textContent = ".emojiContainer { visibility: hidden !important; }";
+            document.head.appendChild(hide);
+            const restore = cnRevealChat(d);
+            btn.click();
+            for (let t = 0; t < 1000 && !box; t += 50) {
+                await cnWait(50);
+                box = document.querySelector(".emojiContainer");
+            }
+            undo = () => {
+                const c = document.querySelector(".emojiContainer");
+                c?.querySelector(".background")?.click();
+                if (c && getComputedStyle(c).display !== "none") c.style.display = "none";
+                restore();
+                hide.remove();
+            };
+        }
+
+        try {
+            const sets = box ? await cnReadEmojiPicker(box) : [];
+            if (sets.length) cnEmojiCache = sets;
+            return sets;
+        } finally {
+            undo();
+        }
+    }
+
+    /* FlockMod's whole app sits in a full-screen layer (.contentScreen,
+       z-index 999998). The cards go inside it, or they'd be underneath. */
+    function cnHost() {
+        /* There can be several screens; use the one the canvas is on */
+        const drawing = document.getElementById("DrawingArea");
+        return drawing?.closest(".contentScreen") ||
+            [...document.querySelectorAll(".contentScreen")].find((el) => el.getClientRects().length) ||
+            document.body;
+    }
+
+    function buildCnStack() {
+        if (cnStack) {
+            return;
+        }
+
+        cnStack = document.createElement("div");
+        cnStack.className = "fmCnStack fmCnLeft";
+        cnStack.innerHTML = `
+<div class="fmCnGrip" title="Drag to resize"></div>
+<div class="fmCnList"></div>
+<div class="fmCnExtra"><div class="fmCnExtraIn">
+    <div class="fmCnPeople"></div>
+    <div class="fmCnAttach" hidden><img alt=""><button type="button" class="fmCnUnattach" title="Remove picture" aria-label="Remove picture"><i class="fas fa-times"></i></button></div>
+    <div class="fmCnEmojiPanel" hidden><div class="fmCnEmojiCats"></div><div class="fmCnEmojiGrid"></div></div>
+    <div class="fmCnTagList" hidden></div>
+    <div class="fmCnReplyRow">
+        <button type="button" class="fmCnEmo" title="Emoji" aria-label="Emoji"><i class="fas fa-smile"></i></button>
+        <button type="button" class="fmCnPic" title="Add a picture (or paste one)" aria-label="Add a picture"><i class="fas fa-image"></i></button>
+        <input class="fmCnFile" type="file" accept="image/*" hidden>
+        <input class="fmCnInput" type="text" maxlength="250" autocomplete="off" spellcheck="true">
+        <button type="button" class="fmCnSend" title="Send" aria-label="Send"><i class="fas fa-paper-plane"></i></button>
+    </div>
+    <div class="fmCnNote"></div>
+</div></div>
+<div class="fmCnTabs">
+    <button type="button" data-cn-tab="public">Public</button>
+    <button type="button" data-cn-tab="staff">Staff</button>
+    <button type="button" data-cn-tab="pm">PM</button>
+</div>
+<button type="button" class="fmCnPill"><i class="fas fa-comment"></i><span class="fmCnPillText">Hide chat</span><span class="fmCnBadge"></span></button>`;
+        cnHost().appendChild(cnStack);
+
+        const input = cnStack.querySelector(".fmCnInput");
+        const width = Number(localStorage.getItem(CN_LS.width));
+        cnStack.style.width = `${width >= 180 && width <= 480 ? width : CN_WIDTH_DEFAULT}px`;
+        cnStack.classList.toggle("fmCnCollapsed", localStorage.getItem(CN_LS.hidden) === "true");
+        cnUpdatePill();
+
+        /* A picture waiting to go out with the next message */
+        const attach = cnStack.querySelector(".fmCnAttach");
+        const fileInput = cnStack.querySelector(".fmCnFile");
+        let pending = null;
+
+        const setPending = (file) => {
+            const img = attach.querySelector("img");
+            if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
+            pending = file && /^image\//.test(file.type) ? file : null;
+            attach.hidden = !pending;
+            img.src = pending ? URL.createObjectURL(pending) : "";
+        };
+
+        /* Copy/cut/paste inside the cards stay inside the cards. FlockMod
+           listens for pastes on the whole page and puts pictures on the
+           board, so it must never see these. (Runs first, on window.) */
+        ["copy", "cut", "paste"].forEach((type) => window.addEventListener(type, (event) => {
+            if (!cnStack.contains(event.target) && !(type === "copy" && cnHasSelection())) {
+                return;
+            }
+            event.stopImmediatePropagation();
+
+            if (type === "paste" && event.target === input) {
+                const item = [...(event.clipboardData?.items || [])].find((i) => i.kind === "file" && /^image\//.test(i.type));
+                const file = item?.getAsFile();
+                if (file) {
+                    event.preventDefault();
+                    setPending(file);
+                }
+            }
+        }, true));
+
+        /* Selecting card text with the mouse: FlockMod is a drawing app and
+           treats mouse-downs as its own, so presses on a card stop here */
+        ["pointerdown", "mousedown", "selectstart", "dragstart"].forEach((type) =>
+            cnStack.addEventListener(type, (event) => {
+                if (event.target.closest?.(".fmCnCard")) event.stopPropagation();
+            }));
+
+        /* Ctrl+C / Cmd+C with card text selected: copy that text, and keep
+           FlockMod from treating it as copying from the board */
+        window.addEventListener("keydown", (event) => {
+            if (!(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== "c" || !cnHasSelection()) {
+                return;
+            }
+            if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+                return;   /* copying inside a text box works as usual */
+            }
+            event.stopImmediatePropagation();
+            const text = window.getSelection().toString();
+            navigator.clipboard?.writeText(text).catch(() => {});
+        }, true);
+        cnStack.querySelector(".fmCnPic").addEventListener("click", () => fileInput.click());
+        fileInput.addEventListener("change", () => {
+            setPending(fileInput.files[0] || null);
+            fileInput.value = "";
+            input.focus({ preventScroll: true });
+        });
+        cnStack.querySelector(".fmCnUnattach").addEventListener("click", () => {
+            setPending(null);
+            input.focus({ preventScroll: true });
+        });
+
+        /* Emoji panel */
+        const emoPanel = cnStack.querySelector(".fmCnEmojiPanel");
+        const emoCats = emoPanel.querySelector(".fmCnEmojiCats");
+        const emoGrid = emoPanel.querySelector(".fmCnEmojiGrid");
+        let emoSets = [];
+
+        const showEmojiSet = (i) => {
+            emoGrid.textContent = "";
+            [...emoCats.children].forEach((b, n) => b.classList.toggle("active", n === i));
+            (emoSets[i]?.items || []).forEach((ch) => {
+                const b = document.createElement("button");
+                b.type = "button";
+                b.textContent = ch;
+                emoGrid.appendChild(b);
+            });
+        };
+
+        emoCats.addEventListener("click", (event) => {
+            const b = event.target.closest("button");
+            if (b) showEmojiSet([...emoCats.children].indexOf(b));
+        });
+
+        emoGrid.addEventListener("click", (event) => {
+            const b = event.target.closest("button");
+            if (!b) return;
+            const ch = b.textContent;
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+            if (input.value.length - (end - start) + ch.length > 250) return;
+            input.value = input.value.slice(0, start) + ch + input.value.slice(end);
+            input.focus({ preventScroll: true });
+            input.setSelectionRange(start + ch.length, start + ch.length);
+        });
+
+        cnStack.querySelector(".fmCnEmo").addEventListener("click", async () => {
+            if (!emoPanel.hidden) {
+                emoPanel.hidden = true;
+                input.focus({ preventScroll: true });
+                return;
+            }
+            emoSets = await cnLoadEmoji();
+            if (!emoSets.length) {
+                cnNote("Couldn't find FlockMod's emoji list. Open FlockMod's emoji picker once, then try again.");
+                return;
+            }
+            emoCats.textContent = "";
+            emoSets.forEach((set) => {
+                const b = document.createElement("button");
+                b.type = "button";
+                b.textContent = set.icon || "•";
+                b.title = set.name;
+                emoCats.appendChild(b);
+            });
+            emoPanel.hidden = false;
+            showEmojiSet(0);
+            input.focus({ preventScroll: true });
+        });
+        input.addEventListener("themeModEscape", () => { emoPanel.hidden = true; });
+
+        const send = async () => {
+            const text = input.value.trim();
+            const target = { ...cnTarget };
+            const file = pending;
+
+            if (!text && !file) {
+                return;
+            }
+
+            input.value = "";
+            emoPanel.hidden = true;
+            const shown = file ? URL.createObjectURL(file) : "";
+            if (file) setPending(null);
+
+            const ok = await cnSend(target.channel, text, file);
+
+            /* FlockMod moves the cursor to its own chat box when it switches
+               channels. Put it back here so you can keep typing. */
+            const refocus = () => {
+                if (document.activeElement !== input && cnStack.isConnected) {
+                    input.focus({ preventScroll: true });
+                }
+            };
+            refocus();
+            setTimeout(refocus, 120);
+
+            if (ok !== true) {
+                if (!input.value) input.value = text;   /* keep what you wrote */
+                if (file && !pending) setPending(file);
+                if (shown) URL.revokeObjectURL(shown);
+                cnNote(ok === "image"
+                    ? "FlockMod didn't take that picture (it may be too big), so nothing was sent."
+                    : "FlockMod wouldn't switch to that chat, so nothing was sent.");
+                return;
+            }
+
+            const src = document.createElement("div");
+            if (text) src.append(text);
+            if (shown) {
+                const img = document.createElement("img");
+                img.src = shown;
+                src.append(img);
+            }
+
+            cnSentByCards.set(cnSentKey(target.channel, text || "[image]"), Date.now());
+            cnTouchPm(target.channel);
+
+            cnAddCard({
+                key: `you|${target.channel}`,
+                kind: target.kind,
+                user: "You",
+                where: target.kind === "pm" ? `→ ${target.channel.slice(1)}` : `· ${cnLabel(target.channel)}`,
+                text: text || "[image]",
+                srcs: [src],
+                own: true
+            });
+
+            /* Use FlockMod's own time for it once it shows in the chat */
+            const card = cnStack.querySelector(".fmCnList")?.lastElementChild;
+            setTimeout(() => {
+                const mine = [...document.querySelectorAll(`#chatMessages .channelMessages[name="${CSS.escape(target.channel)}"] .chatBlock[data-type="MYMSG"]`)].pop();
+                const stamp = mine ? cnTimeOf([...mine.querySelectorAll(".msgLine")], mine) : "";
+                const el = card?.querySelector(".fmCnTime");
+                if (stamp && el) {
+                    el.textContent = stamp;
+                    const last = card.querySelector(".fmCnLine:last-child");
+                    if (last) last.title = stamp;
+                }
+            }, 700);
+        };
+
+        /* @ tagging, like FlockMod's chat: type @ and pick a name */
+        const tagList = cnStack.querySelector(".fmCnTagList");
+        let tagPick = 0;
+
+        const tagQuery = () => {
+            const caret = input.selectionStart ?? input.value.length;
+            const m = input.value.slice(0, caret).match(/(^|\s)@([^\s@]{0,40})$/);
+            return m ? { text: m[2], start: caret - m[2].length - 1, end: caret } : null;
+        };
+
+        const closeTags = () => {
+            tagList.hidden = true;
+            tagList.textContent = "";
+        };
+
+        const showTags = () => {
+            const q = tagQuery();
+            if (!q) return closeTags();
+
+            const lower = q.text.toLowerCase();
+            const users = [...readUserRows()].filter(([name]) => name.toLowerCase().startsWith(lower)).slice(0, 6);
+            if (!users.length) return closeTags();
+
+            tagPick = Math.min(tagPick, users.length - 1);
+            tagList.textContent = "";
+            users.forEach(([name, u], i) => {
+                const b = document.createElement("button");
+                b.type = "button";
+                b.textContent = name;
+                b.dataset.name = name;
+                const rank = cnRankOf(u.cell);
+                if (rank) b.classList.add(rank);
+                b.classList.toggle("active", i === tagPick);
+                tagList.appendChild(b);
+            });
+            tagList.hidden = false;
+        };
+
+        const pickTag = (name) => {
+            const q = tagQuery();
+            if (!q || !name) return;
+            const insert = `@${name} `;
+            input.value = input.value.slice(0, q.start) + insert + input.value.slice(q.end);
+            const at = q.start + insert.length;
+            input.focus({ preventScroll: true });
+            input.setSelectionRange(at, at);
+            closeTags();
+        };
+
+        input.addEventListener("input", () => { tagPick = 0; showTags(); });
+        input.addEventListener("click", showTags);
+        input.addEventListener("blur", () => setTimeout(closeTags, 150));
+        tagList.addEventListener("mousedown", (event) => event.preventDefault());   /* keep typing focus */
+        tagList.addEventListener("click", (event) => pickTag(event.target.closest("button")?.dataset.name));
+
+        input.addEventListener("themeModKey", (event) => {
+            if (tagList.hidden) return;
+            const items = [...tagList.children];
+            if (event.detail.key === "Tab") {
+                event.preventDefault();
+                pickTag(items[tagPick]?.dataset.name);
+                return;
+            }
+            event.preventDefault();
+            tagPick = (tagPick + (event.detail.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
+            items.forEach((b, i) => b.classList.toggle("active", i === tagPick));
+        });
+        input.addEventListener("themeModEnter", (event) => {
+            if (!tagList.hidden) {
+                event.stopImmediatePropagation();   /* Enter picks the name, doesn't send */
+                pickTag(tagList.children[tagPick]?.dataset.name);
+            }
+        });
+        input.addEventListener("themeModEscape", (event) => {
+            if (!tagList.hidden) {
+                event.stopImmediatePropagation();   /* first Escape just closes the list */
+                closeTags();
+            }
+        });
+
+        input.addEventListener("themeModEnter", send);
+        input.addEventListener("themeModEscape", () => input.blur());
+        cnStack.querySelector(".fmCnSend").addEventListener("click", send);
+
+        cnStack.querySelector(".fmCnTabs").addEventListener("click", (event) => {
+            const tab = event.target.closest("[data-cn-tab]")?.dataset.cnTab;
+            event.target.closest("button")?.blur();   /* a clicked tab shouldn't hold the box open */
+
+            if (tab === "public") cnSetTarget("#public");
+            if (tab === "staff") cnSetTarget("#staff");
+            if (tab === "pm") {
+                const pms = cnPmChannels();
+                cnSetTarget(pms.includes(cnLastPm) ? cnLastPm : (pms[0] || "@"));
+            }
+        });
+
+        cnStack.querySelector(".fmCnPeople").addEventListener("click", (event) => {
+            const chip = event.target.closest("[data-cn-chip]");
+
+            if (!chip) {
+                return;
+            }
+
+            if (chip.dataset.cnChip === "more") {
+                cnOpenChat(null);
+                return;
+            }
+
+            cnSetTarget(chip.dataset.cnChip);
+            input.focus();
+        });
+
+        cnStack.querySelector(".fmCnPill").addEventListener("click", () => {
+            const collapsed = !cnStack.classList.contains("fmCnCollapsed");
+            cnStack.classList.toggle("fmCnCollapsed", collapsed);
+            localStorage.setItem(CN_LS.hidden, String(collapsed));
+
+            if (!collapsed) {
+                cnUnread = 0;
+                cnShowPending(cnViewKey(cnTarget.kind, cnTarget.channel), 0);   /* what came in while hidden */
+            }
+
+            cnUpdatePill();
+        });
+
+        cnStack.addEventListener("mouseenter", cnOpenControls);
+
+        /* Back on FlockMod's tab: fill in any name colors that were missing */
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden || !cnStack) return;
+            setTimeout(() => cnStack.querySelectorAll(".fmCnCard:not([data-rank]):not([data-plain])").forEach(cnPaintName), 300);
+        });
+
+        /* Close to the top: load the earlier ones before you get there,
+           so they're already in place as you keep scrolling */
+        const cnList = cnStack.querySelector(".fmCnList");
+        let nearTopAt = 0;
+        cnList.addEventListener("scroll", () => {
+            if (cnList.scrollTop > 160 || !cnStack.classList.contains("fmCnOpen") || Date.now() - nearTopAt < 250) return;
+            nearTopAt = Date.now();
+            cnLoadEarlier();
+        }, { passive: true });
+
+        cnStack.addEventListener("wheel", (event) => {
+            const list = cnStack.querySelector(".fmCnList");
+            if (event.deltaY >= 0 || list.scrollTop > 0) return;
+            if (!event.target.closest(".fmCnList, .fmCnTabs, .fmCnPill")) return;
+            cnWheelUp();
+        }, { passive: true });
+        document.documentElement.addEventListener("mouseleave", () => cnCloseSoon());
+
+        /* Width: drag the pink grip on the edge facing the canvas */
+        const grip = cnStack.querySelector(".fmCnGrip");
+        grip.addEventListener("pointerdown", (event) => {
+            event.preventDefault();
+            grip.setPointerCapture(event.pointerId);
+            const x0 = event.clientX;
+            const w0 = cnStack.offsetWidth;
+            const dir = cnStack.classList.contains("fmCnLeft") ? 1 : -1;
+
+            const move = (e) => {
+                cnStack.style.width = `${Math.max(180, Math.min(480, w0 + (e.clientX - x0) * dir))}px`;
+            };
+            const up = () => {
+                grip.removeEventListener("pointermove", move);
+                grip.removeEventListener("pointerup", up);
+                localStorage.setItem(CN_LS.width, String(cnStack.offsetWidth));
+            };
+
+            grip.addEventListener("pointermove", move);
+            grip.addEventListener("pointerup", up);
+        });
+
+        cnRenderControls();
+    }
+
+    function cnLabel(channel) {
+        const kind = cnKindOf(channel);
+        if (kind === "pm") return "PM";
+        if (kind === "staff") return "Staff";
+        return channel === "#public" ? "Public" : channel;
+    }
+
+    function cnNote(text) {
+        const note = cnStack?.querySelector(".fmCnNote");
+
+        if (!note) {
+            return;
+        }
+
+        note.textContent = text;
+        clearTimeout(note._t);
+        note._t = setTimeout(() => { note.textContent = ""; }, 4000);
+    }
+
+    /* Public, staff and each PM are kept apart: the cards show only the
+       chat you picked in the tabs. Anything else gets a dot instead. */
+    function cnViewKey(kind, channel) {
+        return kind === "pm" ? channel : kind;
+    }
+
+    function cnCardView(m) {
+        const channel = m.channel || (m.key.startsWith("you|") ? m.key.slice(4) : "");
+        return cnViewKey(m.kind, channel || m.key);
+    }
+
+    function cnApplyView() {
+        const view = cnViewKey(cnTarget.kind, cnTarget.channel);
+        cnViewUnread.delete(view);
+
+        if (cnStack._view === view) {
+            return;
+        }
+
+        const first = cnStack._view === undefined;
+        cnStack._view = view;
+        const list = cnStack.querySelector(".fmCnList");
+
+        /* Switching chats: the cards fade out together, swap, and fade back
+           in (opacity only, about 0.3s), instead of sliding past each other */
+        const swap = () => {
+            list._swapT = 0;
+            list.querySelectorAll(":scope > .fmCnCard").forEach((card) => {
+                if (!card.dataset.sample) {
+                    clearTimeout(card._t);
+                    card.remove();
+                }
+            });
+            if (!cnStack.classList.contains("fmCnCollapsed")) {
+                cnShowPending(cnStack._view);
+            }
+            list.scrollTop = list.scrollHeight;
+            list.classList.remove("fmCnSwapOut");
+        };
+
+        clearTimeout(list._swapT);
+        const animate = !first && document.documentElement.classList.contains("fmAnimMenu") && list.children.length;
+        if (animate) {
+            list.classList.add("fmCnSwapOut");
+            list._swapT = setTimeout(swap, 120);
+        } else {
+            swap();
+        }
+    }
+
+    let cnLastPm = "";   /* the PM you looked at last: the PM tab goes back there */
+
+    function cnSetTarget(channel) {
+        cnTarget = { kind: cnKindOf(channel), channel };
+        if (cnTarget.kind === "pm" && channel !== "@") cnLastPm = channel;
+        cnRenderControls();
+    }
+
+    function cnRenderControls() {
+        if (!cnStack) {
+            return;
+        }
+
+        const pms = cnPmChannels();
+        const tabs = cnStack.querySelector(".fmCnTabs");
+        tabs.querySelector('[data-cn-tab="staff"]').hidden = !cnCanUseStaff();
+        tabs.querySelector('[data-cn-tab="pm"]').hidden = !pms.length;
+
+        if (cnTarget.kind === "staff" && !cnCanUseStaff()) cnTarget = { kind: "public", channel: "#public" };
+        if (cnTarget.kind === "pm" && !pms.includes(cnTarget.channel)) {
+            cnTarget = pms.length ? { kind: "pm", channel: pms[0] } : { kind: "public", channel: "#public" };
+        }
+
+        cnApplyView();
+
+        /* Only Public to pick from: no need for the tabs */
+        tabs.hidden = tabs.querySelectorAll("[data-cn-tab]:not([hidden])").length < 2 && !cnViewUnread.size;
+
+        tabs.querySelectorAll("[data-cn-tab]").forEach((b) => {
+            const kind = b.dataset.cnTab;
+            const unread = kind === "pm"
+                ? [...cnViewUnread].some((v) => v.startsWith("@"))
+                : cnViewUnread.has(kind);
+            b.classList.toggle("on", kind === cnTarget.kind);
+            b.querySelector(".fmCnDot")?.remove();
+            if (unread) b.insertAdjacentHTML("beforeend", '<span class="fmCnDot"></span>');
+        });
+        cnStack.dataset.cnTarget = cnTarget.kind;
+
+        const people = cnStack.querySelector(".fmCnPeople");
+        people.textContent = "";
+
+        if (cnTarget.kind === "pm") {
+            pms.slice(0, CN_MAX_CHIPS).forEach((channel) => {
+                const chip = document.createElement("button");
+                chip.type = "button";
+                chip.dataset.cnChip = channel;
+                chip.className = channel === cnTarget.channel ? "on" : "";
+                chip.textContent = channel.slice(1);
+
+                if ((cnViewUnread.has(channel) || cnHasUnread(channel)) && channel !== cnTarget.channel) {
+                    chip.insertAdjacentHTML("beforeend", '<span class="fmCnDot"></span>');
+                }
+
+                people.appendChild(chip);
+            });
+
+            if (pms.length > CN_MAX_CHIPS) {
+                const more = document.createElement("button");
+                more.type = "button";
+                more.dataset.cnChip = "more";
+                more.className = "fmCnMore";
+                more.title = "Open all PMs in FlockMod's chat";
+                more.textContent = `+${pms.length - CN_MAX_CHIPS}`;
+                people.appendChild(more);
+            }
+        }
+
+        cnStack.querySelector(".fmCnInput").placeholder =
+            cnTarget.kind === "pm" ? `Message ${cnTarget.channel.slice(1)}…` : `Reply in ${cnLabel(cnTarget.channel)}…`;
+    }
+
+    function cnUpdatePill() {
+        if (!cnStack) {
+            return;
+        }
+
+        const collapsed = cnStack.classList.contains("fmCnCollapsed");
+        cnStack.querySelector(".fmCnPillText").textContent = collapsed ? "Show chat" : "Hide chat";
+        const badge = cnStack.querySelector(".fmCnBadge");
+        badge.textContent = cnUnread > 99 ? "99+" : String(cnUnread);
+        badge.hidden = !(collapsed && cnUnread > 0);
+    }
+
+    /* ---------- Reply box open / close ----------
+       Opening the reply box pushes the cards up. Using plain :hover, the
+       card then slid out from under the mouse, the box closed, the cards
+       dropped back and it all flickered. Now it opens on hover and stays
+       open until the mouse leaves the whole area (cards + box) for a
+       moment. The pointer check only runs while open, once per frame. */
+    let cnCloseT = 0;
+    let cnMoveRaf = 0;
+    let cnLastPt = null;
+
+    function cnInZone(x, y) {
+        if (!cnStack) return false;
+        const pad = 10;
+        const list = cnStack.querySelector(".fmCnList").getBoundingClientRect();
+        const s = cnStack.getBoundingClientRect();
+        const top = list.height ? list.top : cnStack.querySelector(".fmCnExtra").getBoundingClientRect().top;
+        return x >= s.left - pad && x <= s.right + pad && y >= top - pad && y <= s.bottom + pad;
+    }
+
+    function cnOnMove(event) {
+        cnLastPt = event;
+        if (cnMoveRaf) return;
+        cnMoveRaf = requestAnimationFrame(() => {
+            cnMoveRaf = 0;
+            if (cnInZone(cnLastPt.clientX, cnLastPt.clientY)) {
+                clearTimeout(cnCloseT);
+                cnCloseT = 0;
+            } else {
+                cnCloseSoon();
+            }
+        });
+    }
+
+    /* Focus in the reply box (not just a tab you clicked) */
+    function cnTyping() {
+        return Boolean(cnStack?.querySelector(".fmCnExtra")?.contains(document.activeElement));
+    }
+
+    /* While the cards are open, a scroll that lands in the gaps between
+       them (or just beside a short bubble) scrolls the cards instead of
+       zooming the canvas. Only the scroll wheel: clicks and drawing still
+       go to the canvas. Ctrl+wheel (browser zoom) is left alone. */
+    let cnWheelUpAt = 0;
+
+    function cnWheelUp() {
+        if (Date.now() - cnWheelUpAt < 200) return;
+        cnWheelUpAt = Date.now();
+        cnLoadEarlier();
+    }
+
+    function cnWheelCatch(event) {
+        if (event.ctrlKey || !cnStack?.classList.contains("fmCnOpen") || cnStack.contains(event.target)) return;
+        if (!cnInZone(event.clientX, event.clientY)) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const list = cnStack.querySelector(".fmCnList");
+        const dy = event.deltaMode === 1 ? event.deltaY * 16
+            : event.deltaMode === 2 ? event.deltaY * list.clientHeight
+            : event.deltaY;
+        list.scrollTop += dy;
+        if (dy < 0 && list.scrollTop <= 0) cnWheelUp();
+    }
+
+    function cnOpenControls() {
+        if (!cnStack) return;
+        clearTimeout(cnCloseT);
+        cnCloseT = 0;
+        if (cnStack.classList.contains("fmCnOpen")) return;
+        cnRenderControls();
+        cnStack.classList.add("fmCnOpen");
+        document.addEventListener("pointermove", cnOnMove, { passive: true });
+        window.addEventListener("wheel", cnWheelCatch, { capture: true, passive: false });
+    }
+
+    function cnCloseSoon() {
+        if (!cnStack || cnCloseT || !cnStack.classList.contains("fmCnOpen")) return;
+        cnCloseT = setTimeout(() => {
+            cnCloseT = 0;
+            if (cnTyping()) return;   /* typing: :focus-within keeps it */
+            cnStack.classList.remove("fmCnOpen");
+            document.removeEventListener("pointermove", cnOnMove);
+            window.removeEventListener("wheel", cnWheelCatch, { capture: true });
+
+            /* Back to the newest few once you leave (scrolled-back history goes) */
+            const list = cnStack.querySelector(".fmCnList");
+            const cards = [...list.children].filter((c) => !c.classList.contains("fmCnOut"));
+            cards.slice(0, Math.max(0, cards.length - CN_MAX_CARDS)).forEach((c) => {
+                clearTimeout(c._t);
+                c.classList.add("fmCnOut");
+                setTimeout(() => c.remove(), 400);
+            });
+            list.scrollTop = list.scrollHeight;
+        }, 350);
+    }
+
+    function cnFadeLater(card) {
+        clearTimeout(card._t);
+
+        const fade = () => {
+            /* hovering anywhere on the cards keeps them all, so nothing jumps under the mouse */
+            if (card.matches(":hover") || cnStack.classList.contains("fmCnOpen") || cnTyping()) {
+                card._t = setTimeout(fade, 1500);
+                return;
+            }
+
+            card.classList.add("fmCnOut");
+            setTimeout(() => card.remove(), 400);
+        };
+
+        card._t = setTimeout(fade, liveCn.stay * 1000);
+    }
+
+    /* m: { key, kind, user, color, where, text, mention, own, channel } */
+    /* ---------- Message content: text, links, images, emoji ----------
+       Built fresh from FlockMod's message (never copied as HTML), so only
+       plain text, http(s) links and pictures come through. */
+    const CN_URL = /\bhttps?:\/\/[^\s<>"']+/gi;
+
+    function cnSafeUrl(url) {
+        try {
+            const u = new URL(url, location.href);
+            return /^https?:$/.test(u.protocol) ? u.href : "";
+        } catch (e) {
+            return "";
+        }
+    }
+
+    function cnLink(href, label) {
+        const a = document.createElement("a");
+        a.className = "fmCnLink";
+        a.href = href;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = label;
+        a.addEventListener("click", (event) => event.stopPropagation());
+        return a;
+    }
+
+    /* Plain text with any web addresses turned into links */
+    function cnTagify(text, out) {
+        let names = null;
+        let at = 0;
+        text.replace(/@([^\s@]{1,40})/g, (whole, raw, index) => {
+            names = names || new Set([...readUserRows().keys(), getMyName()].map((n) => n.toLowerCase()));
+            const name = raw.replace(/[.,!?:;)]+$/, "");
+            if (!names.has(name.toLowerCase())) return whole;
+            if (index > at) out.append(text.slice(at, index));
+            const tag = document.createElement("span");
+            tag.className = "fmCnTag";
+            tag.textContent = `@${name}`;
+            out.append(tag);
+            at = index + name.length + 1;
+            return whole;
+        });
+        if (at < text.length) out.append(text.slice(at));
+    }
+
+    function cnLinkify(text, out) {
+        let at = 0;
+        text.replace(CN_URL, (url, index) => {
+            const clean = url.replace(/[.,!?)]+$/, "");
+            const href = cnSafeUrl(clean);
+            if (index > at) cnTagify(text.slice(at, index), out);
+            out.append(href ? cnLink(href, clean) : clean);
+            at = index + clean.length;
+            return url;
+        });
+        if (at < text.length) cnTagify(text.slice(at), out);
+    }
+
+    /* Opens a picture in FlockMod's own Image Viewer. FlockMod opens it when
+       a ".chatDataUri" picture inside its chat window is clicked (it reads
+       the picture's src), and that works even while the chat is closed. So
+       a hidden copy is clicked there for a moment. Only your screen. */
+    function cnOpenInViewer(url) {
+        const chat = document.getElementById("chatMessages");
+        const host = chat && cnChatDialog()?.contains(chat) ? chat.parentElement : null;
+
+        if (!host || !url) {
+            return false;
+        }
+
+        const img = document.createElement("img");
+        img.className = "chatDataUri";
+        img.src = url;
+        img.alt = "";
+        img.style.display = "none";
+        host.appendChild(img);
+        img.click();
+        img.remove();
+        return true;
+    }
+
+    function cnRich(src, out) {
+        src.childNodes.forEach((node) => {
+            if (node.nodeType === 3) {
+                cnLinkify(node.textContent, out);
+                return;
+            }
+            if (node.nodeType !== 1 || node.matches(".msgTime, .msgUsername, .fmBubDeco, script, style")) {
+                return;
+            }
+            if (node.matches(".chatTag")) {
+                const tag = document.createElement("span");
+                tag.className = "fmCnTag" + (node.classList.contains("chatTagUnknown") ? " fmCnTagUnknown" : "");
+                tag.textContent = node.textContent;
+                out.append(tag);
+                return;
+            }
+            if (node.matches(".chatEmoji")) {
+                const span = document.createElement("span");
+                span.className = "fmCnChatEmoji";
+                span.textContent = node.textContent;
+                if (node.isConnected) cnEmojiFont(node);
+                out.append(span);
+                return;
+            }
+            if (node.tagName === "IMG" && node.classList.contains("flagIcon")) {
+                const flag = document.createElement("img");
+                flag.className = "fmCnFlag";
+                flag.src = node.currentSrc || node.src || "";
+                flag.alt = node.alt || "";
+                flag.title = node.alt || "";
+                if (/^https?:/i.test(flag.src)) out.append(flag);
+                return;
+            }
+            if (node.tagName === "I" && /\bfa-[a-z0-9-]+/.test(node.className)) {
+                const icon = document.createElement("i");
+                icon.className = node.className.split(/\s+/).filter((c) => /^(fas|far|fab|fa|fa-[a-z0-9-]+)$/.test(c)).join(" ");
+                out.append(icon);
+                return;
+            }
+            if (node.tagName === "BR") {
+                out.append(" ");
+            } else if (node.tagName === "IMG") {
+                const url = node.currentSrc || node.src || "";
+                const ok = /^(https?:|data:image\/|blob:)/i.test(url);
+                if (!ok) return;
+                const img = document.createElement("img");
+                const small = /emoji|emote|smiley/i.test(node.className + " " + url) ||
+                    (node.naturalHeight && node.naturalHeight <= 40);
+                img.className = small ? "fmCnEmoji" : "fmCnImg";
+                img.src = url;
+                img.alt = node.alt || "";
+                img.loading = "lazy";
+                img.draggable = false;
+                if (!small) {
+                    const href = cnSafeUrl(node.closest("a")?.href || url);
+                    img.title = "Open picture";
+                    img.addEventListener("click", (event) => {
+                        event.stopPropagation();
+                        if (!cnOpenInViewer(url) && href) {
+                            window.open(href, "_blank", "noopener");
+                        }
+                    });
+                }
+                out.append(img);
+            } else if (node.tagName === "A" && cnSafeUrl(node.getAttribute("href") || "")) {
+                if (node.querySelector("img")) {
+                    cnRich(node, out);   /* a linked picture: show the picture */
+                } else {
+                    out.append(cnLink(cnSafeUrl(node.getAttribute("href")), (node.textContent || "").trim() || node.href));
+                }
+            } else {
+                cnRich(node, out);
+            }
+        });
+        return out;
+    }
+
+    /* Text selected inside the cards (for copying) */
+    function cnHasSelection() {
+        const sel = window.getSelection();
+        return Boolean(cnStack && sel && !sel.isCollapsed && sel.toString().trim() &&
+            cnStack.contains(sel.anchorNode) && cnStack.contains(sel.focusNode));
+    }
+
+    /* ---------- Times ---------- */
+    function cnClock() {
+        const d = new Date();
+        return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    }
+
+    /* FlockMod only prints the time on the first line of a group; every
+       line carries it in data-timestamp */
+    function cnTimeOf(lines, block) {
+        const stamps = lines.map((l) => l?.querySelector?.(".msgTime")?.dataset.timestamp).filter(Boolean);
+        return stamps.pop() || block?.querySelector(".msgTime[data-timestamp]")?.dataset.timestamp || "";
+    }
+
+    /* ---------- Names: rank color + troll flag, like in chat ---------- */
+    const CN_RANK = /^rank[A-Z]{2}$/;
+
+    function cnRankOf(el) {
+        return el ? [...el.classList].find((c) => CN_RANK.test(c)) || "" : "";
+    }
+
+    /* Ranks we've seen this session, for when FlockMod hasn't drawn the
+       message yet (its tab in the background) or the person has left */
+    const cnRankCache = new Map();
+
+    /* Their rank from their latest chat message, else the user list, else
+       the last one we saw. The user list row is matched by its name
+       attribute, since the cell also holds their status ("away"...). */
+    function cnRankFor(user) {
+        if (!user) return "";
+        const blocks = [...document.querySelectorAll("#chatMessages .chatBlock[data-username]")]
+            .filter((b) => b.dataset.username === user);
+        let rank = cnRankOf(blocks.pop()?.querySelector(".msgUsername"));
+        if (!rank) {
+            const row = document.querySelector(`#sidebar tr[name="${CSS.escape(user)}"]`);
+            rank = cnRankOf(row?.querySelector('td[class*="rank"]'));
+        }
+        if (!rank) {
+            const cell = [...document.querySelectorAll('#sidebar td[class*="rank"]')].find((td) =>
+                (td.firstChild?.nodeType === 3 ? td.firstChild.textContent : td.textContent).trim() === user);
+            rank = cnRankOf(cell);
+        }
+        if (rank) {
+            cnRankCache.set(user, rank);
+            return rank;
+        }
+        return cnRankCache.get(user) || "";
+    }
+
+    function cnPaintName(card) {
+        const nameEl = card.querySelector(".fmCnName");
+        const user = card.dataset.user;
+        if (!nameEl || !user || card.dataset.plain) return;
+
+        const rank = card.dataset.rank || cnRankFor(user);
+        if (rank) {
+            card.dataset.rank = rank;
+            cnRankCache.set(user, rank);
+        }
+        [...nameEl.classList].filter((c) => CN_RANK.test(c)).forEach((c) => nameEl.classList.remove(c));
+        if (rank) nameEl.classList.add(rank);
+
+        let flagged = false;
+        try { flagged = trollFlagged.has(user); } catch (e) { /* not ready yet */ }
+        nameEl.classList.toggle("fmTrollName", flagged);
+    }
+
+    /* After someone is flagged/unflagged in the troll detector */
+    function cnRepaintNames() {
+        cnStack?.querySelectorAll(".fmCnCard").forEach(cnPaintName);
+    }
+
+    const CN_MAX_READING = 200;   /* cards kept while you're scrolled back */
+
+    function cnTopVisibleCard(list) {
+        const top = list.getBoundingClientRect().top;
+        return [...list.children].find((c) => c.getBoundingClientRect().bottom > top) || null;
+    }
+
+    function cnAddCard(m) {
+        if (!cnStack) {
+            return;
+        }
+
+        const view = cnCardView(m);
+        const otherView = !m.sample && view !== cnViewKey(cnTarget.kind, cnTarget.channel);
+
+        const entry = m.sample ? null : (m.replay ? m : cnRemember(view, m));
+
+        if (otherView && !m.own && !m.event) {
+            cnViewUnread.add(view);
+            cnKeepPending(view);
+            cnRenderControls();
+            setTimeout(cnRenderControls, 600);   /* a new PM's chat tab shows up a moment later */
+        }
+
+        if (cnStack.classList.contains("fmCnCollapsed")) {
+            if (!m.own && !m.event) {
+                cnUnread++;
+                cnUpdatePill();
+                if (!otherView && !m.sample) cnKeepPending(view);
+            }
+            return;
+        }
+
+        if (otherView) {
+            return;   /* not the chat you're looking at: just the dot */
+        }
+
+        const list = cnStack.querySelector(".fmCnList");
+
+        if (list._swapT && !m.replay && !m.sample) {
+            cnKeepPending(view);   /* mid-switch: it shows with the others in a moment */
+            return;
+        }
+        const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 16;
+        /* Scrolled back reading: whatever card is at the top stays exactly where it is */
+        const reading = !atBottom && !m.prepend && cnStack.classList.contains("fmCnOpen");
+        const anchor = reading ? cnTopVisibleCard(list) : null;
+        const anchorTop = anchor ? anchor.getBoundingClientRect().top : 0;
+        /* One card per message everywhere (PMs too), like FlockMod's chat */
+        let card = null;
+
+        {
+            card = document.createElement("div");
+            card.className = `fmCnCard fmCn-${m.kind}${m.own ? " fmCnOwn" : ""}${m.event ? " fmCnEvent" : ""}${m.noAnim ? " fmCnNoAnim" : ""}${m.earlier ? " fmCnEarlier" : ""}`;
+            card.dataset.key = m.key;
+            card.dataset.view = view;
+            if (entry) card.dataset.mid = String(entry.id);
+            if (m.sample) card.dataset.sample = "1";
+            card.innerHTML = '<div class="fmCnHead"><span class="fmCnName"></span><span class="fmCnWhere"></span><span class="fmCnCount" hidden></span><span class="fmCnTime"></span></div><div class="fmCnText"></div>';
+            card.querySelector(".fmCnName").textContent = m.user;
+            card.querySelector(".fmCnWhere").textContent = m.where;
+            card.dataset.user = m.user;
+
+            if (m.color) {
+                card.querySelector(".fmCnName").style.color = m.color;
+            }
+
+            /* Real people: their rank color (and red if flagged as a troll) */
+            if (m.own || m.color || !m.channel) {
+                card.dataset.plain = "1";
+            } else {
+                if (m.rank) card.dataset.rank = m.rank;
+                cnPaintName(card);
+                /* the chat copy lands a moment later (longer while FlockMod's tab is in the background) */
+                [400, 1500, 4000].forEach((ms) => setTimeout(() => {
+                    if (!card.dataset.rank && card.isConnected) cnPaintName(card);
+                }, ms));
+            }
+
+            card.addEventListener("click", (event) => {
+                if (m.own || m.event || !m.channel || cnHasSelection()) {
+                    return;   /* you were selecting text to copy */
+                }
+
+                const input = cnStack.querySelector(".fmCnInput");
+                cnSetTarget(m.channel);
+
+                /* Public/staff: start the reply with @name */
+                if (m.kind !== "pm" && event.target.closest(".fmCnName") && !input.value) {
+                    input.value = `@${m.user} `;
+                }
+
+                input.focus();
+            });
+        }
+
+        /* Each message gets its own line; the last few stay readable */
+        const box = card.querySelector(".fmCnText");
+        const line = document.createElement("div");
+        line.className = "fmCnLine";
+        if (m.srcs && m.srcs.length) {
+            m.srcs.forEach((src, i) => {
+                if (i) line.append(" ");
+                cnRich(src, line);
+            });
+        }
+        if (!line.textContent.trim() && !line.querySelector("img")) {
+            line.textContent = "";
+            cnLinkify(m.text, line);
+        }
+        box.appendChild(line);
+
+        while (box.children.length > CN_MAX_LINES) {
+            box.firstElementChild.remove();
+        }
+
+        /* Time: FlockMod's own timestamp for the message (hover a line in
+           a PM card to see each one's time) */
+        /* Mentions of you: that line (and the card) light up in your
+           Chat Highlight color, the same as in FlockMod's chat */
+        line.classList.toggle("fmCnHl", Boolean(m.mention));
+        card.classList.toggle("fmCnMention", Boolean(box.querySelector(".fmCnHl")));
+
+        /* Interface > Chat Bubbles: your card is the bubble, with the style's decoration */
+        if (m.own) {
+            try { decorateBubbleText(card, bubbleDecoSig()); } catch (err) { /* bubbles not ready yet */ }
+        }
+
+        const time = m.time || cnClock();
+        card.querySelector(".fmCnTime").textContent = time;
+        line.title = time;
+
+        /* Mod actions: highlight the action word and the mod's name */
+        if (m.event) {
+            cnMarkModEvent(line);
+        }
+
+        /* Events: one small gray line with the time in front */
+        if (m.event) {
+            const t = document.createElement("span");
+            t.className = "fmCnEvTime";
+            t.textContent = time;
+            line.prepend(t, " ");
+        }
+
+        if (m.prepend) {
+            list.insertBefore(card, list.firstChild);
+        } else {
+            list.appendChild(card);
+        }
+
+        /* Too many: drop the oldest. While you're hovering (maybe scrolled
+           back) the list can hold the whole history instead. */
+        /* While you're scrolled back, nothing is dropped from the top (that's
+           what you're reading); it catches up once you're back at the bottom
+           or move away from the cards */
+        const max = reading ? CN_MAX_READING : cnStack.classList.contains("fmCnOpen") ? CN_MAX_RECENT : CN_MAX_CARDS;
+        while (list.children.length > max) {
+            (m.prepend ? list.lastElementChild : list.firstElementChild).remove();
+        }
+
+        if (anchor && anchor.isConnected) {
+            list.scrollTop += anchor.getBoundingClientRect().top - anchorTop;
+        }
+
+        if (!m.prepend && (atBottom || !cnStack.classList.contains("fmCnOpen"))) {
+            list.scrollTop = list.scrollHeight;
+        }
+
+        cnFadeLater(card);
+    }
+
+    /* ---------- Mod actions in events ---------- */
+    /* "ioj has been muted by cntrct." -> "muted" stands out and "cntrct"
+       gets their rank color (from the user list, like the card names) */
+    const CN_MOD_WORD = /\b(un)?(muted|banned|silenced|kicked)\b/i;
+    const CN_MOD_BY = /\bby\s+([^\s]+?)([.!,]*)\s*$/i;
+
+    function cnMarkModEvent(line) {
+        if (!CN_MOD_WORD.test(line.textContent || "")) return;
+
+        const texts = [];
+        const walk = document.createTreeWalker(line, NodeFilter.SHOW_TEXT);
+        while (walk.nextNode()) {
+            if (!walk.currentNode.parentElement.closest("a, .fmCnTag")) texts.push(walk.currentNode);
+        }
+
+        texts.forEach((node) => {
+            const frag = document.createDocumentFragment();
+            let rest = node.textContent;
+            let changed = false;
+
+            /* the mod's name: "by <name>" at the end */
+            let tail = null;
+            const by = rest.match(CN_MOD_BY);
+            if (by) {
+                const nameAt = by.index + by[0].indexOf(by[1], 2);
+                tail = { name: by[1], after: rest.slice(nameAt + by[1].length) };
+                rest = rest.slice(0, nameAt);
+            }
+
+            /* the action words */
+            const re = new RegExp(CN_MOD_WORD.source, "gi");
+            let at = 0, hit;
+            while ((hit = re.exec(rest))) {
+                if (hit.index > at) frag.append(rest.slice(at, hit.index));
+                const word = document.createElement("span");
+                word.className = "fmCnModWord" + (hit[1] ? " fmCnModUndo" : "");
+                word.textContent = hit[0];
+                frag.append(word);
+                at = hit.index + hit[0].length;
+                changed = true;
+            }
+            if (at < rest.length) frag.append(rest.slice(at));
+
+            if (tail && changed) {
+                const name = document.createElement("span");
+                name.className = "fmCnModName";
+                name.textContent = tail.name;
+                cnPaintModName(name);
+                frag.append(name, tail.after);
+            } else if (tail) {
+                frag.append(tail.name, tail.after);
+            }
+
+            if (changed) node.replaceWith(frag);
+        });
+    }
+
+    function cnPaintModName(el, retry = true) {
+        const rank = cnRankFor(el.textContent);
+        [...el.classList].filter((c) => CN_RANK.test(c)).forEach((c) => el.classList.remove(c));
+        if (rank) {
+            el.classList.add(rank);
+        } else if (retry) {
+            setTimeout(() => { if (el.isConnected) cnPaintModName(el, false); }, 1500);
+        }
+    }
+
+    /* ---------- Reading new messages ---------- */
+
+    function cnReadLine(line) {
+        const text = line?.querySelector?.(".msgText") || line;
+
+        if (!text) {
+            return "";
+        }
+
+        const words = (text.textContent || "").replace(/\s+/g, " ").trim();
+        return words || (text.querySelector("img") ? "[image]" : "");
+    }
+
+    /* The same message can reach us twice (the chat box and the activity
+       bar). Remember what was shown in the last few seconds. */
+    const cnShown = new Map();
+
+    /* Your own messages: sent from the cards, or typed in FlockMod's own
+       chat window. Both go in that chat's history (so you see what you
+       said when you come back); FlockMod's copy of a card message is skipped. */
+    const cnSentByCards = new Map();
+
+    function cnSentKey(channel, text) {
+        return `${channel}|${String(text).replace(/\s+/g, " ").trim().toLowerCase()}`;
+    }
+
+    /* The person you talked to most recently comes first in the PM list */
+    function cnTouchPm(channel) {
+        if (!channel || !channel.startsWith("@")) return;
+        const i = cnRecentPm.indexOf(channel);
+        if (i > -1) cnRecentPm.splice(i, 1);
+        cnRecentPm.unshift(channel);
+    }
+
+    function cnHandleOwnBlock(block, lines) {
+        const channel = block.closest(".channelMessages")?.getAttribute("name") || "";
+        const text = lines.map(cnReadLine).filter(Boolean).join(" ");
+        if (!channel || !text) return;
+
+        const now = Date.now();
+        cnSentByCards.forEach((t, k) => { if (now - t > 8000) cnSentByCards.delete(k); });
+        const key = cnSentKey(channel, text);
+        if (cnSentByCards.has(key)) {
+            cnSentByCards.delete(key);   /* already on the cards */
+            return;
+        }
+
+        if (!liveCn.on || !customizationsEnabled) return;
+
+        const kind = cnKindOf(channel);
+        cnTouchPm(channel);
+        cnAddCard({
+            key: `you|${channel}`,
+            kind,
+            user: "You",
+            where: kind === "pm" ? `→ ${channel.slice(1)}` : `· ${cnLabel(channel)}`,
+            time: cnTimeOf(lines, block),
+            text,
+            srcs: lines.map((l) => l.querySelector?.(".msgText") || l),
+            own: true
+        });
+    }
+
+    function cnAlreadyShown(user, text) {
+        const now = Date.now();
+        cnShown.forEach((t, k) => { if (now - t > 5000) cnShown.delete(k); });
+        const key = `${user.toLowerCase()}|${text.replace(/\s+/g, " ").trim().toLowerCase()}`;
+        if (cnShown.has(key)) return true;
+        cnShown.set(key, now);
+        return false;
+    }
+
+    function cnHandleBlock(block, lines) {
+        if (block && (block.classList.contains("eventBlock") || block.classList.contains("gmBlock"))) {
+            cnHandleEvent(block, lines);
+            return;
+        }
+
+        if (block && block.classList.contains("messageBlock") && block.dataset.type === "MYMSG") {
+            cnHandleOwnBlock(block, lines);
+            return;
+        }
+
+        if (!block || !block.classList.contains("messageBlock")) {
+            return;
+        }
+
+        const channel = block.closest(".channelMessages")?.getAttribute("name") || "";
+        const text = lines.map(cnReadLine).filter(Boolean).join(" ");
+
+        if (!channel || !text) {
+            return;
+        }
+
+        const kind = cnKindOf(channel);
+
+        if (kind === "pm") {
+            const i = cnRecentPm.indexOf(channel);
+            if (i > -1) cnRecentPm.splice(i, 1);
+            cnRecentPm.unshift(channel);
+        }
+
+        if (!liveCn.on || !customizationsEnabled || (liveCn.closedOnly && cnChatIsOpen())) {
+            return;
+        }
+
+        const nameEl = block.querySelector(".msgUsername");
+        const user = block.dataset.username || nameEl?.textContent?.trim() || "?";
+
+        if (cnAlreadyShown(user, text)) {
+            return;
+        }
+
+        cnAddCard({
+            key: kind === "pm" ? channel : `${channel}|${user}`,
+            kind,
+            channel,
+            user,
+            color: "",
+            time: cnTimeOf(lines, block),
+            rank: cnRankOf(nameEl),
+            where: `· ${cnLabel(channel)}`,
+            text,
+            srcs: lines.map((l) => l.querySelector?.(".msgText") || l),
+            mention: isMention(text)
+        });
+
+        if (cnStack?.classList.contains("fmCnOpen")) {
+            cnRenderControls();
+        }
+    }
+
+    /* Events (joins, leaves with IP, mutes, kicks...) and global messages:
+       small gray lines in the Public cards. FlockMod also copies a user's
+       events into their PM, so only the public copy is used. No dots. */
+    function cnHandleEvent(block, lines) {
+        const channel = block.closest(".channelMessages")?.getAttribute("name") || "";
+        const text = lines.map(cnReadLine).filter(Boolean).join(" ");
+
+        if (cnKindOf(channel) !== "public" || !text) {
+            return;
+        }
+        if (!liveCn.on || !customizationsEnabled || (liveCn.closedOnly && cnChatIsOpen())) {
+            return;
+        }
+
+        cnAddCard({
+            key: `event|${text}`,
+            kind: "public",
+            event: true,
+            channel: "",
+            user: "",
+            color: "",
+            time: cnTimeOf(lines, block),
+            where: "",
+            text,
+            srcs: lines.map((l) => l.querySelector?.(".msgText") || l)
+        });
+    }
+
+    /* Every message line we've already looked at. Anything in the chat
+       that isn't in here is new. Seeded with what's there on attach, so
+       old history never pops up. */
+    let cnSeen = new WeakSet();
+    let cnScanTimer = 0;
+
+    function cnDebug(...args) {
+        if (localStorage.getItem("flockmodChatNotifDebug") === "1") {
+            console.log("[FlockTheme chat notif]", ...args);
+        }
+    }
+
+    function cnLinesIn(root) {
+        return root ? [...root.querySelectorAll(".chatBlock.messageBlock .msgLine, .chatBlock.eventBlock .msgLine, .chatBlock.gmBlock .msgLine")] : [];
+    }
+
+    function cnScan() {
+        cnScanTimer = 0;
+        const fresh = cnLinesIn(cnWatch.el).filter((line) => !cnSeen.has(line));
+
+        if (!fresh.length) {
+            return;
+        }
+
+        /* A channel being loaded or redrawn adds lots at once: that's history */
+        if (fresh.length > 6) {
+            fresh.forEach((line) => cnSeen.add(line));
+            cnDebug("skipped a batch of", fresh.length, "lines (history)");
+            return;
+        }
+
+        /* Group new lines by their message block */
+        const byBlock = new Map();
+
+        fresh.forEach((line) => {
+            if (!cnReadLine(line)) {
+                return;   /* still empty: FlockMod fills it in a moment */
+            }
+            cnSeen.add(line);
+            const block = line.closest(".chatBlock");
+            if (block) {
+                if (!byBlock.has(block)) byBlock.set(block, []);
+                byBlock.get(block).push(line);
+            }
+        });
+
+        byBlock.forEach((lines, block) => {
+            cnDebug("new message", block.dataset.type, block.dataset.username,
+                block.closest(".channelMessages")?.getAttribute("name"), cnReadLine(lines[0]));
+            cnHandleBlock(block, lines);
+        });
+    }
+
+    /* Switching rooms: FlockMod empties every chat channel and closes the
+       PMs. The cards, the dots and the remembered messages from the old
+       room go too, so nothing from there shows up in the new one. */
+    function cnChatHasMessages() {
+        return Boolean(cnWatch.el?.querySelector(".channelMessages .chatBlock"));
+    }
+
+    function cnRoomReset() {
+        cnDebug("room changed: clearing cards and history");
+        cnRecent.clear();
+        cnMissed.clear();
+        cnViewUnread.clear();
+        cnShown.clear();
+        cnRecentPm.length = 0;
+        cnSentByCards.clear();
+        cnRankCache.clear();
+        cnLastPm = "";
+        cnUnread = 0;
+        cnTarget = { kind: "public", channel: "#public" };
+        cnWatch.armedAt = Date.now() + 1500;   /* the new room's old messages aren't new */
+        cnBar.armedAt = Date.now() + 1500;
+
+        if (cnStack) {
+            cnStack.querySelectorAll(".fmCnList > .fmCnCard").forEach((card) => {
+                clearTimeout(card._t);
+                card.remove();
+            });
+            cnStack._view = "public";
+            cnUpdatePill();
+            cnRenderControls();
+        }
+    }
+
+    function cnHandleMutations() {
+        const has = cnChatHasMessages();
+        if (cnWatch.hadMessages && !has) {
+            cnRoomReset();
+        }
+        cnWatch.hadMessages = has;
+
+        if (Date.now() < cnWatch.armedAt) {
+            /* the chat was just (re)built: count all of it as already seen */
+            cnLinesIn(cnWatch.el).forEach((line) => cnSeen.add(line));
+            return;
+        }
+
+        if (!cnScanTimer) {
+            cnScanTimer = setTimeout(cnScan, 120);
+        }
+    }
+
+    /* From the 500ms loop: (re)attach when FlockMod makes or replaces the box */
+    function watchChatNotif() {
+        const el = document.getElementById("chatMessages");
+
+        if (el === cnWatch.el) {
+            return;
+        }
+
+        cnWatch.obs?.disconnect();
+        cnWatch.el = el;
+        cnWatch.obs = null;
+
+        if (!el) {
+            return;
+        }
+
+        cnSeen = new WeakSet();
+        cnLinesIn(el).forEach((line) => cnSeen.add(line));
+        cnWatch.hadMessages = cnChatHasMessages();
+        cnWatch.armedAt = Date.now() + 1500;
+        cnWatch.obs = new MutationObserver(cnHandleMutations);
+        cnWatch.obs.observe(el, { childList: true, subtree: true });
+        cnDebug("watching #chatMessages,", cnLinesIn(el).length, "old lines");
+    }
+
+    /* ---------- The activity bar (#headerTitle) ----------
+       With the chat closed, FlockMod doesn't always add messages to the
+       chat box, but it always flashes them in the activity bar at the top:
+       <div id="headerTitle"><div class="msgCategory msgCategoryPM">..</div>Name: text</div> */
+    const cnBar = { el: null, obs: null, last: "" };
+    const CN_BAR_KINDS = { PM: "pm", PUBLICROOM: "public", STAFFROOM: "staff" };
+
+    function cnReadBar() {
+        const bar = cnBar.el;
+        const catEl = bar?.querySelector(".msgCategory");
+
+        if (!catEl) {
+            return;
+        }
+
+        const catClass = [...catEl.classList].find((c) => c.startsWith("msgCategory") && c !== "msgCategory");
+
+        /* FlockMod has no label for your own messages here (it shows the raw
+           "notifications.categories.MYMSG"). Only a look: the text says "You". */
+        if (catClass === "msgCategoryMYMSG") {
+            const label = catEl.querySelector("[data-i18n]") || catEl;
+            if (/^notifications\./.test(label.textContent.trim())) {
+                label.textContent = "You";
+            }
+            return;
+        }
+        const kind = catClass ? CN_BAR_KINDS[catClass.slice("msgCategory".length)] : null;
+        const full = (bar.textContent || "").replace(/\s+/g, " ").trim();
+        const label = (catEl.textContent || "").replace(/\s+/g, " ").trim();
+        const rest = (label && full.startsWith(label) ? full.slice(label.length) : full).trim();
+
+        if (rest === cnBar.last) {
+            return;
+        }
+        cnBar.last = rest;
+
+        cnDebug("activity bar:", catClass, JSON.stringify(rest), bar.innerHTML.slice(0, 300));
+
+        if (!kind || !rest || Date.now() < cnBar.armedAt) {
+            return;   /* events, MOTD, GM, the room link, or the page just loaded */
+        }
+
+        /* FlockMod puts the message in .msgLine > .msgText (and the name in
+           .msgUsername when there is one). Older layouts: "Name: text". */
+        const tidy = (el) => (el?.textContent || "").replace(/\s+/g, " ").trim();
+        const nameEl = bar.querySelector(".msgUsername, [data-username]");
+        const textEl = bar.querySelector(".msgText");
+        let user = tidy(nameEl) || nameEl?.dataset?.username || "";
+        let text = textEl ? cnReadLine(textEl) : "";
+        let src = textEl ? textEl.cloneNode(true) : null;
+        const hasImg = Boolean(textEl?.querySelector("img"));
+
+        if (!user) {
+            /* "Name: message" — split the name off (the message may be just a picture) */
+            const m = (tidy(textEl) || rest).match(/^([^:\s][^:]{0,39}?)\s*:\s*([\s\S]*)$/);
+            if (m && (m[2].trim() || hasImg)) {
+                user = m[1].trim();
+                text = m[2].trim() || "[image]";
+                /* take "Name:" off the copy too */
+                const first = src && [...src.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+                if (first && first.textContent.includes(":")) {
+                    first.textContent = first.textContent.slice(first.textContent.indexOf(":") + 1).replace(/^\s+/, "");
+                } else {
+                    src = null;
+                }
+            } else if (!text) {
+                text = rest;
+                src = null;
+            }
+        }
+
+        user = user.replace(/^[@#]/, "").replace(/:$/, "");
+
+        /* "To Name:" / "From Name:" styles, just in case */
+        user = user.replace(/^(from|to)\s+/i, "");
+
+        if (!text || Date.now() - lastSentAt < 1500) {
+            return;   /* probably your own message */
+        }
+
+        const channel = kind === "pm" ? `@${user}` : (kind === "staff" ? "#staff" : "#public");
+
+        if (kind === "pm" && user) {
+            const i = cnRecentPm.indexOf(channel);
+            if (i > -1) cnRecentPm.splice(i, 1);
+            cnRecentPm.unshift(channel);
+        }
+
+        if (!liveCn.on || !customizationsEnabled || (liveCn.closedOnly && cnChatIsOpen())) {
+            return;
+        }
+
+        if (cnAlreadyShown(user || "?", text)) {
+            return;
+        }
+
+        cnAddCard({
+            key: kind === "pm" ? channel : `${channel}|${user}`,
+            kind,
+            channel,
+            user: user || "?",
+            color: "",
+            where: `· ${cnLabel(channel)}`,
+            text,
+            time: bar.querySelector(".msgTime")?.dataset.timestamp || "",
+            srcs: src ? [src] : [],
+            mention: isMention(text)
+        });
+
+        if (cnStack?.classList.contains("fmCnOpen")) {
+            cnRenderControls();
+        }
+    }
+
+    function watchChatBar() {
+        const el = document.getElementById("headerTitle");
+
+        if (el === cnBar.el) {
+            return;
+        }
+
+        cnBar.obs?.disconnect();
+        cnBar.el = el;
+        cnBar.obs = null;
+
+        if (!el) {
+            return;
+        }
+
+        cnBar.armedAt = Date.now() + 1500;
+        cnBar.last = "";
+        cnBar.obs = new MutationObserver(() => setTimeout(cnReadBar, 30));
+        cnBar.obs.observe(el, { childList: true, subtree: true, characterData: true, attributes: true });
+        cnDebug("watching the activity bar");
+    }
+
+    /* From the 500ms loop: side away from the sidebar, between the bars */
+    function cnPlace() {
+        if (!cnStack) {
+            return;
+        }
+
+        const host = cnHost();
+        if (cnStack.parentElement !== host) {
+            host.appendChild(cnStack);
+        }
+
+        const sample = Date.now() < (cnStack._sampleUntil || 0);
+        const hide = !sample && (!liveCn.on || !customizationsEnabled || (liveCn.closedOnly && cnChatIsOpen()));
+        cnStack.classList.toggle("fmCnHide", hide);
+
+        if (hide) {
+            return;
+        }
+
+        const sidebar = document.getElementById("sidebar");
+        const r = sidebar ? sidebar.getBoundingClientRect() : null;
+        const sidebarOnRight = !r || !r.width || (r.left + r.width / 2) > window.innerWidth / 2;
+        const topBar = document.querySelector(".topbarButtons")?.closest("nav");
+        const bottomBar = document.getElementById("bottombar");
+        const top = Math.round((topBar ? topBar.getBoundingClientRect().bottom : 40) + 10);
+        const bottom = Math.round((bottomBar ? window.innerHeight - bottomBar.getBoundingClientRect().top : 40) + 10);
+        const left = sidebarOnRight;
+
+        if (cnStack.classList.contains("fmCnLeft") !== left) {
+            cnStack.classList.toggle("fmCnLeft", left);
+            cnStack.classList.toggle("fmCnRight", !left);
+        }
+
+        if (cnStack._pos !== `${top}|${bottom}|${left}`) {
+            cnStack._pos = `${top}|${bottom}|${left}`;
+            cnStack.style.top = `${top}px`;
+            cnStack.style.bottom = `${bottom}px`;
+            cnStack.style.left = left ? "10px" : "auto";
+            cnStack.style.right = left ? "auto" : "10px";
+        }
+
+        /* "Follow my theme": FlockMod's own sidebar colors as the base */
+        if (sidebar && !cnStack._native) {
+            const cs = getComputedStyle(sidebar);
+            const bg = cs.backgroundColor;
+            cnStack._native = true;
+
+            if (bg && !/rgba\(0, 0, 0, 0\)|transparent/.test(bg)) {
+                cnStack.style.setProperty("--fmcn-native-bg", bg);
+            }
+
+            cnStack.style.setProperty("--fmcn-native-text", cs.color);
+        }
+    }
+
+    function buildChatNotifRowsHTML() {
+        const toggle = (id, def) => `
+    <label class="themeModToggle" style="margin-right: 10px;">
+        <input type="checkbox" id="${id}" data-default="${def}"${def ? " checked" : ""}>
+        <span class="themeModToggleTrack">
+            <span class="themeModToggleOption themeModToggleOff">OFF</span>
+            <span class="themeModToggleOption themeModToggleOn">ON</span>
+            <span class="themeModToggleThumb"></span>
+        </span>
+    </label>`;
+
+        return `
+<div class="themeModSubsectionTitle themeModSpacingSubsection">
+    Chat Notifications
+</div>
+
+<div class="themeModSetting themeModNoDivider">
+    <div class="themeModSettingText">
+        <div class="themeModSettingName">Chat notifications</div>
+        <div class="themeModSettingDescription">
+            New messages pop up beside the canvas. The tabs pick which chat you see; a dot means news in another. Hover to reply. Colors: Colors &gt; Chat Notifications.
+        </div>
+    </div>
+    ${toggle("themeModChatNotif", true)}
+</div>
+
+<div class="themeModSetting themeModNoDivider">
+    <div class="themeModSettingText">
+        <div class="themeModSettingName">Only while the chat is closed</div>
+        <div class="themeModSettingDescription">Hides them while FlockMod's chat window is open.</div>
+    </div>
+    ${toggle("themeModChatNotifClosedOnly", true)}
+</div>
+
+<div class="themeModSetting themeModNoDivider">
+    <div class="themeModSettingText">
+        <div class="themeModSettingName">Your cards on the right</div>
+        <div class="themeModSettingDescription">With Chat Bubbles on, your messages line up on the right.</div>
+    </div>
+    ${toggle("themeModChatNotifOwnRight", true)}
+</div>
+
+<div class="themeModSetting themeModNoDivider">
+    <div class="themeModSettingText">
+        <div class="themeModSettingName">Size</div>
+        <div class="themeModSettingDescription">Text and card size. Drag the pink edge of the cards to change their width.</div>
+    </div>
+    <div class="themeModRangeControl">
+        <input type="range" id="themeModChatNotifSize" class="themeModRange" min="70" max="150" step="5" value="${CN_DEFAULTS.size}" data-default="${CN_DEFAULTS.size}">
+        <span id="themeModChatNotifSizeValue" class="themeModRangeValue">${CN_DEFAULTS.size}%</span>
+    </div>
+</div>
+
+<div class="themeModSetting themeModNoDivider">
+    <div class="themeModSettingText">
+        <div class="themeModSettingName">Stay on screen</div>
+        <div class="themeModSettingDescription">Seconds before a card fades. Hovering keeps it.</div>
+    </div>
+    <div class="themeModRangeControl">
+        <input type="range" id="themeModChatNotifStay" class="themeModRange" min="3" max="30" step="1" value="${CN_DEFAULTS.stay}" data-default="${CN_DEFAULTS.stay}">
+        <span id="themeModChatNotifStayValue" class="themeModRangeValue">${CN_DEFAULTS.stay}s</span>
+    </div>
+</div>
+
+<div class="themeModSetting themeModNoDivider">
+    <div class="themeModSettingText">
+        <div class="themeModSettingName">Try it</div>
+        <div class="themeModSettingDescription">Shows a sample message.</div>
+    </div>
+    <button type="button" class="themeModButton themeModChatNotifTest">Show sample</button>
+</div>`;
+    }
+
+    function setupChatNotif(dialog) {
+        const on = dialog.querySelector("#themeModChatNotif");
+        const closedOnly = dialog.querySelector("#themeModChatNotifClosedOnly");
+        const ownRight = dialog.querySelector("#themeModChatNotifOwnRight");
+        const size = dialog.querySelector("#themeModChatNotifSize");
+        const stay = dialog.querySelector("#themeModChatNotifStay");
+
+        if (!on || !closedOnly || !ownRight || !size || !stay) {
+            return;
+        }
+
+        const labels = () => {
+            dialog.querySelector("#themeModChatNotifSizeValue").textContent = `${size.value}%`;
+            dialog.querySelector("#themeModChatNotifStayValue").textContent = `${stay.value}s`;
+        };
+        const fill = (st) => {
+            on.checked = st.on;
+            closedOnly.checked = st.closedOnly;
+            ownRight.checked = st.ownRight;
+            size.value = String(st.size);
+            stay.value = String(st.stay);
+            labels();
+        };
+        const read = () => ({ on: on.checked, closedOnly: closedOnly.checked, ownRight: ownRight.checked, size: Number(size.value), stay: Number(stay.value) });
+        const preview = () => {
+            labels();
+            applyChatNotif(read());
+        };
+
+        fill(readSavedChatNotif());
+        [on, closedOnly, ownRight].forEach((el) => el.addEventListener("change", preview));
+        [size, stay].forEach((el) => el.addEventListener("input", preview));
+
+        dialog.querySelector(".themeModChatNotifTest")?.addEventListener("click", () => {
+            if (!on.checked) {
+                on.checked = true;
+                preview();
+            }
+
+            buildCnStack();
+            cnStack._sampleUntil = Date.now() + 10000;   /* shows even if the chat is open */
+            cnStack.classList.remove("fmCnCollapsed");
+            localStorage.setItem(CN_LS.hidden, "false");
+            cnUpdatePill();
+            cnPlace();
+            cnAddCard({ key: "@sample", kind: "pm", user: "Sample", color: "#ffd27a", where: "· PM", text: "Hi! This is how a private message looks.", sample: true });
+            cnAddCard({ key: "#sample|Leaf", kind: "public", user: "Sample", color: "#7fc8ff", where: "· Public", text: "And this is a public one.", sample: true });
+            cnAddCard({ key: "you|sample", kind: "public", user: "You", where: "· Public", text: "And this is yours.", own: true, sample: true });
+        });
+
+        dialog.querySelector(".themeModApplyButton").addEventListener("click", () => {
+            const st = read();
+            localStorage.setItem(CN_LS.on, String(st.on));
+            localStorage.setItem(CN_LS.closedOnly, String(st.closedOnly));
+            localStorage.setItem(CN_LS.ownRight, String(st.ownRight));
+            localStorage.setItem(CN_LS.size, String(st.size));
+            localStorage.setItem(CN_LS.stay, String(st.stay));
+        });
+
+        dialog.querySelector(".themeModResetButton").addEventListener("click", () => {
+            Object.values(CN_LS).forEach((key) => {
+                if (key !== CN_LS.width && key !== CN_LS.hidden) localStorage.removeItem(key);
+            });
+            fill(readSavedChatNotif());
+            preview();
+        });
+
+        dialog.querySelector(".closeButton").addEventListener("click", applySavedChatNotif);
+    }
+
+
+    /* =========================================================
+       CLOCK + TIME ON FLOCKMOD + BREAK REMINDER (v1.6.3)
+       A small clock next to the flower in the bottom bar. Click it
+       for how long you've been on FlockMod. Time only counts while
+       the FlockMod tab is in front (and, with "Active time only",
+       while you've drawn/typed/clicked in the last 2 minutes).
+       One tick every 15 seconds; everything stays on this computer.
+       ========================================================= */
+    const CLOCK_LS = { on: "flockmodClockEnabled", h24: "flockmodClock24h", active: "flockmodClockActiveOnly", brk: "flockmodBreakEvery" };
+    const TIME_STATS_LS = "flockmodTimeStats";
+    const BREAK_CHOICES = [[0, "Off"], [30, "Every 30 minutes"], [45, "Every 45 minutes"], [60, "Every hour"], [90, "Every 1.5 hours"], [120, "Every 2 hours"]];
+    const TIME_TICK_S = 15;
+    let liveClock = { on: true, h24: false, active: false, brk: 0 };
+    let sessionSecs = 0;
+    let breakSecs = 0;
+    let breakSnoozeUntil = 0;
+    let lastActivityAt = Date.now();
+    let hiddenSince = 0;
+
+    function readSavedClock() {
+        const brk = Number(localStorage.getItem(CLOCK_LS.brk));
+        return {
+            on: localStorage.getItem(CLOCK_LS.on) !== "false",
+            h24: localStorage.getItem(CLOCK_LS.h24) === "true",
+            active: localStorage.getItem(CLOCK_LS.active) === "true",
+            brk: BREAK_CHOICES.some(([v]) => v === brk) ? brk : 0
+        };
+    }
+
+    function applyClock(st) {
+        liveClock = st;
+        document.documentElement.classList.toggle("fmClockOn", st.on);
+        updateClockText();
+    }
+
+    function applySavedClock() {
+        applyClock(readSavedClock());
+    }
+
+    function clockText() {
+        const d = new Date();
+        let h = d.getHours();
+        const m = String(d.getMinutes()).padStart(2, "0");
+
+        if (liveClock.h24) {
+            return `${String(h).padStart(2, "0")}:${m}`;
+        }
+
+        const ampm = h >= 12 ? "PM" : "AM";
+        h = h % 12 || 12;
+        return `${h}:${m} ${ampm}`;
+    }
+
+    function updateClockText() {
+        const el = document.querySelector(".fmClockButton .fmClockTime");
+
+        if (el) {
+            const t = clockText();
+            if (el.textContent !== t) el.textContent = t;
+        }
+    }
+
+    function addClockButton() {
+        const bottomBar = document.querySelector("#bottombar > nav > div > ul:nth-child(3)");
+
+        if (!bottomBar || bottomBar.querySelector(".fmClockButton")) {
+            return;
+        }
+
+        const item = document.createElement("li");
+        item.className = "nav-item fmClockItem";
+        const button = document.createElement("a");
+        button.href = "#";
+        button.className = "nav-link fmClockButton";
+        button.title = "Time on FlockMod";
+        button.innerHTML = '<span class="fmClockTime"></span>';
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();   /* keep FlockMod's own bottom bar handlers out of it */
+            toggleTimeCard(button);
+        });
+        item.appendChild(button);
+        /* v1.6.3: on the left of the bottom bar buttons, after FlockMod's
+           divider line (so no line sits between the clock and the buttons) */
+        const firstButton = [...bottomBar.children].find((li) =>
+            !li.matches(".nav-separator") && !li.querySelector(".nav-separator"));
+        bottomBar.insertBefore(item, firstButton || null);
+        updateClockText();
+    }
+
+    /* ---- stats ---- */
+    function dayKey(d = new Date()) {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+
+    function readTimeStats() {
+        try {
+            const s = JSON.parse(localStorage.getItem(TIME_STATS_LS) || "{}");
+            return { days: s.days && typeof s.days === "object" ? s.days : {}, total: Number(s.total) || 0 };
+        } catch (error) {
+            return { days: {}, total: 0 };
+        }
+    }
+
+    function addTrackedTime(secs) {
+        const s = readTimeStats();
+        const key = dayKey();
+        s.days[key] = (Number(s.days[key]) || 0) + secs;
+        s.total += secs;
+
+        /* keep two weeks of days */
+        const keys = Object.keys(s.days).sort();
+        keys.slice(0, Math.max(0, keys.length - 14)).forEach((k) => delete s.days[k]);
+
+        try {
+            localStorage.setItem(TIME_STATS_LS, JSON.stringify(s));
+        } catch (error) { /* storage full: skip */ }
+    }
+
+    function fmtDuration(secs) {
+        const m = Math.floor(secs / 60);
+        if (m < 1) return "under a minute";
+        const h = Math.floor(m / 60);
+        return h ? `${h}h ${String(m % 60).padStart(2, "0")}m` : `${m}m`;
+    }
+
+    function timeSummary() {
+        const s = readTimeStats();
+        const today = Number(s.days[dayKey()]) || 0;
+        let week = 0;
+
+        for (let i = 0; i < 7; i++) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            week += Number(s.days[dayKey(d)]) || 0;
+        }
+
+        return { session: sessionSecs, today, week, total: s.total };
+    }
+
+    function setupTimeTracking() {
+        ["pointerdown", "keydown", "wheel"].forEach((type) => {
+            window.addEventListener(type, () => { lastActivityAt = Date.now(); }, { capture: true, passive: true });
+        });
+
+        document.addEventListener("visibilitychange", () => {
+            hiddenSince = document.hidden ? Date.now() : 0;
+        });
+
+        setInterval(() => {
+            updateClockText();
+            const now = Date.now();
+
+            /* away 5+ minutes (tab hidden or no activity) = you took a break */
+            if ((hiddenSince && now - hiddenSince > 5 * 60000) || now - lastActivityAt > 5 * 60000) {
+                breakSecs = 0;
+            }
+
+            if (document.hidden || !customizationsEnabled) {
+                return;
+            }
+
+            if (liveClock.active && now - lastActivityAt > 2 * 60000) {
+                return;
+            }
+
+            sessionSecs += TIME_TICK_S;
+            breakSecs += TIME_TICK_S;
+            addTrackedTime(TIME_TICK_S);
+            refreshTimeCard();
+
+            if (liveClock.brk && breakSecs >= liveClock.brk * 60 && now >= breakSnoozeUntil) {
+                showBreakReminder();
+            }
+        }, TIME_TICK_S * 1000);
+    }
+
+    /* ---- the little card above the clock ---- */
+    let timeCardToggledAt = 0;
+
+    function toggleTimeCard(button) {
+        /* one toggle per click, even if the click arrives twice */
+        if (Date.now() - timeCardToggledAt < 300) {
+            return;
+        }
+        timeCardToggledAt = Date.now();
+
+        const old = document.querySelector(".fmTimeCard");
+
+        if (old) {
+            old.remove();
+            return;
+        }
+
+        const card = document.createElement("div");
+        card.className = "fmTimeCard";
+        card.setAttribute("role", "dialog");
+        card.setAttribute("aria-label", "Time on FlockMod");
+        document.documentElement.appendChild(card);   /* outside FlockMod's page, so nothing there can hide it */
+        refreshTimeCard();
+
+        const r = button.getBoundingClientRect();
+        card.style.left = `${Math.max(8, Math.min(window.innerWidth - card.offsetWidth - 8, r.left + r.width / 2 - card.offsetWidth / 2))}px`;
+        card.style.top = `${Math.max(8, r.top - card.offsetHeight - 8)}px`;
+
+        const outside = (event) => {
+            if (!card.contains(event.target) && !button.contains(event.target)) {
+                card.remove();
+                window.removeEventListener("pointerdown", outside, true);
+            }
+        };
+        setTimeout(() => window.addEventListener("pointerdown", outside, true), 0);
+    }
+
+    function refreshTimeCard() {
+        const card = document.querySelector(".fmTimeCard");
+
+        if (!card) {
+            return;
+        }
+
+        const t = timeSummary();
+        const brk = BREAK_CHOICES.find(([v]) => v === liveClock.brk);
+        card.innerHTML =
+            '<div class="fmTimeTitle"><span class="fmTourFlower" aria-hidden="true"></span>Time on FlockMod</div>' +
+            `<div class="fmTimeRow"><span>This session</span><b>${fmtDuration(t.session)}</b></div>` +
+            `<div class="fmTimeRow"><span>Today</span><b>${fmtDuration(t.today)}</b></div>` +
+            `<div class="fmTimeRow"><span>Last 7 days</span><b>${fmtDuration(t.week)}</b></div>` +
+            `<div class="fmTimeRow"><span>All time</span><b>${fmtDuration(t.total)}</b></div>` +
+            `<div class="fmTimeNote">${liveClock.active ? "Counting active time only." : "Counting while FlockMod is open in front."} Break reminder: ${brk ? brk[1].toLowerCase() : "off"}.</div>`;
+    }
+
+    /* ---- break reminder ---- */
+    function showBreakReminder() {
+        if (document.querySelector(".fmBreakToast")) {
+            return;
+        }
+
+        const mins = Math.round(breakSecs / 60);
+        const toast = document.createElement("div");
+        toast.className = "fmBreakToast";
+        toast.setAttribute("role", "status");
+        toast.dataset.fm = "break";
+        toast.innerHTML =
+            '<span class="fmTourFlower" aria-hidden="true"></span>' +
+            `<div class="fmBreakText"><b>Time for a little break?</b><br>You've been drawing for ${fmtDuration(mins * 60)}. Stretch, sip some water and rest your eyes.</div>` +
+            '<div class="fmBreakButtons"><button type="button" data-break="ok">Thanks!</button><button type="button" data-break="snooze">In 10 min</button></div>';
+        document.documentElement.appendChild(toast);
+
+        toast.addEventListener("click", (event) => {
+            const b = event.target.closest("[data-break]");
+            if (!b) return;
+            if (b.dataset.break === "ok") breakSecs = 0;
+            else breakSnoozeUntil = Date.now() + 10 * 60000;
+            toast.remove();
+        });
+    }
+
+    /* ---- settings (Interface > Clock & Time) ---- */
+    function buildClockRowsHTML() {
+        const toggle = (id, def) => `
+            <label class="themeModToggle">
+                <input type="checkbox" id="${id}" data-default="${def}"${def ? " checked" : ""}>
+                <span class="themeModToggleTrack">
+                    <span class="themeModToggleOption themeModToggleOff">OFF</span>
+                    <span class="themeModToggleOption themeModToggleOn">ON</span>
+                    <span class="themeModToggleThumb"></span>
+                </span>
+            </label>`;
+        const row = (name, desc, control) => `
+<div class="themeModSetting themeModNoDivider">
+    <div class="themeModSettingText">
+        <div class="themeModSettingName">${name}</div>
+        <div class="themeModSettingDescription">${desc}</div>
+    </div>
+    ${control}
+</div>`;
+
+        return `
+<div class="themeModSubsectionTitle themeModSpacingSubsection">
+    Clock &amp; Time
+</div>
+${row("Clock", "A small clock next to the flower. Click it to see your time on FlockMod.", toggle("themeModClockOn", true))}
+${row("24-hour time", "Shows 15:30 instead of 3:30 PM.", toggle("themeModClock24h", false))}
+${row("Active time only", "Only counts time while you're drawing, typing or clicking.", toggle("themeModClockActive", false))}
+${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
+    `<select id="themeModBreakEvery" class="themeModSelect" data-default="0">${BREAK_CHOICES.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}</select>`)}`;
+    }
+
+    function setupClockPanel(dialog) {
+        const on = dialog.querySelector("#themeModClockOn");
+        const h24 = dialog.querySelector("#themeModClock24h");
+        const active = dialog.querySelector("#themeModClockActive");
+        const brk = dialog.querySelector("#themeModBreakEvery");
+
+        if (!on || !h24 || !active || !brk) {
+            return;
+        }
+
+        const fill = (st) => {
+            on.checked = st.on;
+            h24.checked = st.h24;
+            active.checked = st.active;
+            brk.value = String(st.brk);
+        };
+        const read = () => ({ on: on.checked, h24: h24.checked, active: active.checked, brk: Number(brk.value) });
+        const preview = () => applyClock(read());
+
+        fill(readSavedClock());
+        [on, h24, active, brk].forEach((el) => el.addEventListener("change", preview));
+
+        const save = (st) => {
+            localStorage.setItem(CLOCK_LS.on, String(st.on));
+            localStorage.setItem(CLOCK_LS.h24, String(st.h24));
+            localStorage.setItem(CLOCK_LS.active, String(st.active));
+            localStorage.setItem(CLOCK_LS.brk, String(st.brk));
+        };
+
+        dialog.querySelector(".themeModApplyButton").addEventListener("click", () => save(read()));
+        dialog.querySelector(".themeModResetButton").addEventListener("click", () => {
+            save({ on: true, h24: false, active: false, brk: 0 });
+            fill(readSavedClock());
+            preview();
+        });
+        dialog.querySelector(".closeButton").addEventListener("click", applySavedClock);
+    }
+
     const thumbRoomChecked = new WeakSet();
 
     function makeThumbRoom() {
@@ -2613,8 +5435,25 @@ function buildSimpleColorRowsHTML() {
         osc.stop(start + dur + 0.05);
     }
 
+    /* a tone that slides from f0 to f1 */
+    function playSweep(ctx, dest, start, f0, f1, dur, type, peak) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(f0, start);
+        osc.frequency.exponentialRampToValueAtTime(f1, start + dur * 0.8);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(peak, start + 0.006);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+        osc.connect(gain);
+        gain.connect(dest);
+        osc.start(start);
+        osc.stop(start + dur + 0.05);
+    }
+
     const BUILTIN_SOUNDS = {
         petal: {
+            group: "Cute",
             label: "Petal (sakura)",
             play(ctx, dest, t) {
                 [1046.5, 1318.5, 1568, 2093].forEach((f, i) => {
@@ -2623,6 +5462,7 @@ function buildSimpleColorRowsHTML() {
             }
         },
         chime: {
+            group: "Calm",
             label: "Soft chime",
             play(ctx, dest, t) {
                 playTone(ctx, dest, t, 1318.5, 0.6, "sine", 0.45);
@@ -2630,6 +5470,7 @@ function buildSimpleColorRowsHTML() {
             }
         },
         bell: {
+            group: "Calm",
             label: "Bell",
             play(ctx, dest, t) {
                 [[880, 0.4], [880 * 2.76, 0.14], [880 * 5.4, 0.06]].forEach(([f, p]) => {
@@ -2638,6 +5479,7 @@ function buildSimpleColorRowsHTML() {
             }
         },
         pop: {
+            group: "Cute",
             label: "Bubble pop",
             play(ctx, dest, t) {
                 const osc = ctx.createOscillator();
@@ -2655,11 +5497,146 @@ function buildSimpleColorRowsHTML() {
             }
         },
         sparkle: {
+            group: "Cute",
             label: "Sparkle",
             play(ctx, dest, t) {
                 [2093, 2637, 3136, 4186].forEach((f, i) => {
                     playTone(ctx, dest, t + i * 0.05, f, 0.22, "triangle", 0.16, 0.004);
                 });
+            }
+        },
+
+        /* ---- v1.6.3: more built-in sounds (all made in code, no files) ---- */
+        musicbox: {
+            group: "Cute",
+            label: "Music box",
+            play(ctx, dest, t) {
+                [1568, 1318.5, 1046.5, 1318.5, 1568, 2093].forEach((f, i) => {
+                    playTone(ctx, dest, t + i * 0.12, f, 0.8, "sine", 0.22, 0.004);
+                    playTone(ctx, dest, t + i * 0.12, f * 2, 0.35, "sine", 0.04, 0.004);
+                });
+            }
+        },
+        kalimba: {
+            group: "Cute",
+            label: "Kalimba",
+            play(ctx, dest, t) {
+                [784, 988, 1175].forEach((f, i) => {
+                    playTone(ctx, dest, t + i * 0.1, f, 0.5, "sine", 0.34, 0.003);
+                    playTone(ctx, dest, t + i * 0.1, f * 3.9, 0.12, "sine", 0.05, 0.002);
+                });
+            }
+        },
+        twinkle: {
+            group: "Cute",
+            label: "Twinkle",
+            play(ctx, dest, t) {
+                [2637, 3136, 3951].forEach((f, i) => {
+                    playTone(ctx, dest, t + i * 0.07, f, 0.35, "triangle", 0.14, 0.004);
+                });
+            }
+        },
+        meow: {
+            group: "Cute",
+            label: "Kitty meow",
+            play(ctx, dest, t) {
+                const osc = ctx.createOscillator();
+                const filter = ctx.createBiquadFilter();
+                const gain = ctx.createGain();
+                osc.type = "sawtooth";
+                osc.frequency.setValueAtTime(620, t);
+                osc.frequency.linearRampToValueAtTime(980, t + 0.12);
+                osc.frequency.linearRampToValueAtTime(560, t + 0.42);
+                filter.type = "bandpass";
+                filter.Q.value = 4;
+                filter.frequency.setValueAtTime(900, t);
+                filter.frequency.linearRampToValueAtTime(1800, t + 0.15);
+                filter.frequency.linearRampToValueAtTime(800, t + 0.42);
+                gain.gain.setValueAtTime(0.0001, t);
+                gain.gain.exponentialRampToValueAtTime(0.5, t + 0.04);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.46);
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(dest);
+                osc.start(t);
+                osc.stop(t + 0.5);
+            }
+        },
+        waterdrop: {
+            group: "Calm",
+            label: "Water drop",
+            play(ctx, dest, t) {
+                playSweep(ctx, dest, t, 600, 1400, 0.16, "sine", 0.45);
+                playSweep(ctx, dest, t + 0.13, 800, 1800, 0.12, "sine", 0.18);
+            }
+        },
+        windchimes: {
+            group: "Calm",
+            label: "Wind chimes",
+            play(ctx, dest, t) {
+                [[2349, 0], [3136, 0.09], [2794, 0.21], [3520, 0.3], [4186, 0.42]].forEach(([f, d]) => {
+                    playTone(ctx, dest, t + d, f, 1.2, "sine", 0.12, 0.003);
+                });
+            }
+        },
+        harp: {
+            group: "Calm",
+            label: "Harp",
+            play(ctx, dest, t) {
+                [523.3, 659.3, 784, 1046.5, 1318.5, 1568].forEach((f, i) => {
+                    playTone(ctx, dest, t + i * 0.045, f, 0.9, "triangle", 0.16, 0.004);
+                });
+            }
+        },
+        coin: {
+            group: "Retro",
+            label: "Coin",
+            play(ctx, dest, t) {
+                playTone(ctx, dest, t, 988, 0.07, "square", 0.1, 0.002);
+                playTone(ctx, dest, t + 0.07, 1318.5, 0.35, "square", 0.1, 0.002);
+            }
+        },
+        blip: {
+            group: "Retro",
+            label: "8-bit blip",
+            play(ctx, dest, t) {
+                playSweep(ctx, dest, t, 900, 1500, 0.08, "square", 0.09);
+            }
+        },
+        levelup: {
+            group: "Retro",
+            label: "Level up",
+            play(ctx, dest, t) {
+                [523.3, 659.3, 784, 1046.5].forEach((f, i) => {
+                    playTone(ctx, dest, t + i * 0.07, f, 0.1, "square", 0.08, 0.002);
+                });
+                playTone(ctx, dest, t + 0.28, 1318.5, 0.32, "square", 0.08, 0.002);
+            }
+        },
+        knock: {
+            group: "Alerts",
+            label: "Soft knock",
+            play(ctx, dest, t) {
+                [0, 0.15].forEach((d) => {
+                    playSweep(ctx, dest, t + d, 190, 90, 0.11, "sine", 0.7);
+                    playSweep(ctx, dest, t + d, 420, 200, 0.05, "triangle", 0.12);
+                });
+            }
+        },
+        lowping: {
+            group: "Alerts",
+            label: "Low ping",
+            play(ctx, dest, t) {
+                playTone(ctx, dest, t, 440, 0.9, "sine", 0.4, 0.004);
+                playTone(ctx, dest, t, 880, 0.3, "sine", 0.08, 0.004);
+            }
+        },
+        doorbell: {
+            group: "Alerts",
+            label: "Doorbell",
+            play(ctx, dest, t) {
+                playTone(ctx, dest, t, 659.3, 0.7, "sine", 0.35, 0.004);
+                playTone(ctx, dest, t + 0.32, 523.3, 0.9, "sine", 0.35, 0.004);
             }
         }
     };
@@ -2936,6 +5913,9 @@ function buildSimpleColorRowsHTML() {
 
         lastSoundAt[key] = now;
         lastAnySoundAt = now;
+        if (localStorage.getItem("flockmodChatNotifDebug") === "1") {
+            console.log("[FlockTheme sound]", key, ev.sound);
+        }
 
         playSoundValue(ev.sound, (st.volume / 100) * (ev.volume / 100));
     }
@@ -2985,46 +5965,74 @@ function buildSimpleColorRowsHTML() {
             }));
         }
 
-        if (!liveSoundSettings || !liveSoundSettings.enabled || Date.now() < watch.armedAt) {
+        if (Date.now() < watch.armedAt) {
+            chatSoundLines(watch.el).forEach((line) => chatSoundSeen.add(line));
+            return;   /* the chat was just (re)built: that's history */
+        }
+
+        if (!chatSoundTimer) {
+            chatSoundTimer = setTimeout(() => chatSoundScan(watch), 120);
+        }
+    }
+
+    /* v1.6.3: every message line already heard. Anything in the chat that
+       isn't in here is new, even when FlockMod trims old messages at the
+       same moment (which the old check skipped). Works with the chat
+       closed too, so the chat notification cards and sounds agree. */
+    let chatSoundSeen = new WeakSet();
+    let chatSoundTimer = 0;
+
+    function chatSoundLines(root) {
+        return root ? [...root.querySelectorAll(".chatBlock .msgLine, .chatBlock:not(:has(.msgLine))")] : [];
+    }
+
+    function chatSoundScan(watch) {
+        chatSoundTimer = 0;
+        const fresh = chatSoundLines(watch.el).filter((line) => !chatSoundSeen.has(line));
+
+        if (fresh.length > 6) {
+            fresh.forEach((line) => chatSoundSeen.add(line));   /* history loading */
             return;
         }
 
-        records.forEach((record) => {
-            newElementsIn(record).forEach((node) => {
-                const block = node.matches(".chatBlock")
-                    ? node
-                    : (node.matches(".msgLine") ? node.closest(".chatBlock") : null);
+        /* One sound per batch: the most important one */
+        const rank = { Private: 4, Mention: 3, Chat: 2, JoinLeave: 1 };
+        let best = null;
 
-                if (!block || block.classList.contains("motdBlock")) {
-                    return;
-                }
+        fresh.forEach((line) => {
+            const textEl = line.matches(".msgText") ? line : (line.querySelector(".msgText") || line);
+            const text = textEl.textContent || "";
 
-                const textEls = node.matches(".msgText") ? [node] : [...node.querySelectorAll(".msgText")];
-                const text = textEls.map((el) => el.textContent).join(" ");
+            if (!text.trim() && !line.querySelector("img")) {
+                return;   /* still empty: FlockMod fills it in a moment */
+            }
+            chatSoundSeen.add(line);
 
-                if (block.classList.contains("eventBlock")) {
-                    if (/(entered|left|joined)/i.test(text)) {
-                        fireSoundEvent("JoinLeave");
-                    }
-                    return;
-                }
+            const block = line.closest(".chatBlock");
+            let key = null;
 
-                if (Date.now() - lastSentAt < 2000) {
-                    return; /* probably your own message */
-                }
+            if (!block || block.classList.contains("motdBlock")) {
+                return;
+            }
 
-                const channel = block.closest(".channelMessages");
-                const channelName = channel ? channel.getAttribute("name") || "" : "";
+            if (block.classList.contains("eventBlock")) {
+                key = /(entered|left|joined)/i.test(text) ? "JoinLeave" : null;
+            } else if (block.dataset.type === "MYMSG" || Date.now() - lastSentAt < 2000) {
+                return;   /* your own message */
+            } else {
+                const channelName = block.closest(".channelMessages")?.getAttribute("name") || "";
+                key = channelName && !channelName.startsWith("#") ? "Private"
+                    : (isMention(text) ? "Mention" : "Chat");
+            }
 
-                if (channelName && !channelName.startsWith("#")) {
-                    fireSoundEvent("Private");
-                } else if (isMention(text)) {
-                    fireSoundEvent("Mention");
-                } else {
-                    fireSoundEvent("Chat");
-                }
-            });
+            if (key && (!best || rank[key] > rank[best])) {
+                best = key;
+            }
         });
+
+        if (best && liveSoundSettings && liveSoundSettings.enabled) {
+            fireSoundEvent(best);
+        }
     }
 
     function handleMessengerMutations(records, watch) {
@@ -3106,6 +6114,10 @@ function buildSimpleColorRowsHTML() {
             watch.observer = null;
 
             if (el) {
+                if (watch.id === "chatMessages") {
+                    chatSoundSeen = new WeakSet();
+                    chatSoundLines(el).forEach((line) => chatSoundSeen.add(line));
+                }
                 /* Give FlockMod a moment to fill in old messages */
                 watch.armedAt = Date.now() + 3000;
                 watch.observer = new MutationObserver((records) => watch.handler(records, watch));
@@ -3117,14 +6129,19 @@ function buildSimpleColorRowsHTML() {
     /* ---------- Sounds panel ---------- */
 
     function soundOptionsHTML() {
-        const builtins = Object.entries(BUILTIN_SOUNDS)
-            .map(([key, s]) => `<option value="builtin:${key}">${s.label}</option>`)
-            .join("");
+        /* v1.6.3: grouped, so the longer list is easy to scan */
+        const builtins = ["Cute", "Calm", "Retro", "Alerts"].map((g) => {
+            const opts = Object.entries(BUILTIN_SOUNDS)
+                .filter(([, s]) => (s.group || "Cute") === g)
+                .map(([key, s]) => `<option value="builtin:${key}">${s.label}</option>`)
+                .join("");
+            return opts ? `<optgroup label="${g}">${opts}</optgroup>` : "";
+        }).join("");
         const uploads = getSoundLibrary()
             .map((s) => `<option value="upload:${escapeHTML(s.id)}">${escapeHTML(s.name)}</option>`)
             .join("");
 
-        return `<optgroup label="Built-in">${builtins}</optgroup>` +
+        return builtins +
             (uploads ? `<optgroup label="Your sounds">${uploads}</optgroup>` : "");
     }
 
@@ -3343,12 +6360,17 @@ function buildSimpleColorRowsHTML() {
         [master, quiet].forEach((el) => el.addEventListener("change", preview));
         volume.addEventListener("input", preview);
         keywords.addEventListener("input", preview);
+        keywords.addEventListener("input", () => chatHighlightRescanSoon());
 
         rows.forEach(({ ev, toggle, select, vol, play }) => {
             toggle.addEventListener("change", preview);
-            select.addEventListener("change", () => {
+            select.addEventListener("change", (event) => {
                 preview();
-                playSoundValue(select.value, (Number(volume.value) / 100) * (Number(vol.value) / 100));
+
+                /* only when you pick one yourself (not on a section reset) */
+                if (event.isTrusted) {
+                    playSoundValue(select.value, (Number(volume.value) / 100) * (Number(vol.value) / 100));
+                }
             });
             vol.addEventListener("input", preview);
             play.addEventListener("click", () => {
@@ -3414,10 +6436,16 @@ function buildSimpleColorRowsHTML() {
                 return;
             }
 
-            try {
-                await soundDB("readwrite", (store) => store.delete(id));
-            } catch (error) {
-                /* Already gone: still remove it from the list */
+            /* v1.6.3: a saved theme still uses it: keep the file (loading that theme puts it back in your list) */
+            let keptForTheme = false;
+            try { keptForTheme = themeSoundIdsInUse().has(id); } catch (error) { /* themes not ready */ }
+
+            if (!keptForTheme) {
+                try {
+                    await soundDB("readwrite", (store) => store.delete(id));
+                } catch (error) {
+                    /* Already gone: still remove it from the list */
+                }
             }
 
             soundBufferCache.delete(id);
@@ -3425,7 +6453,7 @@ function buildSimpleColorRowsHTML() {
             renderList();
             refreshSelects();   /* events using it fall back to their default sound */
             preview();
-            showStatus("Sound removed.");
+            showStatus(keptForTheme ? "Sound removed. A saved theme still uses it, so it comes back when you load that theme." : "Sound removed.");
         });
 
         return {
@@ -6990,8 +10018,12 @@ function buildSimpleColorRowsHTML() {
     }
 
     function decorateBubbleBlock(block, sig) {
-        const text = block.querySelector(".msgLine .msgText");
+        decorateBubbleText(block.querySelector(".msgLine .msgText"), sig);
+    }
 
+    /* Adds (or swaps / removes) the decoration on one bubble: a chat
+       .msgText or one of your Chat Notification cards */
+    function decorateBubbleText(text, sig) {
         if (!text) {
             return;
         }
@@ -7021,6 +10053,7 @@ function buildSimpleColorRowsHTML() {
     }
 
     const MY_BLOCKS = '.chatBlock.messageBlock[data-type="MYMSG"]';
+    const CN_OWN_BUBBLE = ".fmCnStack .fmCnCard.fmCnOwn";
 
     function redecorateAllBubbles() {
         const sig = bubbleDecoSig();
@@ -7028,11 +10061,15 @@ function buildSimpleColorRowsHTML() {
         document.querySelectorAll(`#chatMessages ${MY_BLOCKS}`)
             .forEach((block) => decorateBubbleBlock(block, sig));
 
+        /* Your Chat Notification cards wear it too */
+        document.querySelectorAll(CN_OWN_BUBBLE)
+            .forEach((line) => decorateBubbleText(line, sig));
+
         /* Leftovers (e.g. after turning decorations off). The menu
            preview handles its own (paintBubblePreview). */
         if (!sig) {
-            document.querySelectorAll("#chatMessages .fmBubDeco").forEach((el) => el.remove());
-            document.querySelectorAll("#chatMessages .fmBubHasDeco").forEach((el) => el.classList.remove("fmBubHasDeco"));
+            document.querySelectorAll("#chatMessages .fmBubDeco, .fmCnStack .fmBubDeco").forEach((el) => el.remove());
+            document.querySelectorAll("#chatMessages .fmBubHasDeco, .fmCnStack .fmBubHasDeco").forEach((el) => el.classList.remove("fmBubHasDeco"));
         }
     }
 
@@ -7926,6 +10963,7 @@ function buildSimpleColorRowsHTML() {
 
         if (on !== was) {
             markTrollChat(document.getElementById("chatMessages"));
+            cnRepaintNames();
         }
     }
 
@@ -8052,6 +11090,10 @@ function buildSimpleColorRowsHTML() {
                 if (u) {
                     u.row.scrollIntoView({ block: "nearest", behavior: "smooth" });
                     playOnce(u.row, "fmTrollPulse");
+                    /* their name in the highlight color for a few seconds, so it's easy to spot */
+                    clearTimeout(u.row._fmShownT);
+                    u.row.classList.add("fmTrollShown");
+                    u.row._fmShownT = setTimeout(() => u.row.classList.remove("fmTrollShown"), 6000);
                 }
             } else if (action.dataset.troll === "ignore") {
                 trollIgnored.add(name);
@@ -8893,6 +11935,7 @@ function buildSimpleColorRowsHTML() {
         `;
 
         modButton.title = "Theme Mod Menu";
+        modButton.classList.add("fmFlowerButton");
 
         modButton.addEventListener("click", (event) => {
             event.preventDefault();
@@ -8901,6 +11944,7 @@ function buildSimpleColorRowsHTML() {
 
         modItem.appendChild(modButton);
         bottomBar.insertBefore(modItem, bottomBar.children[1]);
+        refreshFlowerUpdateDot();
 
         return true;
     }
@@ -9168,6 +12212,138 @@ function buildSimpleColorRowsHTML() {
 
     function saveThemeUndo() {
         localStorage.setItem(THEME_UNDO_LS, encodeThemeCode(getCurrentThemeSettings(), "Before last load"));
+        localStorage.removeItem(THEME_UNDO_IMAGES_LS);   /* only set when a load changes images */
+    }
+
+    /* =========================================================
+       v1.6.3: BACKGROUND IMAGES SAVED WITH YOUR THEMES
+       Saved themes (My Themes) can keep a copy of your background
+       images, so loading a theme brings its pictures back. Each
+       picture is stored once ("lib:<fingerprint>" in the background
+       image database), however many themes use it. Theme codes
+       still never carry images. Everything stays on this computer.
+       ========================================================= */
+    const THEME_UNDO_IMAGES_LS = "flockmodThemeUndoImages";
+
+    async function bgLibStore(blob) {
+        const hash = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer());
+        const id = "lib:" + [...new Uint8Array(hash)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
+        const has = await bgDB("readonly", (s) => s.count(id)).catch(() => 0);
+
+        if (!has) {
+            await bgDB("readwrite", (s) => s.put(blob, id));
+        }
+
+        return id;
+    }
+
+    /* { sidebar: "lib:..." | null, chat: ..., ... } for what's showing now */
+    async function snapshotBgImages() {
+        const images = {};
+
+        for (const place of BACKGROUND_PLACES) {
+            const blob = await getBgBlob(place.key);
+            images[place.key] = blob ? await bgLibStore(blob) : null;
+        }
+
+        return images;
+    }
+
+    async function restoreBgImages(images) {
+        for (const place of BACKGROUND_PLACES) {
+            if (!(place.key in images)) {
+                continue;
+            }
+
+            const id = images[place.key];
+            const blob = id ? await bgDB("readonly", (s) => s.get(id)).catch(() => null) : null;
+            await setBgBlob(place.key, blob || null);
+        }
+    }
+
+    /* Removes stored pictures no saved theme (or Undo) uses anymore */
+    async function cleanBgLibrary() {
+        const used = new Set();
+        getSavedThemes().forEach((t) => Object.values(t.images || {}).forEach((id) => id && used.add(id)));
+
+        try {
+            Object.values(JSON.parse(localStorage.getItem(THEME_UNDO_IMAGES_LS) || "{}")).forEach((id) => id && used.add(id));
+        } catch (error) { /* ignore */ }
+
+        const keys = await bgDB("readonly", (s) => s.getAllKeys()).catch(() => []);
+        const stale = (keys || []).filter((k) => typeof k === "string" && k.startsWith("lib:") && !used.has(k));
+
+        if (stale.length) {
+            await bgDB("readwrite", (s) => { stale.forEach((k) => s.delete(k)); return null; }).catch(() => {});
+        }
+    }
+
+    /* =========================================================
+       v1.6.3: SOUNDS SAVED WITH YOUR THEMES
+       Saved themes (My Themes) can keep your sound picks (which sound
+       each event plays, on/off and its volume), so loading a theme
+       brings its sounds back. Your main Sounds switch, main volume and
+       keywords stay yours. Uploaded sound files are kept as long as a
+       saved theme uses them, even if you remove them from your list;
+       loading that theme puts them back in it. Theme codes never carry
+       sounds. Everything stays on this computer.
+       ========================================================= */
+    const THEME_UNDO_SOUNDS_LS = "flockmodThemeUndoSounds";
+
+    function snapshotThemeSounds() {
+        const events = readSavedSoundSettings().events;
+        const lib = getSoundLibrary();
+        const ids = new Set(Object.values(events)
+            .map((e) => e.sound)
+            .filter((v) => v.startsWith("upload:"))
+            .map((v) => v.slice(7)));
+        return { events, files: lib.filter((f) => ids.has(f.id)) };
+    }
+
+    async function restoreThemeSounds(snap) {
+        if (!snap || typeof snap.events !== "object") return;
+
+        /* uploaded files this theme uses: back in your list if still stored */
+        const lib = getSoundLibrary();
+        for (const f of Array.isArray(snap.files) ? snap.files : []) {
+            if (!f || typeof f.id !== "string" || lib.some((s) => s.id === f.id)) continue;
+            const has = await soundDB("readonly", (st) => st.count(f.id)).catch(() => 0);
+            if (has) lib.push({ id: f.id, name: String(f.name || "My sound").slice(0, 40) });
+        }
+        setSoundLibrary(lib);
+
+        const st = readSavedSoundSettings();
+        SOUND_EVENTS.forEach((ev) => {
+            const e = snap.events[ev.key];
+            if (!e) return;
+            st.events[ev.key] = {
+                enabled: Boolean(e.enabled),
+                sound: isValidSoundValue(e.sound) ? e.sound : ev.def.sound,
+                volume: clampVolume(Number(e.volume), ev.def.volume)
+            };
+        });
+        writeSoundSettings(st);
+        applySavedSounds();
+    }
+
+    /* Uploaded sound ids a saved theme (or Undo) still needs */
+    function themeSoundIdsInUse() {
+        const used = new Set();
+        const add = (snap) => (snap?.files || []).forEach((f) => f && f.id && used.add(f.id));
+        getSavedThemes().forEach((t) => add(t.sounds));
+        try { add(JSON.parse(localStorage.getItem(THEME_UNDO_SOUNDS_LS) || "null")); } catch (error) { /* ignore */ }
+        return used;
+    }
+
+    /* Removes stored sound files nothing uses anymore (not in your list, no theme) */
+    async function cleanSoundFiles() {
+        const keep = themeSoundIdsInUse();
+        getSoundLibrary().forEach((f) => keep.add(f.id));
+        const keys = await soundDB("readonly", (st) => st.getAllKeys()).catch(() => []);
+        const stale = (keys || []).filter((k) => typeof k === "string" && !keep.has(k));
+        if (stale.length) {
+            await soundDB("readwrite", (st) => { stale.forEach((k) => st.delete(k)); return null; }).catch(() => {});
+        }
     }
 
     function getSavedThemes() {
@@ -9329,8 +12505,31 @@ function buildSimpleColorRowsHTML() {
             return reopened;
         }
 
-        function loadTheme(settings, full, message) {
+        async function loadTheme(settings, full, message, images, sounds) {
             saveThemeUndo();
+
+            /* v1.6.3: a saved theme with sounds swaps them in (Undo brings yours back) */
+            if (sounds) {
+                try {
+                    localStorage.setItem(THEME_UNDO_SOUNDS_LS, JSON.stringify(snapshotThemeSounds()));
+                    await restoreThemeSounds(sounds);
+                } catch (error) {
+                    /* sounds couldn't be loaded: colors still load */
+                }
+            } else {
+                localStorage.removeItem(THEME_UNDO_SOUNDS_LS);
+            }
+
+            /* v1.6.3: a saved theme with pictures swaps them in (Undo can bring yours back) */
+            if (images) {
+                try {
+                    localStorage.setItem(THEME_UNDO_IMAGES_LS, JSON.stringify(await snapshotBgImages()));
+                    await restoreBgImages(images);
+                } catch (error) {
+                    /* pictures couldn't be loaded: colors still load */
+                }
+            }
+
             writeThemeSettings(settings, full);
             loadSavedCustomizations();
             const reopened = flash("themes", message);
@@ -9387,7 +12586,7 @@ function buildSimpleColorRowsHTML() {
         });
 
         /* ---- Undo ---- */
-        panel.querySelector(".themeModUndoButton").addEventListener("click", () => {
+        panel.querySelector(".themeModUndoButton").addEventListener("click", async () => {
             const code = localStorage.getItem(THEME_UNDO_LS);
 
             if (!code) {
@@ -9397,6 +12596,31 @@ function buildSimpleColorRowsHTML() {
             try {
                 const result = decodeThemeCode(code);
                 localStorage.removeItem(THEME_UNDO_LS);
+
+                /* v1.6.3: put your pictures back too, if the last load changed them */
+                const undoImages = localStorage.getItem(THEME_UNDO_IMAGES_LS);
+
+                if (undoImages) {
+                    try {
+                        await restoreBgImages(JSON.parse(undoImages));
+                    } catch (error) { /* keep going */ }
+
+                    localStorage.removeItem(THEME_UNDO_IMAGES_LS);
+                    cleanBgLibrary();
+                }
+
+                /* v1.6.3: and your sounds, if the last load changed them */
+                const undoSounds = localStorage.getItem(THEME_UNDO_SOUNDS_LS);
+
+                if (undoSounds) {
+                    try {
+                        await restoreThemeSounds(JSON.parse(undoSounds));
+                    } catch (error) { /* keep going */ }
+
+                    localStorage.removeItem(THEME_UNDO_SOUNDS_LS);
+                    cleanSoundFiles();
+                }
+
                 writeThemeSettings(result.settings, true);
                 loadSavedCustomizations();
                 flash("themes", "Went back to your theme from before the last load.");
@@ -9417,7 +12641,7 @@ function buildSimpleColorRowsHTML() {
 
             savedList.innerHTML = themes.map((theme, index) => `
                 <div class="themeModSavedItem" data-index="${index}">
-                    <div class="themeModSavedName">${escapeHTML(theme.name)}</div>
+                    <div class="themeModSavedName">${escapeHTML(theme.name)}${theme.images && Object.values(theme.images).some(Boolean) ? ' <i class="fas fa-image themeModSavedHasImages" title="Includes background images"></i>' : ""}${theme.sounds && Object.keys(theme.sounds.events || {}).length ? ' <i class="fas fa-volume-up themeModSavedHasImages" title="Includes your sounds"></i>' : ""}</div>
                     <div class="themeModSavedButtons">
                         <button type="button" class="themeModButton" data-action="load">Load</button>
                         <button type="button" class="themeModButton" data-action="copy">Copy code</button>
@@ -9428,7 +12652,7 @@ function buildSimpleColorRowsHTML() {
             `).join("");
         }
 
-        function saveCurrent() {
+        async function saveCurrent() {
             const name = saveName.value.trim().slice(0, 40);
 
             if (!name) {
@@ -9436,19 +12660,42 @@ function buildSimpleColorRowsHTML() {
                 return;
             }
 
-            const themes = getSavedThemes();
             const code = encodeThemeCode(getCurrentThemeSettings(), name);
+            const entry = { name, code };
+            const withImages = panel.querySelector("#themeModSaveImages");
+
+            /* v1.6.3: keep a copy of your background pictures with it */
+            if (!withImages || withImages.checked) {
+                try {
+                    entry.images = await snapshotBgImages();
+                } catch (error) {
+                    showStatus("Couldn't copy your background images, so this theme is saved without them.", "error");
+                }
+            }
+
+            /* v1.6.3: and your sound picks */
+            const withSounds = panel.querySelector("#themeModSaveSounds");
+
+            if (!withSounds || withSounds.checked) {
+                try {
+                    entry.sounds = snapshotThemeSounds();
+                } catch (error) { /* saved without sounds */ }
+            }
+
+            const themes = getSavedThemes();
             const existing = themes.findIndex((t) => t.name.toLowerCase() === name.toLowerCase());
 
             if (existing >= 0) {
-                themes[existing] = { name, code };
+                themes[existing] = entry;
                 showStatus(`Updated "${name}".`);
             } else {
-                themes.push({ name, code });
+                themes.push(entry);
                 showStatus(`Saved "${name}".`);
             }
 
             setSavedThemes(themes);
+            cleanBgLibrary();
+            cleanSoundFiles();
             saveName.value = "";
             renderSavedList();
         }
@@ -9476,7 +12723,7 @@ function buildSimpleColorRowsHTML() {
 
             if (action === "load") {
                 try {
-                    loadTheme(decodeThemeCode(theme.code).settings, true, `Loaded "${theme.name}".`);
+                    loadTheme(decodeThemeCode(theme.code).settings, true, `Loaded "${theme.name}".`, theme.images || null, theme.sounds || null);
                 } catch (error) {
                     showStatus("This saved theme is damaged and can't be loaded.", "error");
                 }
@@ -9507,6 +12754,8 @@ function buildSimpleColorRowsHTML() {
 
                 themes.splice(index, 1);
                 setSavedThemes(themes);
+                cleanBgLibrary();
+                cleanSoundFiles();
                 renderSavedList();
                 showStatus(`Deleted "${theme.name}".`);
             }
@@ -9855,7 +13104,7 @@ function buildSimpleColorRowsHTML() {
                                     </div>
 
                                     <div class="themeModSettingDescription">
-                                        Once a day at most. A pink dot on General means an update is out.
+                                        Once a day at most. A pink dot on the flower button means an update is out.
                                     </div>
                                 </div>
 
@@ -9925,7 +13174,7 @@ function buildSimpleColorRowsHTML() {
                                     <a class="themeModButton themeModLinkButton" href="${UPDATE_REPO ? `https://github.com/${UPDATE_REPO}` : "#"}" target="_blank" rel="noopener noreferrer">
                                         <i class="fab fa-github"></i> GitHub page
                                     </a>
-                                    <a class="themeModButton themeModLinkButton" href="${UPDATE_REPO ? `https://github.com/${UPDATE_REPO}/issues` : "#"}" target="_blank" rel="noopener noreferrer">
+                                    <a class="themeModButton themeModLinkButton" href="${UPDATE_REPO ? bugReportURL() : "#"}" target="_blank" rel="noopener noreferrer">
                                         <i class="fas fa-bug"></i> Report a bug
                                     </a>
                                 </div>
@@ -10190,6 +13439,12 @@ ${buildDecoRowsHTML()}
 
 ${buildBubbleRowsHTML()}
 
+${buildChatHighlightRowsHTML()}
+
+${buildChatNotifRowsHTML()}
+
+${buildClockRowsHTML()}
+
         </div>
 
                         <div
@@ -10348,6 +13603,12 @@ ${buildBubbleRowsHTML()}
 
     ${buildSidebarColorRowsHTML(CHAT_COLOR_SETTINGS)}
 
+    <div class="themeModSubsectionTitle themeModSpacingSubsection">
+        Chat Notifications
+    </div>
+
+    ${buildSidebarColorRowsHTML(CHATNOTIF_COLOR_SETTINGS)}
+
     </div><!-- closes themeModDetailedColors -->
 
     <!-- v1.6: Canvas stays visible in simple AND detailed coloring -->
@@ -10412,6 +13673,16 @@ ${buildBubbleRowsHTML()}
                                     <button type="button" class="themeModButton themeModSaveButton">Save</button>
                                 </div>
                             </div>
+
+                            <label class="themeModSaveImagesRow">
+                                <input type="checkbox" id="themeModSaveImages" checked>
+                                Include my background images (kept on this computer, not in theme codes)
+                            </label>
+
+                            <label class="themeModSaveImagesRow">
+                                <input type="checkbox" id="themeModSaveSounds" checked>
+                                Include my sounds (kept on this computer, not in theme codes)
+                            </label>
 
                             <div class="themeModSavedList"></div>
 
@@ -10508,6 +13779,9 @@ ${buildSafetyPanelHTML()}
         setupThemesPanel(dialog);
         setupBackgroundsPanel(dialog);
         setupThumbShape(dialog);
+        setupChatHighlight(dialog);
+        setupChatNotif(dialog);
+        setupClockPanel(dialog);
         setupCanvasDimmer(dialog);
 
         const enabledToggle =
@@ -11332,6 +14606,8 @@ const safetyControls = setupSafetyPanel(dialog);
             refreshColorPreview();
         });
 
+        stampPanelDefaults(dialog);
+
         setupSubsectionResets(dialog, {
             actionsNote,
             decoControls
@@ -11394,6 +14670,51 @@ const safetyControls = setupSafetyPanel(dialog);
         }
 
         return el.defaultValue;
+    }
+
+    const RESETTABLE_CONTROLS = 'input[type="checkbox"], input[type="color"], input[type="range"], select, input[type="text"][data-default]';
+
+    /* v1.6.3: write each control's default into the markup (data-default),
+       for panels whose controls are filled in by code */
+    function stampPanelDefaults(dialog) {
+        const stamp = (sel, value) => {
+            const el = typeof sel === "string" ? dialog.querySelector(sel) : sel;
+            if (el) el.dataset.default = String(value);
+        };
+
+        /* Animations: everything on, normal speed */
+        stamp("#themeModAnimEnabled", true);
+        ANIM_EFFECTS.forEach((effect) => stamp(`#${effect.toggleId}`, true));
+        stamp("#themeModAnimSpeed", 100);
+
+        /* Sounds */
+        const sd = defaultSoundSettings();
+        stamp("#themeModSoundsEnabled", sd.enabled);
+        stamp("#themeModSoundsVolume", sd.volume);
+        stamp("#themeModSoundsQuietDrawing", sd.quietDrawing);
+        stamp("#themeModSoundsKeywords", "");
+        SOUND_EVENTS.forEach((ev) => {
+            stamp(`#themeModSound${ev.key}Enabled`, ev.def.enabled);
+            stamp(`[data-sound-select="${ev.key}"]`, ev.def.sound);
+            stamp(`[data-sound-volume="${ev.key}"]`, ev.def.volume);
+        });
+
+        /* Safety */
+        const ids = {
+            enabled: "#themeModTrollEnabled", guestsOnly: "#themeModTrollGuestsOnly", eraser: "#themeModTrollEraser",
+            fill: "#themeModTrollFill", selection: "#themeModTrollSelection", bigBrush: "#themeModTrollBigBrush",
+            scribble: "#themeModTrollScribble", bigText: "#themeModTrollBigText", popup: "#themeModTrollPopup",
+            warnAgain: "#themeModTrollWarnAgain", flagAfter: "#themeModTrollFlagAfter", bigBrushPx: "#themeModTrollBigBrushPx",
+            bigTextPx: "#themeModTrollBigTextPx", stay: "#themeModTrollStay", popupEvery: "#themeModTrollPopupEvery",
+            color: "#themeModTrollColor"
+        };
+        Object.entries(ids).forEach(([k, sel]) => stamp(sel, TROLL_DEFAULTS[k]));
+        dialog.querySelector(`[data-troll-sens="${TROLL_DEFAULTS.sensitivity}"]`)?.setAttribute("data-reset-click", "");
+
+        /* Backgrounds */
+        BACKGROUND_PLACES.forEach((place) => {
+            bgFieldsFor(place).forEach(([suffix, , def]) => stamp(`#themeModBg${place.idPart}${suffix}`, def));
+        });
     }
 
     function resetControlToDefault(el) {
@@ -11655,9 +14976,10 @@ const safetyControls = setupSafetyPanel(dialog);
     }
 
     function setupSubsectionResets(dialog, { actionsNote, decoControls }) {
+        /* v1.6.3: Animations, Sounds, Safety and Backgrounds too */
         const panels = dialog.querySelectorAll(
-            '.themeModSectionContent[data-theme-panel="colors"], ' +
-            '.themeModSectionContent[data-theme-panel="interface"]'
+            ["colors", "interface", "animations", "sounds", "safety", "backgrounds"]
+                .map((p) => `.themeModSectionContent[data-theme-panel="${p}"]`).join(", ")
         );
 
         const showNote = (text) => {
@@ -11692,6 +15014,15 @@ const safetyControls = setupSafetyPanel(dialog);
 
                 const name = label.textContent.trim();
 
+                /* nothing to reset here (like Your Sounds): no button */
+                const resettable = getSubsectionElements(title).some((el) =>
+                    el.querySelector(RESETTABLE_CONTROLS + ", [data-reset-click]") || el.matches(RESETTABLE_CONTROLS + ", [data-reset-click]"));
+
+                if (!resettable) {
+                    title.appendChild(label);
+                    return;
+                }
+
                 const button = document.createElement("button");
                 button.type = "button";
                 button.className = "themeModSubsectionReset";
@@ -11721,9 +15052,9 @@ const safetyControls = setupSafetyPanel(dialog);
                             return;
                         }
 
-                        el.querySelectorAll(
-                            'input[type="checkbox"], input[type="color"], input[type="range"], select'
-                        ).forEach(resetControlToDefault);
+                        el.querySelectorAll(RESETTABLE_CONTROLS).forEach(resetControlToDefault);
+                        /* buttons standing in for a control (Safety > Sensitivity) */
+                        el.querySelectorAll("[data-reset-click]").forEach((b) => b.click());
                     });
 
                     if (hasDeco && decoControls && decoControls.resetPreview) {
@@ -11759,6 +15090,23 @@ const safetyControls = setupSafetyPanel(dialog);
     const UPDATE_MANIFEST_PATH = "Flockmod Themer and Mod/manifest.json";
     const UPDATE_DOWNLOAD_URL = "";      /* optional; defaults to the repo page */
 
+    /* v1.6.3: "Report a bug" opens a new GitHub issue with the mod version
+       and browser already filled in (nothing is sent until they post it) */
+    function bugReportURL() {
+        const ua = navigator.userAgent;
+        const browser =
+            /Edg\//.test(ua) ? `Edge ${(ua.match(/Edg\/(\d+)/) || [])[1] || ""}` :
+            /OPR\//.test(ua) ? `Opera ${(ua.match(/OPR\/(\d+)/) || [])[1] || ""}` :
+            /Firefox\//.test(ua) ? `Firefox ${(ua.match(/Firefox\/(\d+)/) || [])[1] || ""}` :
+            /Chrome\//.test(ua) ? `Chrome ${(ua.match(/Chrome\/(\d+)/) || [])[1] || ""}` : "Other";
+        const os = /Windows/.test(ua) ? "Windows" : /Mac OS/.test(ua) ? "Mac" : /CrOS/.test(ua) ? "ChromeOS" : /Linux/.test(ua) ? "Linux" : "Other";
+        const body =
+            "**What happened?**\n\n\n**What did you expect to happen?**\n\n\n" +
+            `---\nFlockTheme v${getModVersion()}\nBrowser: ${browser.trim()} on ${os}\n`;
+        const repo = getUpdateRepo();
+        return `https://github.com/${repo}/issues/new?body=${encodeURIComponent(body)}`;
+    }
+
     function getModVersion() {
         try {
             return chrome.runtime.getManifest().version || "?";
@@ -11788,6 +15136,47 @@ const safetyControls = setupSafetyPanel(dialog);
     const UPDATE_LAST_CHECK_LS = "flockmodLastUpdateCheck";
     const UPDATE_LATEST_LS = "flockmodLatestKnownVersion";
     const UPDATE_AUTO_EVERY_MS = 24 * 60 * 60 * 1000;
+    const UPDATE_DOT_SEEN_LS = "flockmodUpdateDotSeen";
+
+    /* v1.6.3: ON unless someone turned it off */
+    function autoUpdateOn() {
+        return localStorage.getItem(UPDATE_AUTO_LS) !== "false";
+    }
+
+    /* v1.6.3: pink dot on the bottom bar flower while an update is out
+       (until you've looked at it in General) */
+    function refreshFlowerUpdateDot() {
+        const button = document.querySelector(MOD_BUTTON_SELECTOR);
+
+        if (!button) {
+            return;
+        }
+
+        const latest = localStorage.getItem(UPDATE_LATEST_LS);
+        const has = Boolean(latest) && compareVersions(latest, getModVersion()) > 0 &&
+            localStorage.getItem(UPDATE_DOT_SEEN_LS) !== latest;
+
+        button.classList.toggle("fmHasUpdateDot", has);
+        button.title = has ? `Update available: v${latest}` : "Theme Mod Menu";
+    }
+
+    /* v1.6.3: the daily check also runs when FlockMod loads, so the dot can
+       show without opening the menu. Only asks GitHub for a version number. */
+    function backgroundUpdateCheck() {
+        refreshFlowerUpdateDot();
+
+        if (!autoUpdateOn() || !getUpdateRepo()) {
+            return;
+        }
+
+        const last = Number(localStorage.getItem(UPDATE_LAST_CHECK_LS)) || 0;
+
+        if (Date.now() - last < UPDATE_AUTO_EVERY_MS) {
+            return;
+        }
+
+        fetchLatestVersion().then(refreshFlowerUpdateDot).catch(() => {});
+    }
 
     function getUpdateRepo() {
         return UPDATE_REPO.trim().replace(/^https?:\/\/github\.com\//i, "").replace(/\/+$/, "");
@@ -11890,6 +15279,7 @@ const safetyControls = setupSafetyPanel(dialog);
 
             try {
                 showResult(await fetchLatestVersion());
+                seenUpdate();
             } catch (error) {
                 show("Error", `<i class="fas fa-exclamation-circle"></i><span>Couldn't check right now. You might be offline. ${downloadUrl ? link("Open the download page") : ""}</span>`);
             } finally {
@@ -11897,12 +15287,27 @@ const safetyControls = setupSafetyPanel(dialog);
             }
         });
 
-        /* ---- Automatic check (OFF unless turned on; saves right away) ---- */
+        /* v1.6.3: looking at General while an update is known clears the flower dot */
+        const seenUpdate = () => {
+            const latest = localStorage.getItem(UPDATE_LATEST_LS);
+
+            if (latest && compareVersions(latest, current) > 0) {
+                localStorage.setItem(UPDATE_DOT_SEEN_LS, latest);
+                refreshFlowerUpdateDot();
+            }
+        };
+
+        generalTab?.addEventListener("click", seenUpdate);
+        setTimeout(() => {
+            if (dialog.isConnected && generalTab?.classList.contains("active")) seenUpdate();
+        }, 300);
+
+        /* ---- Automatic check (ON by default since v1.6.3; saves right away) ---- */
         if (!autoToggle) {
             return;
         }
 
-        autoToggle.checked = localStorage.getItem(UPDATE_AUTO_LS) === "true";
+        autoToggle.checked = autoUpdateOn();
 
         const autoCheck = async () => {
             if (!autoToggle.checked || !repo) {
@@ -11928,6 +15333,8 @@ const safetyControls = setupSafetyPanel(dialog);
                 if (dialog.isConnected && markUpdate(latest)) {
                     showResult(latest);
                 }
+
+                refreshFlowerUpdateDot();
             } catch (error) {
                 /* Quiet: try again next time the menu opens */
             }
@@ -11941,6 +15348,8 @@ const safetyControls = setupSafetyPanel(dialog);
             } else {
                 markUpdate(null);
             }
+
+            refreshFlowerUpdateDot();
         });
 
         autoCheck();
@@ -12032,9 +15441,9 @@ const safetyControls = setupSafetyPanel(dialog);
 
                 entry.notes.forEach((note) => {
                     const li = document.createElement("li");
-                    /* {pink:Name} / {blue:Name} / {orange:Name} = a glowing colored name */
-                    String(note).split(/(\{(?:pink|blue|orange):[^}]+\})/).forEach((part) => {
-                        const m = part.match(/^\{(pink|blue|orange):([^}]+)\}$/);
+                    /* {pink:Name} / {blue:Name} / {teal:Name} / {orange:Name} = a glowing colored name */
+                    String(note).split(/(\{(?:pink|blue|teal|orange):[^}]+\})/).forEach((part) => {
+                        const m = part.match(/^\{(pink|blue|teal|orange):([^}]+)\}$/);
 
                         if (m) {
                             const name = document.createElement("span");
@@ -12075,13 +15484,137 @@ const safetyControls = setupSafetyPanel(dialog);
                updating from a version before this card existed */
             if (localStorage.getItem("flockmodTourSeen") === "true" || hasExistingModData()) {
                 const entries = pickEntries(null).slice(0, 1);
+                queueNewSpots(entries, current);
                 setTimeout(() => dialog.isConnected && open(entries, true), 400);
             } else {
                 localStorage.setItem(WHATS_NEW_SEEN_LS, current);
             }
         } else if (compareVersions(current, lastSeen) > 0) {
+            queueNewSpots(pickEntries(lastSeen), current);
             setTimeout(() => dialog.isConnected && open(pickEntries(lastSeen), true), 400);
         }
+
+        setupNewSpots(dialog);
+    }
+
+    /* =========================================================
+       NEW-FEATURE DOTS (v1.6.3)
+       After an update, a pink dot marks each new thing (the
+       CHANGELOG's "spots") and the tab it's on. Opening that tab
+       counts as seen: the tab's dot goes right away, the dots
+       inside stay until the menu is closed. New users get none.
+       ========================================================= */
+    const NEW_SPOTS_LS = "flockmodNewSpots";
+    const NEW_SPOTS_FOR_LS = "flockmodNewSpotsVersion";
+
+    function getNewSpots() {
+        try {
+            const list = JSON.parse(localStorage.getItem(NEW_SPOTS_LS) || "[]");
+            return Array.isArray(list) ? list.filter((x) => x && typeof x.spot === "string") : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function setNewSpots(list) {
+        if (list.length) localStorage.setItem(NEW_SPOTS_LS, JSON.stringify(list));
+        else localStorage.removeItem(NEW_SPOTS_LS);
+    }
+
+    /* Once per update (the What's new card can show more than once if it isn't closed) */
+    function queueNewSpots(entries, current) {
+        if (localStorage.getItem(NEW_SPOTS_FOR_LS) === current) return;
+        localStorage.setItem(NEW_SPOTS_FOR_LS, current);
+
+        const list = getNewSpots();
+        entries.forEach((entry) => (Array.isArray(entry.spots) ? entry.spots : []).forEach((spot) => {
+            if (typeof spot === "string" && !list.some((x) => x.spot === spot)) {
+                list.push({ spot, version: entry.version });
+            }
+        }));
+        setNewSpots(list);
+    }
+
+    function findNewSpot(dialog, spot) {
+        if (spot.startsWith("#")) {
+            let el = null;
+            try { el = dialog.querySelector(spot); } catch (error) { return null; }
+            if (!el) return null;
+            return el.closest(".themeModSetting") || el.closest("label") || el;
+        }
+
+        const [tab, section] = spot.split(">").map((x) => x.trim().toLowerCase());
+        const panel = dialog.querySelector(`[data-theme-panel="${CSS.escape(tab || "")}"]`);
+        if (!panel || !section) return null;
+
+        return Array.from(panel.querySelectorAll(".themeModSubsectionTitle")).find((t) => {
+            const copy = (t.querySelector(".themeModSubsectionLabel") || t).cloneNode(true);
+            copy.querySelectorAll("button, .fmNewDot").forEach((b) => b.remove());
+            return copy.textContent.replace(/\s+/g, " ").trim().toLowerCase() === section;
+        }) || null;
+    }
+
+    function addNewDot(where, version) {
+        if (!where || where.querySelector(":scope > .fmNewDot")) return;
+        const dot = document.createElement("span");
+        dot.className = "fmNewDot";
+        dot.title = `New in v${version}`;
+        where.appendChild(dot);
+    }
+
+    function setupNewSpots(dialog) {
+        const list = getNewSpots();
+        if (!list.length) return;
+
+        const byTab = new Map();
+
+        list.forEach(({ spot, version }) => {
+            const target = findNewSpot(dialog, spot);
+            const panel = target?.closest("[data-theme-panel]");
+            if (!target || !panel) return;
+
+            const tab = panel.dataset.themePanel;
+            if (!byTab.has(tab)) byTab.set(tab, version);
+
+            if (target.classList.contains("themeModSubsectionTitle")) {
+                addNewDot(target.querySelector(".themeModSubsectionLabel") || target, version);
+            } else {
+                addNewDot(target.querySelector(".themeModSettingName") || target, version);
+
+                /* its section title too, so it shows while the card is folded */
+                const titles = Array.from(panel.querySelectorAll(".themeModSubsectionTitle"))
+                    .filter((t) => t.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING);
+                const title = titles[titles.length - 1];
+                if (title) addNewDot(title.querySelector(".themeModSubsectionLabel") || title, version);
+            }
+        });
+
+        /* Spots that no longer exist in the menu: forget them */
+        setNewSpots(list.filter(({ spot }) => {
+            const target = findNewSpot(dialog, spot);
+            return target && target.closest("[data-theme-panel]");
+        }));
+
+        byTab.forEach((version, tab) => {
+            addNewDot(dialog.querySelector(`.themeModSidebarItem[data-theme-section="${tab}"]`), version);
+        });
+
+        const seen = (tab) => {
+            if (!byTab.has(tab)) return;
+            byTab.delete(tab);
+            dialog.querySelector(`.themeModSidebarItem[data-theme-section="${tab}"] > .fmNewDot`)?.remove();
+            setNewSpots(getNewSpots().filter(({ spot }) => {
+                const target = findNewSpot(dialog, spot);
+                return target && target.closest("[data-theme-panel]")?.dataset.themePanel !== tab;
+            }));
+        };
+
+        dialog.querySelectorAll(".themeModSidebarItem[data-theme-section]").forEach((button) => {
+            button.addEventListener("click", () => seen(button.dataset.themeSection));
+        });
+
+        const active = dialog.querySelector(".themeModSidebarItem.active");
+        if (active) seen(active.dataset.themeSection);
     }
 
     /* =========================================================
@@ -12538,6 +16071,23 @@ const safetyControls = setupSafetyPanel(dialog);
                 target: () => document.querySelector(REF_BUTTON_SELECTOR)
             },
             {
+                icon: "fa-sync-alt",
+                title: "Updates",
+                text: "The mod checks GitHub for updates once a day. A pink dot on the flower means a new version is out, and What's new shows what changed.",
+                before: openTab("general"),
+                target: rowOf("#themeModAutoUpdate")
+            },
+            {
+                icon: "fa-bug",
+                title: "Found a bug?",
+                text: "Report a bug opens a ready-made report with your mod version filled in. Your backup file and the download page are here too.",
+                before: openTab("general"),
+                target: () => {
+                    const bug = [...dialog.querySelectorAll("a .fa-bug")].map((i) => i.closest("a")).find(Boolean);
+                    return bug ? (bug.closest(".themeModSetting") || bug) : null;
+                }
+            },
+            {
                 icon: "fa-info-circle",
                 title: "A tour for every tab",
                 text: "Interface, Animations, Sounds, Backgrounds and the rest each have their own quick tour. Press \u24D8 up here on any tab.",
@@ -12567,10 +16117,11 @@ const safetyControls = setupSafetyPanel(dialog);
             general: [
                 step("fa-power-off", "On/off switch", "Turns all your customizations on or off at once.", row("Enable customizations")),
                 step("fa-seedling", "Simple coloring", "A few main colors fill in everything else. Your detailed colors are kept.", row("Simple coloring")),
+                step("fa-sliders-h", "Options", "Ask before closing reminds you to apply, and Lite mode turns off heavy extras on slower computers.", row("Lite mode")),
                 step("fa-play", "Tours", "Show welcome brings back the first popup, Replay tour starts the main tour.", row("Quick tour")),
-                step("fa-sync-alt", "Updates", "See your version, what's new, and check GitHub for a newer one.", row("Version")),
+                step("fa-sync-alt", "Updates", "See your version, what's new, and check GitHub for a newer one. Automatic checks show a pink dot on the flower.", row("Version")),
                 step("fa-download", "Backup", "Save everything to one file and load it on another browser or computer.", row("Full backup file")),
-                step("fa-bug", "Help", "Links to the GitHub page and to report a bug.", row("Links"))
+                step("fa-bug", "Help", "Get the latest version, or report a bug. The report fills in your mod version for you.", row("Links"))
             ],
             interface: [
                 step("fa-font", "Font", "Change the font, its size and weight. You can add any Google Font by name, or upload your own.", title("Font")),
@@ -12579,6 +16130,8 @@ const safetyControls = setupSafetyPanel(dialog);
                 step("fa-cat", "Popup decorations", "Ears, tails, flowers and more on every popup. Click a tile to try one, and use the chips to show Cute, Dark or Neutral styles.", el(".fmStylePick")),
                 step("fa-comment-dots", "Chat bubbles", "Put chat in bubbles, with your own messages in a special style. Only you see it.", title("Chat Bubbles")),
                 step("fa-link", "Match them", "With this ON, picking a style for popups also picks it for bubbles, and the other way around.", row("Match popups")),
+                step("fa-highlighter", "Chat highlights", "Lines that mention your name light up in chat and Messenger.", row("Highlight mentions")),
+                step("fa-clock", "Clock & time", "The clock next to the flower, your time on FlockMod, and a gentle break reminder.", title("Clock")),
                 step("fa-undo-alt", "Reset one part", "\u21BA next to a section title resets just that section.", el(".themeModSubsectionReset"))
             ],
             colors: simple ? [
@@ -12596,9 +16149,10 @@ const safetyControls = setupSafetyPanel(dialog);
             ],
             themes: [
                 step("fa-share-alt", "Share a theme", "Copy code gives you a theme code for friends. Paste someone's code below and press Import.", row("Export theme")),
-                step("fa-bookmark", "My Themes", "Save your current look with a name, then load it again anytime.", row("Save current theme")),
+                step("fa-bookmark", "My Themes", "Save your current look with a name, then load it again anytime. Your background images are saved with it.", row("Save current theme")),
                 step("fa-swatchbook", "Presets", "Ready-made looks to start from. Calm Night is extra gentle on sensitive eyes.", title("Presets")),
-                step("fa-undo", "Undo", "Loaded a theme by mistake? An Undo button shows up right after.", title("Share"))
+                step("fa-undo", "Undo", "Loaded a theme by mistake? An Undo button shows up at the top right after.",
+                    () => tourEl(dialog, '.themeModSectionContent[data-theme-panel="themes"] .themeModUndoRow')() || title("Share")())
             ],
             animations: [
                 step("fa-magic", "Animations", "Turn the mod's little effects on or off, and set how fast they play.", title("Animations")),
@@ -12608,16 +16162,17 @@ const safetyControls = setupSafetyPanel(dialog);
                 step("fa-volume-up", "Sounds", "Turn notification sounds on, set the volume, and stay quiet while you draw.", title("Sounds")),
                 step("fa-at", "Mention words", "Extra words (like your nickname) that count as a mention.", row("Extra mention words")),
                 step("fa-bell", "Events", "Pick a sound for each event and press \u25B6 to hear it.", title("Events")),
-                step("fa-upload", "Your sounds", "Upload your own sounds to use for any event. They stay in this browser.", title("Your Sounds"))
+                step("fa-upload", "Your sounds", "Upload your own sounds to use for any event. They stay in this browser.", title("Your Sounds")),
+                step("fa-undo-alt", "Reset one part", "\u21BA next to a section title resets just that section.", el(".themeModSubsectionReset"))
             ],
             safety: [
                 step("fa-shield-alt", "Troll detection", "Flags people who seem to be griefing: their name turns red in the user list and chat.", title("Troll Detection")),
                 step("fa-clock", "Timing", "How quickly someone gets flagged, and how long their name stays red.", title("Timing")),
                 step("fa-eye", "Watch for", "Pick which kinds of griefing count, like big erasing or scribbling.", title("Watch For")),
-                step("fa-bell", "Warnings", "The popup and highlight color used when someone is flagged. It's all local and only you see it.", title("Warnings"))
+                step("fa-bell", "Warnings", "The popup, how often it can repeat, and the highlight color. It's all local and only you see it.", title("Warnings"))
             ],
             backgrounds: [
-                step("fa-image", "Background images", "Put your own image behind the sidebar, chat or messenger.", row("Sidebar Background Image")),
+                step("fa-image", "Background images", "Put your own image behind the sidebar, chat, messenger or around the canvas.", row("Sidebar Background Image")),
                 step("fa-adjust", "See-through", "Let the image show through the boxes on top of it, and fine-tune how it fits.", title("Sidebar")),
                 step("fa-lock", "Only on your computer", "Images are saved in this browser only. Nobody else sees them.", el(".themeModLocalNote"))
             ]
@@ -12699,45 +16254,68 @@ const safetyControls = setupSafetyPanel(dialog);
             peeked = [];
         }
 
+        /* v1.6.3: a step's target can sit inside a folded card. The tour
+           opens just that card while the step shows (your folds are kept
+           and come back afterwards). A target that's a card's title opens
+           the card too, so you see what the step is about. */
+        const isShown = (el) => Boolean(el) && el.getClientRects().length > 0;
+
+        function peekCard(head) {
+            if (!head || !head.classList.contains("fmFolded")) {
+                return;
+            }
+
+            let n = head.nextElementSibling;
+
+            while (n && !n.classList.contains("fmCardHead")) {
+                if (n.classList.contains("fmFoldHidden")) {
+                    n.classList.remove("fmFoldHidden");
+                    peeked.push(n);
+                }
+                n = n.nextElementSibling;
+            }
+        }
+
+        function cardHeadOf(el) {
+            if (!el) return null;
+            const own = el.closest(".fmCardHead");
+            if (own) return own;
+
+            let item = el;
+            while (item && !item.classList.contains("fmCardItem")) {
+                item = item.parentElement;
+            }
+
+            let head = item;
+            while (head && !head.classList.contains("fmCardHead")) {
+                head = head.previousElementSibling;
+            }
+
+            return head;
+        }
+
         function findTarget(s) {
             clearPeek();
             let target = s.target();
 
-            if (target) {
+            if (isShown(target)) {
+                peekCard(target.closest(".fmCardHead"));
                 return target;
             }
 
+            /* not visible yet: look again with every folded row showing,
+               then keep only the card that holds the target */
             const hidden = Array.from(dialog.querySelectorAll(".fmFoldHidden"));
+            hidden.forEach((el) => el.classList.remove("fmFoldHidden"));
+            target = s.target();
+            hidden.forEach((el) => el.classList.add("fmFoldHidden"));
 
-            if (!hidden.length) {
+            if (!target) {
                 return null;
             }
 
-            hidden.forEach((el) => el.classList.remove("fmFoldHidden"));
-            target = s.target();
-
-            const keep = new Set();
-            const item = target && hidden.find((el) => el === target || el.contains(target));
-
-            if (item) {
-                let head = item;
-                while (head && !head.classList.contains("fmCardHead")) {
-                    head = head.previousElementSibling;
-                }
-
-                let n = head ? head.nextElementSibling : item;
-                while (n && !n.classList.contains("fmCardHead")) {
-                    if (hidden.includes(n)) keep.add(n);
-                    n = n.nextElementSibling;
-                }
-            }
-
-            hidden.forEach((el) => {
-                if (!keep.has(el)) el.classList.add("fmFoldHidden");
-            });
-            peeked = Array.from(keep);
-
-            return item ? target : null;
+            peekCard(cardHeadOf(target));
+            return isShown(target) ? target : null;
         }
 
         function closeTour() {
@@ -14313,6 +17891,40 @@ const safetyControls = setupSafetyPanel(dialog);
             noResults.style.display = "none";
         }
 
+        /* Every word you type has to start a word in the setting's text
+           ("art" finds "Art style", not "start"); several words narrow it down */
+        function searchMatches(text, words) {
+            return words.every((w) => {
+                const at = text.indexOf(w);
+                if (at < 0) return false;
+                const re = new RegExp("(^|[^a-z0-9])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+                return re.test(text);
+            });
+        }
+
+        function hideUnmatchedBlocks(container, words, kept = []) {
+            Array.from(container.children).forEach((child) => {
+                if (child.matches(".themeModSetting, .themeModSubsectionTitle")) {
+                    return;
+                }
+
+                const settings = child.querySelectorAll(".themeModSetting");
+
+                if (!settings.length) {
+                    const text = (child.textContent || "").replace(/\s+/g, " ").toLowerCase();
+                    const show = Boolean(text.trim()) && searchMatches(text, words);
+                    child.classList.toggle("themeModSearchHidden", !show);
+                    if (show) kept.push(child);
+                } else if (Array.from(settings).some((r) => !r.classList.contains("themeModSearchHidden"))) {
+                    child.classList.remove("themeModSearchHidden");
+                    hideUnmatchedBlocks(child, words, kept);
+                } else {
+                    child.classList.add("themeModSearchHidden");
+                }
+            });
+            return kept;
+        }
+
         function runSearch() {
             const query = searchInput.value.trim().toLowerCase();
             const wasSearching = isSearching();
@@ -14336,6 +17948,7 @@ const safetyControls = setupSafetyPanel(dialog);
 
             dialog.classList.add("themeModSearching");
 
+            const words = query.split(/\s+/).filter(Boolean);
             let total = 0;
 
             panels.forEach((panel) => {
@@ -14344,9 +17957,13 @@ const safetyControls = setupSafetyPanel(dialog);
                 let panelCount = 0;
 
                 rows.forEach((row) => {
-                    const match = (row.dataset.searchText || "").includes(query);
+                    const match = searchMatches(row.dataset.searchText || "", words);
                     row.classList.toggle("themeModSearchHidden", !match);
                 });
+
+                /* Everything that isn't a setting (font lists, previews, notes,
+                   whole cards) hides too unless it holds a match */
+                const keptBlocks = hideUnmatchedBlocks(panel, words);
 
                 /* Count after hiding, skipping rows hidden by simple/detailed mode */
                 rows.forEach((row) => {
@@ -14356,6 +17973,15 @@ const safetyControls = setupSafetyPanel(dialog);
                             titlesWithMatches.add(row._themeModTitle);
                         }
                     }
+                });
+
+                /* a list or note that matched by its own text keeps its section title too */
+                const allTitles = Array.from(panel.querySelectorAll(".themeModSubsectionTitle"));
+                keptBlocks.forEach((block) => {
+                    if (block.offsetParent === null) return;
+                    panelCount++;
+                    const before = allTitles.filter((t) => t.compareDocumentPosition(block) & Node.DOCUMENT_POSITION_FOLLOWING);
+                    if (before.length) titlesWithMatches.add(before[before.length - 1]);
                 });
 
                 panel.querySelectorAll(".themeModSubsectionTitle").forEach((title) => {
@@ -14585,6 +18211,9 @@ const safetyControls = setupSafetyPanel(dialog);
         applySavedBackgrounds();
         applySavedThumbShape();
         applySavedCanvasDim();
+        applySavedChatHighlight();
+        applySavedChatNotif();
+        applySavedClock();
 
         /* Border radius was only applied when the menu opened — now on page load too */
         if (customizationsEnabled) {
@@ -14610,7 +18239,7 @@ const safetyControls = setupSafetyPanel(dialog);
         const shield = (event) => {
             const target = event.target;
 
-            if (!(target instanceof Element) || !target.closest(`${MOD_DIALOG_SELECTOR}, ${REF_SELECTOR}`)) {
+            if (!(target instanceof Element) || !target.closest(`${MOD_DIALOG_SELECTOR}, ${REF_SELECTOR}, ${CN_SELECTOR}`)) {
                 return;
             }
 
@@ -14621,6 +18250,15 @@ const safetyControls = setupSafetyPanel(dialog);
 
             if (event.type === "keydown" && event.key === "Enter" && target.matches("input")) {
                 target.dispatchEvent(new CustomEvent("themeModEnter"));
+            }
+
+            /* v1.6.3: the chat cards' @ list uses arrows and Tab */
+            if (event.type === "keydown" && ["ArrowUp", "ArrowDown", "Tab"].includes(event.key) &&
+                target.matches("input") && target.closest(CN_SELECTOR)) {
+                const keyEvent = new CustomEvent("themeModKey", { detail: { key: event.key }, cancelable: true });
+                if (!target.dispatchEvent(keyEvent)) {
+                    event.preventDefault();
+                }
             }
 
             /* Reference window: it only keeps its own keys (arrows and
@@ -14652,7 +18290,7 @@ const safetyControls = setupSafetyPanel(dialog);
            this a focused picture kept catching keys. */
         window.addEventListener("pointerdown", (event) => {
             const active = document.activeElement;
-            const inside = (el) => el instanceof Element && el.closest(`${MOD_DIALOG_SELECTOR}, ${REF_SELECTOR}`);
+            const inside = (el) => el instanceof Element && el.closest(`${MOD_DIALOG_SELECTOR}, ${REF_SELECTOR}, ${CN_SELECTOR}`);
 
             if (inside(active) && !inside(event.target)) {
                 active.blur();
@@ -14672,6 +18310,9 @@ const safetyControls = setupSafetyPanel(dialog);
             /* sounds keep listening even while the tab is in the background */
             watchSoundTargets(); /* chat / Messenger boxes for sounds */
             checkMessengerBadge(); /* Messenger unread badge, for sounds */
+            watchChatHighlight(); /* keyword highlights in chat / Messenger */
+            watchChatNotif();     /* chat notification cards */
+            watchChatBar();
 
             /* v1.6.2: nothing visual to update while the tab is hidden */
             if (document.hidden) {
@@ -14680,7 +18321,9 @@ const safetyControls = setupSafetyPanel(dialog);
 
             addModButton();
             addRefButton();
+            addClockButton();
             checkSeeThroughTargets();
+            cnPlace();           /* chat notification cards follow the sidebar side */
             makeThumbRoom();     /* for sliders in popups opened later */
             updateDecorations(); /* ears/tails on popups opened later */
             watchBubbleChat();   /* chat bubble decorations */
@@ -14692,6 +18335,12 @@ const safetyControls = setupSafetyPanel(dialog);
                 updateDecorations();
             }
         });
+
+        /* v1.6.3: time on FlockMod + break reminder (one light tick every 15s) */
+        setupTimeTracking();
+
+        /* v1.6.3: daily update check a little after load (for the flower dot) */
+        setTimeout(backgroundUpdateCheck, 8000);
 
         /* Troll detection checks 4x a second (does nothing while off) */
         setInterval(trollTick, 250);

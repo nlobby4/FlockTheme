@@ -3441,6 +3441,8 @@ html.fmAnimPopups:not(.flockmodCustomizationsDisabled) .dialog > .fmDeco .fmdTai
    html.fmBubOn:not(.flockmodCustomizationsDisabled)   = html.fmBubOn   (+ data-fm-bub="style")
    Your messages: .messageBlock[data-type="MYMSG"]
    Colors: --fmbub-bg / -text / -border, decoration -a -b -c -d
+   Chat Notification cards: .fmCnStack .fmCnCard.fmCnOwn is your bubble
+   (third selector in each rule)
    ========================================================= */
 
 /* Layout: time + name on one row, the messages under it */
@@ -3498,6 +3500,31 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled) #chatMessages .chatBlock.messa
     white-space: pre-wrap;
 }
 
+/* v1.6.3: Chat Notification cards wear the bubbles too. Your whole card
+   becomes the bubble (on the right with "Your cards on the right");
+   everyone else's cards get the bubble shape with "Bubbles for others".
+   The channel color stays as the stripe on the card's edge. */
+html.fmBubOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmCnCard.fmCnOwn,
+html.fmBubOn:not(.flockmodCustomizationsDisabled).fmBubOthers .fmCnStack .fmCnCard:not(.fmCnOwn):not(.fmCnEvent) {
+    position: relative;
+    box-sizing: border-box;
+    align-self: flex-start;
+    width: fit-content;
+    min-width: 45%;
+    max-width: 88%;
+    border-radius: 14px;
+}
+/* Interface > Chat Notifications > "Your cards on the right" */
+html.fmBubOn.fmCnOwnRight:not(.flockmodCustomizationsDisabled) .fmCnStack .fmCnCard.fmCnOwn { align-self: flex-end; }
+html.fmBubOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmCnCard.fmCnOwn { border-left: var(--fmcn-edge) solid var(--fmcn-c) !important; }
+html.fmBubOn:not(.flockmodCustomizationsDisabled) .fmCnStack.fmCnRight .fmCnCard.fmCnOwn {
+    border-left: 1.5px solid var(--fmbub-border) !important;
+    border-right: var(--fmcn-edge) solid var(--fmcn-c) !important;
+}
+/* Your name, place and time take the bubble's text color */
+html.fmBubOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmCnCard.fmCnOwn .fmCnName { color: inherit; }
+html.fmBubOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmCnCard.fmCnOwn .fmCnTag { color: inherit; font-weight: 600; }
+
 /* Everyone else: plain, see-through bubbles (keeps chat colors) */
 html.fmBubOn:not(.flockmodCustomizationsDisabled).fmBubOthers #chatMessages .messageBlock:not([data-type="MYMSG"]) .msgText,
 .themeModBubblePreview.fmPrevOn.fmBubOthers .messageBlock:not([data-type="MYMSG"]) .msgText {
@@ -3521,32 +3548,41 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled).fmBubRight #chatMessages .mess
 
 /* Your bubble */
 html.fmBubOn:not(.flockmodCustomizationsDisabled) #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn .messageBlock[data-type="MYMSG"] .msgText {
+.themeModBubblePreview.fmPrevOn .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmCnCard.fmCnOwn {
     background-color: var(--fmbub-bg) !important;
     color: var(--fmbub-text) !important;
     border: 1.5px solid var(--fmbub-border);
 }
 html.fmBubOn:not(.flockmodCustomizationsDisabled) #chatMessages .messageBlock[data-type="MYMSG"] .msgText a,
-.themeModBubblePreview.fmPrevOn .messageBlock[data-type="MYMSG"] .msgText a { color: inherit !important; text-decoration: underline; }
+.themeModBubblePreview.fmPrevOn .messageBlock[data-type="MYMSG"] .msgText a,
+html.fmBubOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmCnCard.fmCnOwn a { color: inherit !important; text-decoration: underline; }
 
 /* Room above for decorations that stick out of the top */
 html.fmBubOn:not(.flockmodCustomizationsDisabled) #chatMessages .msgText.fmBubHasDeco,
-.themeModBubblePreview.fmPrevOn .msgText.fmBubHasDeco { margin-top: 12px; }
+.themeModBubblePreview.fmPrevOn .msgText.fmBubHasDeco,
+html.fmBubOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmCnCard.fmBubHasDeco { margin-top: 12px; }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="bunny"] #chatMessages .msgText.fmBubHasDeco,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="bunny"] .msgText.fmBubHasDeco { margin-top: 26px; }
+.themeModBubblePreview.fmPrevOn[data-fm-bub="bunny"] .msgText.fmBubHasDeco,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="bunny"] .fmCnStack .fmCnCard.fmBubHasDeco { margin-top: 26px; }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="witch"] #chatMessages .msgText.fmBubHasDeco,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="witch"] .msgText.fmBubHasDeco { margin-top: 17px; }
+.themeModBubblePreview.fmPrevOn[data-fm-bub="witch"] .msgText.fmBubHasDeco,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="witch"] .fmCnStack .fmCnCard.fmBubHasDeco { margin-top: 17px; }
 /* Paws / petals / stars that hang below the bubble need a little room */
 html.fmBubOn:not(.flockmodCustomizationsDisabled):is([data-fm-bub="bear"], [data-fm-bub="stars"], [data-fm-bub="sakura"]) #chatMessages .msgText.fmBubHasDeco,
-.themeModBubblePreview.fmPrevOn:is([data-fm-bub="bear"], [data-fm-bub="stars"], [data-fm-bub="sakura"]) .msgText.fmBubHasDeco { margin-bottom: 6px; }
+.themeModBubblePreview.fmPrevOn:is([data-fm-bub="bear"], [data-fm-bub="stars"], [data-fm-bub="sakura"]) .msgText.fmBubHasDeco,
+html.fmBubOn:not(.flockmodCustomizationsDisabled):is([data-fm-bub="bear"], [data-fm-bub="stars"], [data-fm-bub="sakura"]) .fmCnStack .fmCnCard.fmBubHasDeco { margin-bottom: 6px; }
 /* Tails sticking out on the right need room when bubbles are on the right */
 html.fmBubOn.fmBubRight:not(.flockmodCustomizationsDisabled):is([data-fm-bub="cat"], [data-fm-bub="fox"]) #chatMessages .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
-.themeModBubblePreview.fmPrevOn.fmBubRight:is([data-fm-bub="cat"], [data-fm-bub="fox"]) .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco { margin-right: 8px; }
+.themeModBubblePreview.fmPrevOn.fmBubRight:is([data-fm-bub="cat"], [data-fm-bub="fox"]) .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
+html.fmBubOn:not(.flockmodCustomizationsDisabled).fmBubRight:is([data-fm-bub="cat"], [data-fm-bub="fox"]) .fmCnStack .fmCnCard.fmCnOwn.fmBubHasDeco { margin-right: 8px; }
 /* Cat: ears sit at both ends, so short messages ("ok") get room for both */
 html.fmBubOn:not(.flockmodCustomizationsDisabled):is([data-fm-bub="cat"], [data-fm-bub="fox"], [data-fm-bub="bear"]) #chatMessages .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
-.themeModBubblePreview.fmPrevOn:is([data-fm-bub="cat"], [data-fm-bub="fox"], [data-fm-bub="bear"]) .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco { box-sizing: border-box; min-width: 58px; padding-left: 17px; padding-right: 17px; }
+.themeModBubblePreview.fmPrevOn:is([data-fm-bub="cat"], [data-fm-bub="fox"], [data-fm-bub="bear"]) .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
+html.fmBubOn:not(.flockmodCustomizationsDisabled):is([data-fm-bub="cat"], [data-fm-bub="fox"], [data-fm-bub="bear"]) .fmCnStack .fmCnCard.fmCnOwn.fmBubHasDeco { box-sizing: border-box; min-width: 58px; padding-left: 17px; padding-right: 17px; }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="stars"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="stars"] .messageBlock[data-type="MYMSG"] .msgText { box-shadow: 0 0 8px color-mix(in srgb, var(--fmbub-a) 25%, transparent); }
+.themeModBubblePreview.fmPrevOn[data-fm-bub="stars"] .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="stars"] .fmCnStack .fmCnCard.fmCnOwn { box-shadow: 0 0 8px color-mix(in srgb, var(--fmbub-a) 25%, transparent); }
 
 .fmBubDeco { display: none; }
 html.fmBubOn:not(.flockmodCustomizationsDisabled) .fmBubDeco,
@@ -3570,16 +3606,19 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled) .fmBubDeco,
 
 /* ---- per-style looks ---- */
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="simple"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="simple"] .messageBlock[data-type="MYMSG"] .msgText { border-color: transparent; }
+.themeModBubblePreview.fmPrevOn[data-fm-bub="simple"] .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="simple"] .fmCnStack .fmCnCard.fmCnOwn { border-color: transparent; }
 
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="glitch"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="glitch"] .messageBlock[data-type="MYMSG"] .msgText {
+.themeModBubblePreview.fmPrevOn[data-fm-bub="glitch"] .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="glitch"] .fmCnStack .fmCnCard.fmCnOwn {
     border-radius: 2px;
     font-family: ui-monospace, Consolas, monospace;
     box-shadow: -2px 0 0 var(--fmbub-a), 2px 0 0 var(--fmbub-b);
 }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="strawberry"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="strawberry"] .messageBlock[data-type="MYMSG"] .msgText {
+.themeModBubblePreview.fmPrevOn[data-fm-bub="strawberry"] .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="strawberry"] .fmCnStack .fmCnCard.fmCnOwn {
     background-image:
         radial-gradient(1.1px 1.8px at 4px 5px, color-mix(in srgb, var(--fmbub-c) 22%, transparent) 99%, transparent),
         radial-gradient(1.1px 1.8px at 13px 13px, color-mix(in srgb, var(--fmbub-c) 22%, transparent) 99%, transparent);   /* v1.5: softer, so text reads easily */
@@ -3587,32 +3626,41 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="strawberry"] #cha
     text-shadow: 0 1px 1px rgba(0, 0, 0, .35);
 }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="dragon"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="dragon"] .messageBlock[data-type="MYMSG"] .msgText {
+.themeModBubblePreview.fmPrevOn[data-fm-bub="dragon"] .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="dragon"] .fmCnStack .fmCnCard.fmCnOwn {
     background-image: radial-gradient(circle at 50% 100%, transparent 5px,
         color-mix(in srgb, var(--fmbub-b) 10%, transparent) 5.5px,
         color-mix(in srgb, var(--fmbub-b) 10%, transparent) 6.6px, transparent 7px);   /* v1.5: softer scales */
     background-size: 12px 7px;
 }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="gothic"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="gothic"] .messageBlock[data-type="MYMSG"] .msgText { font-family: Georgia, "Times New Roman", serif; }
+.themeModBubblePreview.fmPrevOn[data-fm-bub="gothic"] .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="gothic"] .fmCnStack .fmCnCard.fmCnOwn { font-family: Georgia, "Times New Roman", serif; }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="terminal"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="terminal"] .messageBlock[data-type="MYMSG"] .msgText {
+.themeModBubblePreview.fmPrevOn[data-fm-bub="terminal"] .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="terminal"] .fmCnStack .fmCnCard.fmCnOwn {
     border-radius: 2px;
     font-family: ui-monospace, Consolas, monospace;
     text-shadow: 0 0 6px color-mix(in srgb, var(--fmbub-text) 45%, transparent);
 }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="terminal"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText::before,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="terminal"] .messageBlock[data-type="MYMSG"] .msgText::before { content: "> "; opacity: .6; }
+.themeModBubblePreview.fmPrevOn[data-fm-bub="terminal"] .messageBlock[data-type="MYMSG"] .msgText::before,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="terminal"] .fmCnStack .fmCnCard.fmCnOwn .fmCnLine::before { content: "> "; opacity: .6; }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="ink"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="ink"] .messageBlock[data-type="MYMSG"] .msgText { border-radius: 14px 5px 13px 6px; border-width: 1.5px 2.5px 3px 1.5px; box-shadow: 2px 2px 0 rgba(0, 0, 0, .5); }
+.themeModBubblePreview.fmPrevOn[data-fm-bub="ink"] .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="ink"] .fmCnStack .fmCnCard.fmCnOwn { border-radius: 14px 5px 13px 6px; border-width: 1.5px 2.5px 3px 1.5px; box-shadow: 2px 2px 0 rgba(0, 0, 0, .5); }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="deepsea"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="deepsea"] .messageBlock[data-type="MYMSG"] .msgText { box-shadow: 0 0 10px color-mix(in srgb, var(--fmbub-a) 35%, transparent); }
+.themeModBubblePreview.fmPrevOn[data-fm-bub="deepsea"] .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="deepsea"] .fmCnStack .fmCnCard.fmCnOwn { box-shadow: 0 0 10px color-mix(in srgb, var(--fmbub-a) 35%, transparent); }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="minimal"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="minimal"] .messageBlock[data-type="MYMSG"] .msgText { border-radius: 8px 3px 3px 8px; border-right: 3px solid var(--fmbub-a); }
+.themeModBubblePreview.fmPrevOn[data-fm-bub="minimal"] .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="minimal"] .fmCnStack .fmCnCard.fmCnOwn { border-radius: 8px 3px 3px 8px; border-right: 3px solid var(--fmbub-a); }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="ghost"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="ghost"] .messageBlock[data-type="MYMSG"] .msgText { border-radius: 16px 16px 3px 3px; margin-bottom: 6px; }
+.themeModBubblePreview.fmPrevOn[data-fm-bub="ghost"] .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="ghost"] .fmCnStack .fmCnCard.fmCnOwn { border-radius: 16px 16px 3px 3px; margin-bottom: 6px; }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="ghost"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText::after,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="ghost"] .messageBlock[data-type="MYMSG"] .msgText::after {
+.themeModBubblePreview.fmPrevOn[data-fm-bub="ghost"] .messageBlock[data-type="MYMSG"] .msgText::after,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="ghost"] .fmCnStack .fmCnCard.fmCnOwn::after {
     content: "";
     position: absolute;
     left: 0; right: 0; bottom: -6px;
@@ -3621,7 +3669,8 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="ghost"] #chatMess
     background-size: 12px 6px;
 }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="pixel"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="pixel"] .messageBlock[data-type="MYMSG"] .msgText {
+.themeModBubblePreview.fmPrevOn[data-fm-bub="pixel"] .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="pixel"] .fmCnStack .fmCnCard.fmCnOwn {
     border-radius: 0;
     border-color: transparent;
     font-family: ui-monospace, Consolas, monospace;
@@ -3630,9 +3679,11 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="pixel"] #chatMess
     box-shadow: inset -3px -3px 0 var(--fmbub-a);
 }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="sticky"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="sticky"] .messageBlock[data-type="MYMSG"] .msgText { border-radius: 2px; border-color: transparent; rotate: -1.5deg; box-shadow: 2px 3px 0 rgba(0, 0, 0, .25); margin-top: 6px; }
+.themeModBubblePreview.fmPrevOn[data-fm-bub="sticky"] .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="sticky"] .fmCnStack .fmCnCard.fmCnOwn { border-radius: 2px; border-color: transparent; rotate: -1.5deg; box-shadow: 2px 3px 0 rgba(0, 0, 0, .25); margin-top: 6px; }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="sticky"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText::before,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="sticky"] .messageBlock[data-type="MYMSG"] .msgText::before {
+.themeModBubblePreview.fmPrevOn[data-fm-bub="sticky"] .messageBlock[data-type="MYMSG"] .msgText::before,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="sticky"] .fmCnStack .fmCnCard.fmCnOwn::before {
     content: "";
     position: absolute;
     top: -7px; left: 50%;
@@ -3646,9 +3697,12 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="sticky"] #chatMes
 @keyframes fmbFlap { 50% { transform: scaleX(.2); } }
 @keyframes fmbTwinkleKf { 50% { transform: scale(.5) rotate(45deg); opacity: .5; } }
 @keyframes fmbFloatKf { 0% { transform: translateY(6px); opacity: 0; } 100% { transform: none; opacity: 1; } }
-html.fmAnimPopups.fmBubOn:not(.flockmodCustomizationsDisabled) #chatMessages .fmBubDeco .fmbWing { animation: fmbFlap calc(.32s * var(--fm-anim-speed, 1)) ease-in-out 3; }
-html.fmAnimPopups.fmBubOn:not(.flockmodCustomizationsDisabled) #chatMessages .fmBubDeco .fmbTwinkle { animation: fmbTwinkleKf calc(.5s * var(--fm-anim-speed, 1)) ease-in-out 2; }
-html.fmAnimPopups.fmBubOn:not(.flockmodCustomizationsDisabled) #chatMessages .fmBubDeco .fmbFloat { animation: fmbFloatKf calc(.8s * var(--fm-anim-speed, 1)) ease-out 1; }
+html.fmAnimPopups.fmBubOn:not(.flockmodCustomizationsDisabled) #chatMessages .fmBubDeco .fmbWing,
+html.fmAnimPopups.fmBubOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmBubDeco .fmbWing { animation: fmbFlap calc(.32s * var(--fm-anim-speed, 1)) ease-in-out 3; }
+html.fmAnimPopups.fmBubOn:not(.flockmodCustomizationsDisabled) #chatMessages .fmBubDeco .fmbTwinkle,
+html.fmAnimPopups.fmBubOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmBubDeco .fmbTwinkle { animation: fmbTwinkleKf calc(.5s * var(--fm-anim-speed, 1)) ease-in-out 2; }
+html.fmAnimPopups.fmBubOn:not(.flockmodCustomizationsDisabled) #chatMessages .fmBubDeco .fmbFloat,
+html.fmAnimPopups.fmBubOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmBubDeco .fmbFloat { animation: fmbFloatKf calc(.8s * var(--fm-anim-speed, 1)) ease-out 1; }
 
 /* ---- menu preview ---- */
 .dialog[name="themeModMenu"] .themeModBubblePreviewWrap { padding: 8px 14px 14px; }
@@ -3683,6 +3737,15 @@ html:not(.flockmodCustomizationsDisabled) #sidebar tr.fmTrollFlag td[class*="ran
 /* One red bar at the very start of the row */
 html:not(.flockmodCustomizationsDisabled) #sidebar tr.fmTrollFlag > td:first-child {
     box-shadow: inset 3px 0 0 var(--fm-troll-color, #ff3b3b);
+}
+
+/* "Show in list" from the warning: their name in the highlight color for a few seconds */
+html:not(.flockmodCustomizationsDisabled) #sidebar tr.fmTrollShown td[class*="rank"] {
+    color: var(--fm-troll-color, #ff3b3b) !important;
+    font-weight: 700 !important;
+}
+html:not(.flockmodCustomizationsDisabled) #sidebar tr.fmTrollShown > td {
+    background-color: color-mix(in srgb, var(--fm-troll-color, #ff3b3b) 18%, transparent) !important;
 }
 
 /* Chat: the name in their messages */
@@ -5089,7 +5152,8 @@ html.flockmodCanvasDimActive:not(.flockmodCustomizationsDisabled) .boardContaine
 
 /* Lamb bubbles: room for the wool puff, both ears and the bell */
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="lamb"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="lamb"] .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco {
+.themeModBubblePreview.fmPrevOn[data-fm-bub="lamb"] .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="lamb"] .fmCnStack .fmCnCard.fmCnOwn.fmBubHasDeco {
     box-sizing: border-box;
     min-width: 64px;
     margin: 16px 20px 18px !important;
@@ -5125,7 +5189,8 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="lamb"] #chatMessa
 
 /* Café bubbles: room above for the mug */
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="cafe"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="cafe"] .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco {
+.themeModBubblePreview.fmPrevOn[data-fm-bub="cafe"] .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="cafe"] .fmCnStack .fmCnCard.fmCnOwn.fmBubHasDeco {
     box-sizing: border-box;
     min-width: 56px;
     margin-top: 20px !important;
@@ -5217,7 +5282,8 @@ html.fmAnimPopups:not(.flockmodCustomizationsDisabled) .dialog > .fmDeco .fmDeco
 
 /* Celestial bubbles: room above for the moon */
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="celestial"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="celestial"] .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco {
+.themeModBubblePreview.fmPrevOn[data-fm-bub="celestial"] .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="celestial"] .fmCnStack .fmCnCard.fmCnOwn.fmBubHasDeco {
     margin-top: 8px !important;
 }
 
@@ -5229,7 +5295,8 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="celestial"] #chat
 .fmDeco .fmdGrinRim { filter: drop-shadow(0 0 1px rgba(255, 255, 255, .55)); }
 .fmbGrinRim { filter: drop-shadow(0 0 1px rgba(255, 255, 255, .55)); }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="grinball"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="grinball"] .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco {
+.themeModBubblePreview.fmPrevOn[data-fm-bub="grinball"] .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="grinball"] .fmCnStack .fmCnCard.fmCnOwn.fmBubHasDeco {
     box-sizing: border-box;
     min-width: 40px;
     margin-left: 26px !important;
@@ -5446,13 +5513,15 @@ html.fmAnimPopups:not(.flockmodCustomizationsDisabled) .dialog > .fmDeco .fmdLuc
 
 /* Lucky days bubbles: teal-to-green gradient, room for the clovers */
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="lucky"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="lucky"] .messageBlock[data-type="MYMSG"] .msgText {
+.themeModBubblePreview.fmPrevOn[data-fm-bub="lucky"] .messageBlock[data-type="MYMSG"] .msgText,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="lucky"] .fmCnStack .fmCnCard.fmCnOwn {
     background-image: linear-gradient(100deg, var(--fmbub-bg) 0%,
         color-mix(in srgb, var(--fmbub-a) 45%, var(--fmbub-b)) 55%, var(--fmbub-b) 100%);
     text-shadow: 0 1px 2px rgba(0, 0, 0, .45);
 }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="lucky"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="lucky"] .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco {
+.themeModBubblePreview.fmPrevOn[data-fm-bub="lucky"] .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="lucky"] .fmCnStack .fmCnCard.fmCnOwn.fmBubHasDeco {
     margin-bottom: 7px;
     margin-right: 10px;
 }
@@ -5519,7 +5588,8 @@ html.fmAnimPopups:not(.flockmodCustomizationsDisabled) .dialog > .fmDeco .fmdMai
 }
 .fmBubDeco .fmbMaidLaceB { background-image: radial-gradient(circle at 5px 0, var(--fmbub-a) 3.4px, transparent 4px); }
 html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="maid"] #chatMessages .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
-.themeModBubblePreview.fmPrevOn[data-fm-bub="maid"] .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco {
+.themeModBubblePreview.fmPrevOn[data-fm-bub="maid"] .messageBlock[data-type="MYMSG"] .msgText.fmBubHasDeco,
+html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="maid"] .fmCnStack .fmCnCard.fmCnOwn.fmBubHasDeco {
     box-sizing: border-box;
     min-width: 50px;
     margin-bottom: 7px;
@@ -5709,5 +5779,535 @@ html.flockmodBgCanvasActive:not(.flockmodCustomizationsDisabled) #DrawingArea {
 /* v1.6.2: glowing names in What's new ({pink:Name} etc.) */
 .dialog[name="themeModMenu"] .fmWhatsNewName { font-weight: 700; }
 .dialog[name="themeModMenu"] .fmWhatsNewName-pink { color: #e0478a; text-shadow: 0 0 6px rgba(244, 100, 160, .75), 0 0 12px rgba(244, 100, 160, .45); }
-.dialog[name="themeModMenu"] .fmWhatsNewName-blue { color: #2f7fd6; text-shadow: 0 0 6px rgba(80, 160, 255, .75), 0 0 12px rgba(80, 160, 255, .45); }
+.dialog[name="themeModMenu"] .fmWhatsNewName-blue { color: #1b83dd; text-shadow: 0 0 6px rgba(27, 131, 221, .75), 0 0 12px rgba(27, 131, 221, .45); }
+.dialog[name="themeModMenu"] .fmWhatsNewName-teal { color: #2babba; text-shadow: 0 0 6px rgba(43, 171, 186, .75), 0 0 12px rgba(43, 171, 186, .45); }
 .dialog[name="themeModMenu"] .fmWhatsNewName-orange { color: #e07a1f; text-shadow: 0 0 6px rgba(255, 150, 50, .8), 0 0 12px rgba(255, 150, 50, .45); }
+
+
+/* v1.6.3: update dot on the bottom bar flower */
+.themeModMenuButton.fmHasUpdateDot { position: relative; }
+.themeModMenuButton.fmHasUpdateDot::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f48fb1;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, .35), 0 0 6px rgba(244, 143, 177, .9);
+    pointer-events: none;
+}
+
+
+/* v1.6.3: chat highlights (mentions of your name / extra words) */
+html.fmHlOn:not(.flockmodCustomizationsDisabled) .msgLine.fmHl,
+html.fmHlOn:not(.flockmodCustomizationsDisabled) .offlineMessage.fmHl {
+    background-color: color-mix(in srgb, var(--fm-hl-color, #f48fb1) 18%, transparent) !important;
+    box-shadow: inset 3px 0 0 var(--fm-hl-color, #f48fb1);
+    border-radius: 3px;
+}
+
+/* v1.6.3: background images saved with themes */
+.dialog[name="themeModMenu"] .themeModSaveImagesRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: -2px 0 8px;
+    font-size: .72rem;
+    color: #b9bbbe !important;   /* grey, never your themed label color */
+    cursor: pointer;
+}
+.dialog[name="themeModMenu"] .themeModSaveImagesRow input { margin: 0; accent-color: #e0668f; }
+.dialog[name="themeModMenu"] .themeModSavedHasImages { margin-left: 4px; font-size: .8em; color: #f48fb1; opacity: .85; }
+
+
+/* =========================================================
+   v1.6.3 CLOCK, TIME CARD + BREAK REMINDER
+   ========================================================= */
+.fmClockItem { display: none; }
+html.fmClockOn:not(.flockmodCustomizationsDisabled) .fmClockItem { display: list-item; list-style: none; }
+.fmClockButton .fmClockTime {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    letter-spacing: .02em;
+}
+.fmTimeCard {
+    position: fixed !important;
+    z-index: 2147483000 !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 220px;
+    padding: 12px 14px 10px;
+    border: 1px solid #f7a1c0;
+    border-radius: 10px;
+    color: #4a2433;
+    background: linear-gradient(160deg, #fff4f8 0%, #ffe1ec 55%, #fcd0e0 100%);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .4), 0 0 14px rgba(244, 143, 177, .4);
+    font-family: Rubik, sans-serif;
+    font-size: 13px;
+}
+.fmTimeCard .fmTimeTitle { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 700; color: #b83d6c; }
+.fmTimeCard .fmTourFlower, .fmBreakToast .fmTourFlower { width: 20px; height: 20px; flex: none; }
+.fmTimeCard .fmTimeRow { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed rgba(184, 61, 108, .2); }
+.fmTimeCard .fmTimeRow b { font-variant-numeric: tabular-nums; color: #8a2f55; }
+.fmTimeCard .fmTimeNote { margin-top: 8px; font-size: 11px; color: #8a5468; line-height: 1.4; }
+.fmBreakToast {
+    position: fixed !important;
+    right: 20px;
+    bottom: 60px;
+    z-index: 2147483000 !important;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: 300px;
+    padding: 12px 14px;
+    border: 1px solid #f7a1c0;
+    border-radius: 10px;
+    color: #4a2433;
+    background: linear-gradient(160deg, #fff4f8 0%, #ffe1ec 55%, #fcd0e0 100%);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .4), 0 0 14px rgba(244, 143, 177, .4);
+    font-family: Rubik, sans-serif;
+    font-size: 12.5px;
+    line-height: 1.45;
+    flex-wrap: wrap;
+}
+.fmBreakToast .fmBreakText { flex: 1; min-width: 0; }
+.fmBreakToast .fmBreakText b { color: #b83d6c; }
+.fmBreakToast .fmBreakButtons { display: flex; gap: 6px; width: 100%; justify-content: flex-end; }
+.fmBreakToast button {
+    border: 1px solid #f48fb1;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    background: #fff;
+    color: #b83d6c;
+}
+.fmBreakToast button[data-break="ok"] { background: linear-gradient(135deg, #f48fb1, #e0668f); color: #fff; border-color: #e0668f; }
+html.fmAnimMenu .fmBreakToast { animation: fmWhatsNewIn calc(.35s * var(--fm-anim-speed, 1)) cubic-bezier(.25, .8, .25, 1); }
+.fmClockButton, .fmClockButton:hover { text-decoration: none !important; }
+
+
+/* =========================================================
+   v1.6.3 CHAT NOTIFICATIONS
+   Cards beside the canvas, on the side away from the sidebar.
+   Colors follow your theme unless set in Colors > Chat
+   Notifications: popup background, chat text, Accent 1.
+   ========================================================= */
+.fmCnStack {
+    contain: layout style;   /* card changes never re-lay out the rest of FlockMod */
+    --fmcn-s: 1;
+    --fmcn-edge: calc(5px * var(--fmcn-s));   /* the pink / green / yellow chat line on each card */
+    --fmcn-bg: var(--fmcn-native-bg, #1f2226);
+    --fmcn-text: var(--fmcn-native-text, #dfe3e6);
+    --fmcn-public: #f48fb1;
+    --fmcn-staff: #6fd38a;
+    --fmcn-pm: #d6b147;
+    position: fixed;
+    z-index: 95;   /* inside FlockMod's .contentScreen: over the canvas, under popups */
+    display: none;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    gap: calc(6px * var(--fmcn-s));
+    width: 260px;
+    pointer-events: none;
+    font-size: calc(12.5px * var(--fmcn-s));
+    line-height: 1.35;
+    color: var(--fmcn-text);
+}
+html.fmCnOn:not(.flockmodCustomizationsDisabled) .fmCnStack:not(.fmCnHide) { display: flex; }
+.fmCnStack.fmCnRight { align-items: flex-end; }
+.fmCnStack [hidden] { display: none !important; }
+
+/* Theme first, then your own Chat Notification colors */
+html.flockmodPopupBackgroundActive .fmCnStack { --fmcn-bg: var(--flockmod-custom-popup-background); }
+html.flockmodChatMessageActive .fmCnStack { --fmcn-text: var(--flockmod-custom-chat-message); }
+html.flockmodSidebarAccentActive .fmCnStack { --fmcn-public: var(--flockmod-custom-sidebar-accent); }
+html.flockmodCnBackgroundActive .fmCnStack { --fmcn-bg: var(--flockmod-custom-cn-background); }
+html.flockmodCnTextActive .fmCnStack { --fmcn-text: var(--flockmod-custom-cn-text); }
+html.flockmodCnPublicActive .fmCnStack { --fmcn-public: var(--flockmod-custom-cn-public); }
+html.flockmodCnStaffActive .fmCnStack { --fmcn-staff: var(--flockmod-custom-cn-staff); }
+html.flockmodCnPmActive .fmCnStack { --fmcn-pm: var(--flockmod-custom-cn-pm); }
+
+.fmCnStack .fmCnList {
+    display: flex;
+    flex-direction: column;
+    gap: calc(6px * var(--fmcn-s));
+    width: 100%;
+    /* Scrolls (while you hover) once there's more than fits. The padding
+       and negative margin give bubble decorations room inside the
+       scroll box so ears and tails aren't cut off. */
+    flex: 0 1 auto;
+    min-height: 0;
+    box-sizing: content-box;
+    padding: 30px 28px 4px;
+    margin: -30px -28px -4px;
+    overflow: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--fmcn-text) 30%, transparent) transparent;
+    transition: opacity calc(.12s * var(--fm-anim-speed, 1)) ease;
+}
+.fmCnStack.fmCnOpen .fmCnList { overflow-y: auto; }
+/* Switching chats: one soft fade of the whole list (no sliding) */
+.fmCnStack .fmCnList.fmCnSwapOut { opacity: 0; }
+.fmCnStack.fmCnCollapsed .fmCnList,
+.fmCnStack.fmCnCollapsed .fmCnExtra { display: none; }
+
+.fmCnStack .fmCnCard {
+    --fmcn-c: var(--fmcn-public);
+    pointer-events: auto;
+    cursor: pointer;
+    padding: calc(7px * var(--fmcn-s)) calc(10px * var(--fmcn-s));
+    border-radius: 8px;
+    border-left: var(--fmcn-edge) solid var(--fmcn-c);
+    background: color-mix(in srgb, var(--fmcn-bg) 94%, transparent);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .3);
+    color: var(--fmcn-text);
+    overflow-wrap: anywhere;
+    transition: opacity .4s, transform .3s;
+}
+.fmCnStack.fmCnRight .fmCnCard { border-left: 0; border-right: var(--fmcn-edge) solid var(--fmcn-c); }
+.fmCnStack .fmCnCard.fmCn-staff { --fmcn-c: var(--fmcn-staff); background: color-mix(in srgb, color-mix(in srgb, var(--fmcn-staff) 20%, var(--fmcn-bg)) 94%, transparent); }
+.fmCnStack .fmCnCard.fmCn-pm { --fmcn-c: var(--fmcn-pm); background: color-mix(in srgb, color-mix(in srgb, var(--fmcn-pm) 22%, var(--fmcn-bg)) 94%, transparent); }
+/* Mentions follow Interface > Chat Highlight (on/off and its color) */
+html.fmHlOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmCnCard.fmCnMention {
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .3), 0 0 0 1px var(--fm-hl-color, #f48fb1), 0 0 12px color-mix(in srgb, var(--fm-hl-color, #f48fb1) 55%, transparent);
+}
+html.fmHlOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmCnLine.fmCnHl {
+    margin-left: -4px;
+    padding-left: 4px;
+    border-radius: 4px;
+    background-color: color-mix(in srgb, var(--fm-hl-color, #f48fb1) 18%, transparent);
+    box-shadow: inset 2px 0 0 var(--fm-hl-color, #f48fb1);
+    opacity: 1;
+}
+.fmCnStack .fmCnCard.fmCnOut { opacity: 0; transform: translateY(6px); }
+html.fmAnimMenu .fmCnStack .fmCnCard:not(.fmCnOut):not(.fmCnNoAnim) { animation: fmCnIn calc(.25s * var(--fm-anim-speed, 1)) ease-out; }
+@keyframes fmCnIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* Earlier messages (scrolling up) fade in softly where they belong */
+html.fmAnimMenu .fmCnStack .fmCnCard.fmCnEarlier:not(.fmCnOut) { animation: fmCnFadeIn calc(.35s * var(--fm-anim-speed, 1)) ease-out; }
+@keyframes fmCnFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.fmCnStack .fmCnHead { display: flex; align-items: baseline; gap: 6px; font-size: .9em; }
+
+/* Events (joins, leaves, IPs, mod actions): small, gray, out of the way */
+.fmCnStack .fmCnCard.fmCnEvent {
+    --fmcn-c: color-mix(in srgb, var(--fmcn-text) 30%, transparent);
+    padding: calc(3px * var(--fmcn-s)) calc(9px * var(--fmcn-s));
+    border-left-width: 2px;
+    background: color-mix(in srgb, var(--fmcn-bg) 80%, transparent);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .18);
+    font-size: .85em;
+    cursor: default;
+}
+.fmCnStack.fmCnRight .fmCnCard.fmCnEvent { border-right-width: 2px; }
+.fmCnStack .fmCnEvent .fmCnHead { display: none; }
+.fmCnStack .fmCnEvent .fmCnText { margin-top: 0; color: color-mix(in srgb, currentColor 75%, transparent); }
+/* Mod actions: the action word and the mod's name (rank color) stand out */
+.fmCnStack .fmCnEvent .fmCnModWord { color: #e5534b; font-weight: 700; }
+.fmCnStack .fmCnEvent .fmCnModWord.fmCnModUndo { color: #57ab5a; }
+.fmCnStack .fmCnEvent .fmCnModName { font-weight: 700; }
+.fmCnStack .fmCnEvent .fmCnModName:not([class*="rank"]) { color: var(--fmcn-text, inherit); }
+.fmCnStack .fmCnEvent .fmCnEvTime { opacity: .7; font-variant-numeric: tabular-nums; }
+.fmCnStack .fmCnFlag { height: .9em; width: auto; vertical-align: -.05em; border-radius: 1px; }
+.fmCnStack .fmCnName { font-weight: 600; }
+.fmCnStack .fmCnOwn .fmCnName { color: var(--fmcn-c); }
+.fmCnStack .fmCnWhere { opacity: .65; }
+.fmCnStack .fmCnCount {
+    margin-left: auto;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--fmcn-c);
+    color: #222;
+    font-size: .85em;
+    white-space: nowrap;
+}
+.fmCnStack .fmCnTime {
+    margin-left: auto;
+    opacity: .6;
+    font-size: .85em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.fmCnStack .fmCnCount:not([hidden]) + .fmCnTime { margin-left: 0; }
+.fmCnStack .fmCnText { margin-top: 2px; }
+.fmCnStack .fmCnLine { overflow-wrap: anywhere; }
+.fmCnStack .fmCnLine + .fmCnLine { margin-top: 2px; }
+.fmCnStack .fmCnLine:not(:last-child) { opacity: .75; }
+.fmCnStack .fmCnLink { color: inherit; text-decoration: underline; text-underline-offset: 2px; word-break: break-all; }
+.fmCnStack .fmCnLink:hover { color: var(--fmcn-c); }
+.fmCnStack .fmCnEmoji { height: 1.4em; width: auto; vertical-align: -.3em; }
+.fmCnStack .fmCnImg {
+    display: block;
+    max-width: 100%;
+    max-height: calc(90px * var(--fmcn-s));
+    margin-top: 4px;
+    border-radius: 6px;
+    cursor: zoom-in;
+}
+
+/* Reply box + switcher: shown while you hover or type. Opens with a
+   real height animation (grid rows 0fr -> 1fr), so it is smooth both
+   ways; the open state is kept by JS (fmCnOpen) so it can't flicker. */
+.fmCnStack .fmCnExtra {
+    pointer-events: auto;
+    display: grid;
+    grid-template-rows: 0fr;
+    width: 100%;
+    opacity: 0;
+    visibility: hidden;
+    transition: grid-template-rows .2s ease, opacity .15s, visibility 0s linear .2s;
+}
+.fmCnStack .fmCnExtraIn {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-height: 0;
+    overflow: hidden;
+    padding: 6px;       /* room for shadows and the picture's x */
+    margin: -6px;
+}
+.fmCnStack.fmCnOpen .fmCnExtra,
+.fmCnStack .fmCnExtra:focus-within {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition: grid-template-rows .2s ease, opacity .15s .05s, visibility 0s;
+}
+.fmCnStack.fmCnRight .fmCnExtraIn { align-items: flex-end; }
+
+.fmCnStack .fmCnReplyRow { display: flex; gap: 4px; width: 100%; }
+.fmCnStack .fmCnInput {
+    flex: 1;
+    min-width: 0;
+    height: calc(28px * var(--fmcn-s));
+    padding: 0 8px;
+    border: 1px solid color-mix(in srgb, var(--fmcn-text) 25%, transparent);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--fmcn-bg) 96%, transparent);
+    color: var(--fmcn-text);
+    font: inherit;
+    outline: none;
+}
+/* The typing box wears the chat you're sending to (pink / green / yellow) */
+.fmCnStack { --fmcn-to: var(--fmcn-public); }
+.fmCnStack[data-cn-target="staff"] { --fmcn-to: var(--fmcn-staff); }
+.fmCnStack[data-cn-target="pm"] { --fmcn-to: var(--fmcn-pm); }
+.fmCnStack .fmCnInput {
+    border: 1.5px solid color-mix(in srgb, var(--fmcn-to) 65%, transparent);
+    background: color-mix(in srgb, color-mix(in srgb, var(--fmcn-to) 10%, var(--fmcn-bg)) 96%, transparent);
+}
+.fmCnStack .fmCnInput:focus { border-color: var(--fmcn-to); box-shadow: 0 0 0 2px color-mix(in srgb, var(--fmcn-to) 25%, transparent); }
+.fmCnStack .fmCnInput::placeholder { color: var(--fmcn-text); opacity: .5; }
+
+.fmCnStack button {
+    transition: background-color .15s, color .15s;
+    font: inherit;
+    font-size: .9em;
+    line-height: 1.3;
+    cursor: pointer;
+    border: 0;
+    border-radius: 999px;
+    padding: 2px 9px;
+    background: transparent;
+    color: var(--fmcn-text);
+}
+.fmCnStack .fmCnSend { border-radius: 6px; padding: 0 9px; background: var(--fmcn-public); color: #222; }
+.fmCnStack .fmCnPic,
+.fmCnStack .fmCnEmo { border-radius: 6px; padding: 0 7px; opacity: .8; }
+.fmCnStack .fmCnEmo:hover { opacity: 1; color: var(--fmcn-public); }
+.fmCnStack .fmCnChatEmoji,
+.fmCnStack .fmCnEmojiPanel button { font-family: var(--fmcn-emoji-font, inherit); }
+.fmCnStack .fmCnChatEmoji { font-size: 1.25em; line-height: 1; vertical-align: -.1em; }
+.fmCnStack .fmCnEmojiPanel {
+    width: 100%;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--fmcn-bg) 96%, transparent);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .3);
+    overflow: hidden;
+}
+.fmCnStack .fmCnEmojiCats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 4px;
+    border-bottom: 1px solid color-mix(in srgb, var(--fmcn-text) 15%, transparent);
+}
+.fmCnStack .fmCnEmojiCats button { padding: 2px 5px; border-radius: 6px; font-size: 1.05em; opacity: .6; }
+.fmCnStack .fmCnEmojiCats button.active,
+.fmCnStack .fmCnEmojiCats button:hover { opacity: 1; background: color-mix(in srgb, var(--fmcn-text) 12%, transparent); }
+.fmCnStack .fmCnEmojiGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(calc(30px * var(--fmcn-s)), 1fr));
+    max-height: calc(140px * var(--fmcn-s));
+    overflow-y: auto;
+    padding: 4px;
+}
+.fmCnStack .fmCnEmojiGrid button { padding: 2px 0; border-radius: 6px; font-size: 1.35em; line-height: 1.2; }
+.fmCnStack .fmCnEmojiGrid button:hover { background: color-mix(in srgb, var(--fmcn-text) 12%, transparent); }
+.fmCnStack .fmCnPic:hover { opacity: 1; color: var(--fmcn-public); }
+.fmCnStack .fmCnAttach {
+    position: relative;
+    align-self: flex-start;
+    padding: 4px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--fmcn-bg) 94%, transparent);
+}
+.fmCnStack.fmCnRight .fmCnAttach { align-self: flex-end; }
+.fmCnStack .fmCnAttach img { display: block; max-width: calc(120px * var(--fmcn-s)); max-height: calc(80px * var(--fmcn-s)); border-radius: 5px; }
+.fmCnStack .fmCnUnattach {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    font-size: 10px;
+    line-height: 18px;
+    background: var(--fmcn-bg);
+    border: 1px solid color-mix(in srgb, var(--fmcn-text) 30%, transparent);
+}
+.fmCnStack[data-cn-target="staff"] .fmCnSend { background: var(--fmcn-staff); }
+.fmCnStack[data-cn-target="pm"] .fmCnSend { background: var(--fmcn-pm); }
+
+.fmCnStack .fmCnTabs,
+.fmCnStack .fmCnPeople:not(:empty),
+.fmCnStack .fmCnPill {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding: 3px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--fmcn-bg) 94%, transparent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+}
+.fmCnStack .fmCnPeople { border-radius: 12px; }
+.fmCnStack .fmCnPeople:not(:empty) { background: color-mix(in srgb, color-mix(in srgb, var(--fmcn-pm) 22%, var(--fmcn-bg)) 94%, transparent); }
+.fmCnStack .fmCnTabs button:hover,
+.fmCnStack .fmCnPeople button:hover { background: color-mix(in srgb, var(--fmcn-text) 12%, transparent); }
+.fmCnStack .fmCnTabs [data-cn-tab="public"].on { background: var(--fmcn-public); color: #222; }
+.fmCnStack .fmCnTabs [data-cn-tab="staff"].on { background: var(--fmcn-staff); color: #222; }
+.fmCnStack .fmCnTabs [data-cn-tab="pm"].on,
+.fmCnStack .fmCnPeople button.on { background: var(--fmcn-pm); color: #222; }
+.fmCnStack .fmCnPeople .fmCnMore { border: 1px dashed color-mix(in srgb, var(--fmcn-pm) 70%, transparent); }
+.fmCnStack .fmCnDot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-left: 4px;
+    border-radius: 50%;
+    background: var(--fmcn-pm);
+    vertical-align: 1px;
+}
+/* The tabs stay on screen: they pick which chat the cards show.
+   A dot = new messages there (in that chat's color). */
+.fmCnStack .fmCnTabs { pointer-events: auto; font-size: .92em; }
+.fmCnStack.fmCnCollapsed .fmCnTabs { display: none; }
+.fmCnStack .fmCnTabs [data-cn-tab="public"] .fmCnDot { background: var(--fmcn-public); }
+.fmCnStack .fmCnTabs [data-cn-tab="staff"] .fmCnDot { background: var(--fmcn-staff); }
+.fmCnStack .fmCnTabs .fmCnDot { box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--fmcn-bg) 80%, transparent); }
+.fmCnStack .fmCnTabs .on .fmCnDot { background: #222; box-shadow: none; }
+.fmCnStack .fmCnNote:empty { display: none; }
+.fmCnStack .fmCnNote { font-size: .85em; padding: 3px 8px; border-radius: 6px; background: color-mix(in srgb, var(--fmcn-bg) 94%, transparent); }
+
+.fmCnStack .fmCnPill {
+    pointer-events: auto;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    color: var(--fmcn-text);
+    opacity: .85;
+}
+.fmCnStack .fmCnPill:hover { opacity: 1; }
+.fmCnStack .fmCnBadge {
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--fmcn-public);
+    color: #222;
+    font-size: .9em;
+}
+
+/* Width: the pink grip on the edge facing the canvas */
+.fmCnStack .fmCnGrip {
+    pointer-events: auto;
+    position: absolute;
+    bottom: 30px;
+    width: 6px;
+    height: 44px;
+    border-radius: 3px;
+    background: #f48fb1;
+    opacity: 0;
+    cursor: ew-resize;
+    transition: opacity .2s;
+    touch-action: none;
+}
+.fmCnStack.fmCnLeft .fmCnGrip { right: -9px; }
+.fmCnStack.fmCnRight .fmCnGrip { left: -9px; }
+.fmCnStack.fmCnOpen .fmCnGrip { opacity: .8; }
+.fmCnStack.fmCnCollapsed .fmCnGrip { display: none; }
+
+
+/* Chat notification cards follow Interface > Font, Font Size and Font
+   Weight (custom fonts too), like the chat itself */
+html.flockmodFontActive:not(.flockmodCustomizationsDisabled) .fmCnStack {
+    font-family: var(--flockmod-custom-ui-font, Rubik, sans-serif) !important;
+}
+html.flockmodFontSizeActive:not(.flockmodCustomizationsDisabled) .fmCnStack {
+    font-size: calc(12.5px * var(--fmcn-s) * var(--flockmod-custom-ui-font-size, 1));
+}
+html.flockmodFontWeightActive:not(.flockmodCustomizationsDisabled) .fmCnStack .fmCnText,
+html.flockmodFontWeightActive:not(.flockmodCustomizationsDisabled) .fmCnStack .fmCnInput {
+    font-weight: var(--flockmod-custom-ui-font-weight, 400) !important;
+}
+
+/* Card text can be selected and copied, like FlockMod's chat */
+.fmCnStack .fmCnText,
+.fmCnStack .fmCnName {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+}
+.fmCnStack .fmCnText { cursor: text; }
+.fmCnStack .fmCnText ::selection,
+.fmCnStack .fmCnName::selection { background: color-mix(in srgb, var(--fmcn-c) 45%, transparent); }
+
+/* @tags: FlockMod's yellow, in the cards and the @ list */
+.fmCnStack .fmCnTag:not(.fmCnTagUnknown) { color: #d6b147; font-weight: 500; }
+.fmCnStack .fmCnTagList {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    padding: 3px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--fmcn-bg) 97%, transparent);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .3);
+}
+.fmCnStack .fmCnTagList button { border-radius: 6px; padding: 3px 8px; text-align: left; }
+.fmCnStack .fmCnTagList button.active,
+.fmCnStack .fmCnTagList button:hover { background: color-mix(in srgb, #d6b147 25%, transparent); }
+
+
+/* v1.6.3: pink dots on new features after an update (tab, section, setting) */
+.dialog[name="themeModMenu"] .fmNewDot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-left: 7px;
+    vertical-align: middle;
+    border-radius: 50%;
+    background: #f48fb1;
+    box-shadow: 0 0 6px rgba(244, 143, 177, .9);
+    pointer-events: auto;
+    flex: none;
+}
+html.fmAnimMenu .dialog[name="themeModMenu"] .fmNewDot {
+    animation: fmNewDotPulse calc(1.6s * var(--fm-anim-speed, 1)) ease-in-out 3;
+}
+@keyframes fmNewDotPulse {
+    50% { box-shadow: 0 0 10px 2px rgba(244, 143, 177, .95); }
+}
