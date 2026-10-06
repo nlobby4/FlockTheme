@@ -3,6 +3,8 @@ A browser extension made to mod flockmod and make it customizable
 
 It will work with any browser that allows extensions. Firefox is more complicated.
 
+The example used here is chrome, but general idea is the same for any browser that allows extensions! including Edge.
+
 1. Click the Green button that says "<> Code"
 2. Click Download ZIP
 3. Go to your Folders > Downloads > You should see ZIP file called "Flockmod Themer and Mod"
