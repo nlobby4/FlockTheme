@@ -4043,8 +4043,11 @@ function buildSimpleColorRowsHTML() {
         const now = Date.now();
         cnShown.forEach((t, k) => { if (now - t > 5000) cnShown.delete(k); });
         const key = `${user.toLowerCase()}|${text.replace(/\s+/g, " ").trim().toLowerCase()}`;
-        if (cnShown.has(key)) return true;
+        /* the same message split differently ("yasuu_" + "b: hi" vs "yasuu_:b" + "hi") */
+        const joined = `=${user}:${text}`.replace(/\s+/g, "").toLowerCase();
+        if (cnShown.has(key) || cnShown.has(joined)) return true;
         cnShown.set(key, now);
+        cnShown.set(joined, now);
         return false;
     }
 
@@ -4272,6 +4275,22 @@ function buildSimpleColorRowsHTML() {
     const cnBar = { el: null, obs: null, last: "" };
     const CN_BAR_KINDS = { PM: "pm", PUBLICROOM: "public", STAFFROOM: "staff" };
 
+    /* The longest name we know (user list, chat) that "Name: text" starts with */
+    function cnKnownNameAt(line) {
+        const names = new Set();
+        document.querySelectorAll("#sidebar tr[name]").forEach((tr) => names.add(tr.getAttribute("name")));
+        document.querySelectorAll("#chatMessages .chatBlock[data-username]").forEach((b) => names.add(b.dataset.username));
+        cnRankCache.forEach((_, name) => names.add(name));
+        let best = "";
+        names.forEach((name) => {
+            if (name && name.includes(":") && name.length > best.length &&
+                line.startsWith(name) && /^\s*:/.test(line.slice(name.length))) {
+                best = name;
+            }
+        });
+        return best;
+    }
+
     function cnReadBar() {
         const bar = cnBar.el;
         const catEl = bar?.querySelector(".msgCategory");
@@ -4318,15 +4337,22 @@ function buildSimpleColorRowsHTML() {
         const hasImg = Boolean(textEl?.querySelector("img"));
 
         if (!user) {
-            /* "Name: message" — split the name off (the message may be just a picture) */
-            const m = (tidy(textEl) || rest).match(/^([^:\s][^:]{0,39}?)\s*:\s*([\s\S]*)$/);
+            /* "Name: message" — split the name off (the message may be just a picture).
+               Names can have a colon in them ("yasuu_:b"), so a name we know
+               from the user list or chat wins over the first colon. */
+            const line = tidy(textEl) || rest;
+            const known = cnKnownNameAt(line);
+            const m = known
+                ? [line, known, line.slice(known.length).replace(/^\s*:/, "")]
+                : line.match(/^([^:\s][^:]{0,39}?)\s*:\s*([\s\S]*)$/);
             if (m && (m[2].trim() || hasImg)) {
                 user = m[1].trim();
                 text = m[2].trim() || "[image]";
                 /* take "Name:" off the copy too */
                 const first = src && [...src.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
-                if (first && first.textContent.includes(":")) {
-                    first.textContent = first.textContent.slice(first.textContent.indexOf(":") + 1).replace(/^\s+/, "");
+                const cut = first ? first.textContent.indexOf(":", known && first.textContent.trimStart().startsWith(known) ? first.textContent.indexOf(known) + known.length : 0) : -1;
+                if (first && cut > -1) {
+                    first.textContent = first.textContent.slice(cut + 1).replace(/^\s+/, "");
                 } else {
                     src = null;
                 }
