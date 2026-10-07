@@ -1,9 +1,9 @@
 # FlockTheme
 A browser extension made to mod flockmod and make it customizable
 
-It will work with any browser that allows extensions. Firefox is more complicated.
+- It will work with any browser that allows extensions. Firefox is more complicated.
 
-The example used here is chrome, but general idea is the same for any browser that allows extensions! including Edge.
+- The example used here is chrome, but general idea is the same for any browser that allows extensions! including Edge.
 
 1. Click the Green button that says "<> Code"
 2. Click Download ZIP
@@ -15,6 +15,7 @@ The example used here is chrome, but general idea is the same for any browser th
 8. Choose the extracted file
 9. Make sure the extension is turned on
 10. Reload Flockmod and enjoy!
-
+---
 11. When updating, you can remove/uninstall the outdated extension and it's files. Then follow step 1-10 with the new one
 12. Your saved settings/themes/imported images should be saved.
+13. If you're using another extension, it should still work the same, you can toggle on/off any features included in this mod to favor another!
