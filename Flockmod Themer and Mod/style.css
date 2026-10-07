@@ -6345,3 +6345,15 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .fmNewDot {
     vertical-align: .05em;
 }
 .fmCnStack .fmCnTabs .on .fmCnDot.fmCnCount1 { color: #fff; }
+
+/* v1.6.4: pen & touch drag-scrolling (no text selection while dragging) */
+.fmPenScrolling,
+.fmPenScrolling * {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    cursor: grabbing;
+}
+.fmCnStack .fmCnList,
+.fmCnStack .fmCnPmList,
+.dialog[name="themeModMenu"] .themeModSectionsScroll { touch-action: pan-y; }
+.dialog[name="themeModMenu"] .themeModJumpBar { touch-action: pan-x; }

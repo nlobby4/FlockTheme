@@ -22,6 +22,7 @@
                 "Hover the chat pill to bring back messages that faded away.",
                 "Unread counts on the chat tabs and on each PM name.",
                 "Reading a PM in the chat notifications marks it read in FlockMod too.",
+                "Pen and touch friendly: tap the chat notifications to open them, and drag to scroll them and the mod menu.",
                 "Pink dots in the menu show what's new after an update.",
                 "Search only shows settings that match.",
                 "FlockTheme has its own flower icon in your extensions list.",
@@ -3393,6 +3394,11 @@ function buildSimpleColorRowsHTML() {
         });
 
         cnStack.querySelector(".fmCnPill").addEventListener("click", () => {
+            /* pen/finger: the tap that just opened the cards doesn't hide them too */
+            if (!cnStack.classList.contains("fmCnCollapsed") && Date.now() - (cnStack._tapOpened || 0) < 700) {
+                cnStack._tapOpened = 0;
+                return;
+            }
             const collapsed = !cnStack.classList.contains("fmCnCollapsed");
             cnStack.classList.toggle("fmCnCollapsed", collapsed);
             localStorage.setItem(CN_LS.hidden, String(collapsed));
@@ -3406,6 +3412,7 @@ function buildSimpleColorRowsHTML() {
         });
 
         cnStack.addEventListener("mouseenter", cnOpenControls);
+        cnSetupPenTouch();
 
         /* Back on FlockMod's tab: fill in any name colors that were missing */
         document.addEventListener("visibilitychange", () => {
@@ -3705,6 +3712,75 @@ function buildSimpleColorRowsHTML() {
             : event.deltaY;
         list.scrollTop += dy;
         if (dy < 0 && list.scrollTop <= 0) cnWheelUp();
+    }
+
+    /* ---------- Pen & touch (v1.6.4) ----------
+       A pen or finger can't use the mouse wheel, and FlockMod turns off the
+       browser's own touch scrolling (so pens draw instead). This lets a
+       pen/finger drag scroll a box. Taps still work; a drag only scrolls once
+       it moves a few pixels, and the click at the end of a drag is dropped. */
+    function penDragScroll(el, { skip = "", horizontal = false } = {}) {
+        if (!el || el._fmPenScroll) return;
+        el._fmPenScroll = true;
+        let drag = null;
+
+        el.addEventListener("pointerdown", (event) => {
+            if (event.pointerType === "mouse" || event.button > 0) return;
+            if (skip && event.target.closest(skip)) return;
+            drag = { id: event.pointerId, x: event.clientX, y: event.clientY, top: el.scrollTop, left: el.scrollLeft, moved: false };
+        });
+
+        el.addEventListener("pointermove", (event) => {
+            if (!drag || event.pointerId !== drag.id) return;
+            const dx = event.clientX - drag.x;
+            const dy = event.clientY - drag.y;
+            if (!drag.moved) {
+                if (Math.hypot(dx, dy) < 8) return;
+                drag.moved = true;
+                el.classList.add("fmPenScrolling");
+                window.getSelection()?.removeAllRanges();
+                try { el.setPointerCapture(event.pointerId); } catch (err) { /* fine */ }
+            }
+            if (horizontal) el.scrollLeft = drag.left - dx;
+            else el.scrollTop = drag.top - dy;
+            event.preventDefault();
+        });
+
+        const end = (event) => {
+            if (!drag || event.pointerId !== drag.id) return;
+            if (drag.moved) {
+                const stop = (e) => { e.stopPropagation(); e.preventDefault(); };
+                el.addEventListener("click", stop, { capture: true, once: true });
+                setTimeout(() => el.removeEventListener("click", stop, { capture: true }), 50);
+            }
+            el.classList.remove("fmPenScrolling");
+            drag = null;
+        };
+        el.addEventListener("pointerup", end);
+        el.addEventListener("pointercancel", end);
+    }
+
+    /* The cards open on a tap (pen or finger: no hover needed) and close
+       when you tap somewhere else */
+    function cnSetupPenTouch() {
+        if (!cnStack || cnStack._fmPen) return;
+        cnStack._fmPen = true;
+
+        cnStack.addEventListener("pointerdown", (event) => {
+            if (event.pointerType === "mouse") return;
+            if (!cnStack.classList.contains("fmCnOpen")) {
+                cnStack._tapOpened = Date.now();   /* this tap only opens */
+                cnOpenControls();
+            }
+        }, true);
+
+        document.addEventListener("pointerdown", (event) => {
+            if (event.pointerType === "mouse" || !cnStack?.classList.contains("fmCnOpen")) return;
+            if (cnStack.contains(event.target) || event.target.closest?.(".fmCnPmList")) return;
+            cnCloseSoon();
+        }, true);
+
+        ["fmCnList", "fmCnPmList", "fmCnTagList", "fmCnEmojiGrid"].forEach((c) => penDragScroll(cnStack.querySelector(`.${c}`)));
     }
 
     function cnOpenControls() {
@@ -18110,6 +18186,10 @@ const safetyControls = setupSafetyPanel(dialog);
     function setupJumpNavAndSearch(dialog) {
         const scroller = dialog.querySelector(".themeModSectionsScroll");
         const jumpBar = dialog.querySelector(".themeModJumpBar");
+
+        /* pen/finger: drag to scroll (not on sliders, switches, pickers or text boxes) */
+        penDragScroll(scroller, { skip: 'input, select, textarea, button, label, a, [draggable="true"], .themeModToggle, .themeModRangeControl, .fmDecoPicker, canvas' });
+        penDragScroll(jumpBar, { horizontal: true });
         const search = dialog.querySelector(".themeModSearch");
         const searchInput = dialog.querySelector(".themeModSearchInput");
         const searchButton = dialog.querySelector(".themeModSearchButton");
