@@ -23,7 +23,7 @@
                 "Pink dots in the menu show what's new after an update.",
                 "Search only shows settings that match.",
                 "FlockTheme has its own flower icon in your extensions list.",
-                "Fixes: no pings for your own PMs, no double messages from names with a colon, and the Staff tab only shows for staff."
+                "Fixes: no pings for your own PMs, no double or nameless (?) messages in the chat notifications, and the Staff tab only shows for staff."
             ]
         },
         {
@@ -4496,7 +4496,7 @@ function buildSimpleColorRowsHTML() {
         let user = tidy(nameEl) || nameEl?.dataset?.username || "";
         let text = textEl ? cnReadLine(textEl) : "";
         let src = textEl ? textEl.cloneNode(true) : null;
-        const hasImg = Boolean(textEl?.querySelector("img"));
+        const hasImg = Boolean((textEl || bar).querySelector("img:not(.flagIcon)"));
 
         if (!user) {
             /* "Name: message" — split the name off (the message may be just a picture).
@@ -4518,6 +4518,10 @@ function buildSimpleColorRowsHTML() {
                 } else {
                     src = null;
                 }
+            } else if (m || /:\s*$/.test(line)) {
+                /* Just "Name:" — a picture or something the bar can't show.
+                   The full message comes from the chat a moment later. */
+                return;
             } else if (!text) {
                 text = rest;
                 src = null;
