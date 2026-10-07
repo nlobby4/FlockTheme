@@ -4279,10 +4279,28 @@ function buildSimpleColorRowsHTML() {
 
     const cnOwnSeen = new Map();
 
+    /* Every message already shown, by chat + name + FlockMod's time + text.
+       FlockMod redraws a chat's messages when it switches channels (which
+       sending and marking PMs as read do), and the redrawn copies look new.
+       Kept for the room (trimmed to the newest 600). */
+    const cnSigSeen = new Map();
+
+    function cnSeenBefore(channel, user, lines, block, text) {
+        const time = cnTimeOf(lines, block);
+        if (!time) return false;
+        const sig = `${channel}|${user}|${time}|${String(text).replace(/\s+/g, " ").trim().toLowerCase()}`;
+        if (cnSigSeen.has(sig)) return true;
+        cnSigSeen.set(sig, Date.now());
+        if (cnSigSeen.size > 600) cnSigSeen.delete(cnSigSeen.keys().next().value);
+        return false;
+    }
+
     function cnHandleOwnBlock(block, lines) {
         const channel = block.closest(".channelMessages")?.getAttribute("name") || "";
         const text = lines.map(cnReadLine).filter(Boolean).join(" ");
         if (!channel || !text) return;
+
+        if (cnSeenBefore(channel, "\u0000me", lines, block, text)) return;   /* a redrawn copy */
 
         const now = Date.now();
         /* pictures can take a while to upload, so their copy may come much later */
@@ -4371,7 +4389,7 @@ function buildSimpleColorRowsHTML() {
         const nameEl = block.querySelector(".msgUsername");
         const user = block.dataset.username || nameEl?.textContent?.trim() || "?";
 
-        if (cnAlreadyShown(user, text)) {
+        if (cnSeenBefore(channel, user, lines, block, text) || cnAlreadyShown(user, text)) {
             return;
         }
 
@@ -4401,7 +4419,7 @@ function buildSimpleColorRowsHTML() {
         const channel = block.closest(".channelMessages")?.getAttribute("name") || "";
         const text = lines.map(cnReadLine).filter(Boolean).join(" ");
 
-        if (cnKindOf(channel) !== "public" || !text) {
+        if (cnKindOf(channel) !== "public" || !text || cnSeenBefore(channel, "\u0000event", lines, block, text)) {
             return;
         }
         if (!liveCn.on || !customizationsEnabled || (liveCn.closedOnly && cnChatIsOpen())) {
@@ -4501,6 +4519,8 @@ function buildSimpleColorRowsHTML() {
         cnMissed.clear();
         cnViewUnread.clear();
         cnShown.clear();
+        cnSigSeen.clear();
+        cnOwnSeen.clear();
         cnRecentPm.length = 0;
         cnSentByCards.clear();
         cnRankCache.clear();
