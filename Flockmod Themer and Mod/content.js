@@ -16,6 +16,14 @@
        ========================================================= */
     const CHANGELOG = [
         {
+            version: "1.6.5",
+            notes: [
+                "Fix: after hiding the chat, holding Space pans again instead of drawing a line.",
+                "Holding Space with the chat reply box empty pans the board too.",
+                "Fix: pictures in chat (like a picture with an @mention) now show in the chat overlay."
+            ]
+        },
+        {
             version: "1.6.4",
             notes: [
                 "Message anyone in the room: the new button beside the chat reply box.",
@@ -2434,7 +2442,7 @@ function buildSimpleColorRowsHTML() {
 
     function cnRemember(view, m) {
         const list = cnRecent.get(view) || [];
-        const entry = { ...m, id: cnNextId++, time: m.time || cnClock() };
+        const entry = { ...m, id: cnNextId++, time: m.time || cnClock(), at: Date.now() };
         list.push(entry);
         while (list.length > CN_MAX_RECENT) list.shift();
         cnRecent.set(view, list);
@@ -4448,6 +4456,10 @@ function buildSimpleColorRowsHTML() {
        bar). Remember what was shown in the last few seconds. */
     const cnShown = new Map();
 
+    /* v1.6.5: when the chat's own copy of someone's message last showed up
+       (even with its picture still loading), by lowercase name */
+    const cnChatCopyAt = new Map();
+
     /* Your own messages: sent from the cards, or typed in FlockMod's own
        chat window. Both go in that chat's history (so you see what you
        said when you come back); FlockMod's copy of a card message is skipped. */
@@ -4540,6 +4552,87 @@ function buildSimpleColorRowsHTML() {
         return false;
     }
 
+    /* v1.6.5: fills in the picture on a card the activity bar made from
+       the words alone. Only the newest card from that person (last 15s). */
+    function cnAddPicture(kind, channel, user, lines) {
+        const view = cnCardView({ kind, channel, key: channel });
+        const entries = cnRecent.get(view) || [];
+        const srcs = lines.map((l) => l.querySelector?.(".msgText") || l);
+        const now = Date.now();
+
+        for (let i = entries.length - 1; i >= 0 && i >= entries.length - 6; i--) {
+            const e = entries[i];
+            if (e.own || e.event || e.user !== user) continue;
+            if (now - (e.at || 0) > 15000) return;
+            if ((e.srcs || []).some((s) => s.querySelector?.("img:not(.flagIcon)"))) return;   /* has it already */
+
+            e.srcs = srcs;
+            const card = cnStack?.querySelector(`.fmCnList > .fmCnCard[data-mid="${e.id}"]`);
+            const line = card?.querySelector(".fmCnText > .fmCnLine:last-child");
+            if (line) {
+                const time = line.querySelector(".fmCnEvTime");
+                [...line.childNodes].forEach((n) => { if (n !== time) n.remove(); });
+                srcs.forEach((src, n) => {
+                    if (n) line.append(" ");
+                    cnRich(src, line);
+                });
+                if (cnStack.classList.contains("fmCnOpen")) {
+                    const list = cnStack.querySelector(".fmCnList");
+                    if (list._fmFollow !== false) cnToBottom(list);
+                }
+            }
+            return;
+        }
+    }
+
+    /* v1.6.5: the activity bar showed a picture-only message. Normally the
+       chat's copy (with the picture) follows; if it never does (FlockMod
+       doesn't always fill a closed chat), show the bar's copy instead of
+       dropping the message. */
+    function cnBarPictureLater(kind, user, srcEl) {
+        user = String(user || "").replace(/^[@#]/, "").replace(/:$/, "").replace(/^(from|to)\s+/i, "").trim();
+        if (!kind || !user || user === myOwnName() || Date.now() - lastSentAt < 1500) {
+            return;
+        }
+
+        const at = Date.now();
+        const keep = srcEl?.querySelector?.("img:not(.flagIcon)") ? srcEl.cloneNode(true) : null;
+
+        setTimeout(() => {
+            if ((cnChatCopyAt.get(user.toLowerCase()) || 0) >= at - 1000) {
+                return;   /* the chat's copy came: it shows the picture */
+            }
+            const shownSince = [...cnRecent.values()].some((list) =>
+                list.some((e) => !e.own && e.user === user && (e.at || 0) >= at));
+            if (shownSince) {
+                return;   /* the bar filled in the real message after all */
+            }
+            if (!liveCn.on || !customizationsEnabled || (liveCn.closedOnly && cnChatIsOpen())) {
+                return;
+            }
+            if (cnAlreadyShown(user, "[image]")) {
+                return;
+            }
+
+            const channel = kind === "pm" ? `@${user}` : (kind === "staff" ? "#staff" : "#public");
+            cnAddCard({
+                key: kind === "pm" ? channel : `${channel}|${user}`,
+                kind,
+                channel,
+                user,
+                color: "",
+                where: `· ${cnLabel(channel)}`,
+                text: keep ? "[image]" : "Sent a picture (see FlockMod's chat)",
+                srcs: keep ? [keep] : [],
+                mention: false
+            });
+
+            if (cnStack?.classList.contains("fmCnOpen")) {
+                cnRenderControls();
+            }
+        }, 5000);
+    }
+
     function cnHandleBlock(block, lines) {
         if (block && (block.classList.contains("eventBlock") || block.classList.contains("gmBlock"))) {
             cnHandleEvent(block, lines);
@@ -4577,7 +4670,16 @@ function buildSimpleColorRowsHTML() {
         const nameEl = block.querySelector(".msgUsername");
         const user = block.dataset.username || nameEl?.textContent?.trim() || "?";
 
-        if (cnSeenBefore(channel, user, lines, block, text) || cnAlreadyShown(user, text)) {
+        if (cnSeenBefore(channel, user, lines, block, text)) {
+            return;
+        }
+
+        if (cnAlreadyShown(user, text)) {
+            /* v1.6.5: the activity bar got there first with only the words
+               ("@name" + a pasted picture): put the picture in that card */
+            if (lines.some((l) => l.querySelector?.("img:not(.flagIcon)"))) {
+                cnAddPicture(kind, channel, user, lines);
+            }
             return;
         }
 
@@ -4664,6 +4766,10 @@ function buildSimpleColorRowsHTML() {
 
         let waiting = false;
         fresh.forEach((line) => {
+            const from = line.closest(".chatBlock");
+            const fromName = from?.dataset.username || from?.querySelector(".msgUsername")?.textContent?.trim();
+            if (fromName) cnChatCopyAt.set(fromName.toLowerCase(), Date.now());
+
             if (!cnReadLine(line)) {
                 return;   /* still empty: FlockMod fills it in a moment */
             }
@@ -4862,7 +4968,9 @@ function buildSimpleColorRowsHTML() {
                 }
             } else if (m || hasImg || /:\s*$/.test(line)) {
                 /* Just "Name:" or a picture: the bar can't show it properly.
-                   The full message comes from the chat a moment later. */
+                   The full message comes from the chat a moment later
+                   (v1.6.5: and if it doesn't, the bar's copy shows). */
+                cnBarPictureLater(kind, m ? m[1].trim() : (line.match(/^([^:]{1,40}):\s*$/) || [])[1], textEl || bar);
                 return;
             } else if (!text) {
                 text = rest;
@@ -4871,6 +4979,7 @@ function buildSimpleColorRowsHTML() {
         }
 
         if (!text.trim() || text === "[image]") {
+            cnBarPictureLater(kind, user, textEl || bar);   /* v1.6.5: in case the chat's copy never comes */
             return;   /* a picture: the chat's copy (with the picture) shows it */
         }
 
