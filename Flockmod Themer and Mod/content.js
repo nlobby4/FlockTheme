@@ -20,10 +20,12 @@
             notes: [
                 "Message anyone in the room: the new button beside the chat reply box.",
                 "Hover the chat pill to bring back messages that faded away.",
+                "Unread counts on the chat tabs and on each PM name.",
+                "Reading a PM in the chat notifications marks it read in FlockMod too.",
                 "Pink dots in the menu show what's new after an update.",
                 "Search only shows settings that match.",
                 "FlockTheme has its own flower icon in your extensions list.",
-                "Fixes: no pings for your own PMs, no double or nameless (?) messages in the chat notifications, and the Staff tab only shows for staff."
+                "Fixes: no pings for your own PMs, no double, nameless (?) or [image] messages in the chat notifications, and the Staff tab only shows for staff."
             ]
         },
         {
@@ -2808,9 +2810,14 @@ function buildSimpleColorRowsHTML() {
             }
 
             button.click();
-            await cnWait(60);
 
-            /* Send button didn't take it: try Enter in the box */
+            /* Give FlockMod time to take it (slower with several tabs open).
+               Pressing Enter too soon sent the message twice. */
+            for (let t = 0; t < 1200 && input.value === text; t += 50) {
+                await cnWait(50);
+            }
+
+            /* Send button really didn't take it: try Enter in the box */
             if (input.value === text) {
                 ["keydown", "keypress", "keyup"].forEach((type) => input.dispatchEvent(
                     new KeyboardEvent(type, { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true, cancelable: true })));
@@ -2833,6 +2840,65 @@ function buildSimpleColorRowsHTML() {
         } finally {
             restore();
         }
+    }
+
+    /* Reading a PM in the cards counts as reading it in FlockMod too:
+       FlockMod clears a PM's unread dot when that PM is selected in its
+       chat, so it's selected for a moment (invisibly, while FlockMod's
+       chat is closed) and then the chat goes back to where it was. Waits
+       its turn behind any message being sent. */
+    function cnMarkRead(channel) {
+        if (!channel || !channel.startsWith("@") || !cnStack || cnStack.classList.contains("fmCnCollapsed")) return;
+        const hasBadge = () => Boolean(cnTitleFor(channel)?.querySelector(".channelIcons .badge"));
+        if (!hasBadge() || cnChatIsOpen()) return;   /* FlockMod's chat on screen: that's yours to click */
+        if (cnMarkRead.busy?.has(channel)) return;
+        (cnMarkRead.busy ||= new Set()).add(channel);
+
+        const job = cnSending.then(async () => {
+            const d = cnChatDialog();
+            const title = cnTitleFor(channel);
+            if (!d || !title || !hasBadge() || cnChatIsOpen()) return;
+
+            const before = d.querySelector(".channelTitle.selected");
+            const focused = document.activeElement;
+            const draft = d.querySelector('.chatTextGroup input[name="text"]')?.value;
+            let restore = () => {};
+            const select = async (t) => {
+                t.click();
+                if (!await cnWaitSelected(t, 120)) cnPokeTitle(t);
+                if (!await cnWaitSelected(t, 120)) {
+                    restore = cnRevealChat(d);
+                    t.click();
+                    if (!await cnWaitSelected(t, 200)) cnPokeTitle(t);
+                    await cnWaitSelected(t, 300);
+                }
+            };
+
+            try {
+                /* already selected but still unread: step off it and back */
+                if (title.classList.contains("selected")) {
+                    const other = cnTitles().find((t) => t !== title && t.getAttribute("name") === "#public") ||
+                        cnTitles().find((t) => t !== title);
+                    if (other) await select(other);
+                }
+                await select(title);
+                await cnWait(80);
+                if (before && before !== title && before.isConnected) await select(before);
+            } finally {
+                restore();
+                const input = d.querySelector('.chatTextGroup input[name="text"]');
+                if (input && draft && !input.value) input.value = draft;
+                if (focused && focused.isConnected && document.activeElement !== focused) {
+                    focused.focus({ preventScroll: true });
+                }
+            }
+        });
+        cnSending = job.catch(() => false);
+        job.catch(() => {}).finally(() => {
+            cnMarkRead.busy.delete(channel);
+            cnReadAt.set(channel, Date.now());
+            cnRenderControls();
+        });
     }
 
     /* ---------- The cards ---------- */
@@ -3130,6 +3196,8 @@ function buildSimpleColorRowsHTML() {
             }
 
             cnSentByCards.set(cnSentKey(target.channel, text || "[image]"), Date.now());
+            if (target.kind === "pm") cnReadAt.set(target.channel, Date.now());
+            if (file && text) cnSentByCards.set(cnSentKey(target.channel, `${text} [image]`), Date.now());
             cnTouchPm(target.channel);
 
             cnAddCard({
@@ -3413,6 +3481,10 @@ function buildSimpleColorRowsHTML() {
     function cnApplyView() {
         const view = cnViewKey(cnTarget.kind, cnTarget.channel);
         cnViewUnread.delete(view);
+        if (cnTarget.kind === "pm") {
+            cnReadAt.set(cnTarget.channel, Date.now());
+            setTimeout(() => cnMarkRead(cnTarget.channel), 400);
+        }
 
         if (cnStack._view === view) {
             return;
@@ -3457,6 +3529,29 @@ function buildSimpleColorRowsHTML() {
         cnRenderControls();
     }
 
+    /* Unread messages in a chat: what the cards counted, or FlockMod's own badge */
+    /* PMs you just read or replied to in the cards: FlockMod's own badge
+       lags behind for a moment, so it's not counted for a few seconds */
+    const cnReadAt = new Map();
+
+    function cnUnreadCount(view) {
+        let n = cnViewUnread.has(view) ? (cnMissed.get(view) || 1) : 0;
+        if (view.startsWith("@") && !n && !(Date.now() - (cnReadAt.get(view) || 0) < 6000)) {
+            /* FlockMod's badge only counts when it shows a real number */
+            const badge = cnTitleFor(view)?.querySelector(".channelIcons .badge");
+            const fm = badge && getComputedStyle(badge).display !== "none" ? parseInt(badge.textContent, 10) : 0;
+            if (fm > 0) n = fm;
+        }
+        return n;
+    }
+
+    function cnAddCount(el, n) {
+        const dot = document.createElement("span");
+        dot.className = "fmCnDot fmCnCount1";
+        dot.textContent = n > 99 ? "99+" : String(n);
+        el.appendChild(dot);
+    }
+
     function cnRenderControls() {
         if (!cnStack) {
             return;
@@ -3479,12 +3574,13 @@ function buildSimpleColorRowsHTML() {
 
         tabs.querySelectorAll("[data-cn-tab]").forEach((b) => {
             const kind = b.dataset.cnTab;
-            const unread = kind === "pm"
-                ? [...cnViewUnread].some((v) => v.startsWith("@"))
-                : cnViewUnread.has(kind);
+            /* how many you haven't seen there (PM: all PMs together) */
+            const count = kind === "pm"
+                ? pms.reduce((n, c) => n + (c === cnTarget.channel && cnTarget.kind === "pm" ? 0 : cnUnreadCount(c)), 0)
+                : cnUnreadCount(kind);
             b.classList.toggle("on", kind === cnTarget.kind);
             b.querySelector(".fmCnDot")?.remove();
-            if (unread) b.insertAdjacentHTML("beforeend", '<span class="fmCnDot"></span>');
+            if (count) cnAddCount(b, count);
         });
         cnStack.dataset.cnTarget = cnTarget.kind;
 
@@ -3499,9 +3595,8 @@ function buildSimpleColorRowsHTML() {
                 chip.className = channel === cnTarget.channel ? "on" : "";
                 chip.textContent = channel.slice(1);
 
-                if ((cnViewUnread.has(channel) || cnHasUnread(channel)) && channel !== cnTarget.channel) {
-                    chip.insertAdjacentHTML("beforeend", '<span class="fmCnDot"></span>');
-                }
+                const count = channel !== cnTarget.channel ? cnUnreadCount(channel) : 0;
+                if (count) cnAddCount(chip, count);
 
                 people.appendChild(chip);
             });
@@ -3513,6 +3608,9 @@ function buildSimpleColorRowsHTML() {
                 more.className = "fmCnMore";
                 more.title = "Open all PMs in FlockMod's chat";
                 more.textContent = `+${pms.length - CN_MAX_CHIPS}`;
+                /* unread from someone hidden in here */
+                const hidden = pms.slice(CN_MAX_CHIPS).reduce((n, c) => n + cnUnreadCount(c), 0);
+                if (hidden) cnAddCount(more, hidden);
                 people.appendChild(more);
             }
         }
@@ -3936,6 +4034,13 @@ function buildSimpleColorRowsHTML() {
             return;   /* not the chat you're looking at: just the dot */
         }
 
+        /* a new message in the PM you're looking at: it's read in FlockMod too */
+        if (m.kind === "pm" && !m.own && !m.sample && !m.replay && m.channel) {
+            cnReadAt.set(m.channel, Date.now());
+            clearTimeout(cnAddCard.readT);
+            cnAddCard.readT = setTimeout(() => cnMarkRead(m.channel), 900);
+        }
+
         const list = cnStack.querySelector(".fmCnList");
 
         if (list._swapT && !m.replay && !m.sample) {
@@ -4172,18 +4277,34 @@ function buildSimpleColorRowsHTML() {
         cnRecentPm.unshift(channel);
     }
 
+    const cnOwnSeen = new Map();
+
     function cnHandleOwnBlock(block, lines) {
         const channel = block.closest(".channelMessages")?.getAttribute("name") || "";
         const text = lines.map(cnReadLine).filter(Boolean).join(" ");
         if (!channel || !text) return;
 
         const now = Date.now();
-        cnSentByCards.forEach((t, k) => { if (now - t > 8000) cnSentByCards.delete(k); });
-        const key = cnSentKey(channel, text);
+        /* pictures can take a while to upload, so their copy may come much later */
+        cnSentByCards.forEach((t, k) => { if (now - t > (k.includes("[image]") ? 60000 : 8000)) cnSentByCards.delete(k); });
+        let key = cnSentKey(channel, text);
+        /* a picture with a caption: FlockMod's copy may read differently, match on the picture */
+        if (!cnSentByCards.has(key) && lines.some((l) => l.querySelector?.("img:not(.flagIcon)"))) {
+            const pic = [...cnSentByCards.keys()].find((k) => k.startsWith(`${channel}|`) && (k.endsWith("|[image]") || k.includes("[image]")));
+            if (pic) key = pic;
+        }
+        /* FlockMod can add your message twice (right away, then again once
+           the server confirms it): the same message within a few seconds is one */
+        cnOwnSeen.forEach((t, k) => { if (now - t > 6000) cnOwnSeen.delete(k); });
+        if (cnOwnSeen.has(key)) return;
+
         if (cnSentByCards.has(key)) {
             cnSentByCards.delete(key);   /* already on the cards */
+            cnSentByCards.delete(cnSentKey(channel, `${text} [image]`));
+            cnOwnSeen.set(key, now);
             return;
         }
+        cnOwnSeen.set(key, now);
 
         if (!liveCn.on || !customizationsEnabled) return;
 
@@ -4335,9 +4456,18 @@ function buildSimpleColorRowsHTML() {
         /* Group new lines by their message block */
         const byBlock = new Map();
 
+        let waiting = false;
         fresh.forEach((line) => {
             if (!cnReadLine(line)) {
                 return;   /* still empty: FlockMod fills it in a moment */
+            }
+            /* a picture still loading: look again shortly (up to ~3s) */
+            const pending = [...line.querySelectorAll("img")].some((img) =>
+                !img.classList.contains("flagIcon") && !/^(https?:|data:image\/|blob:)/i.test(img.currentSrc || img.src || ""));
+            /* while FlockMod's tab is in the background pictures load late: keep waiting */
+            if (pending && (document.hidden || (line._cnTries = (line._cnTries || 0) + 1) < 10)) {
+                waiting = true;
+                return;
             }
             cnSeen.add(line);
             const block = line.closest(".chatBlock");
@@ -4346,6 +4476,10 @@ function buildSimpleColorRowsHTML() {
                 byBlock.get(block).push(line);
             }
         });
+
+        if (waiting && !cnScanTimer) {
+            cnScanTimer = setTimeout(cnScan, 300);
+        }
 
         byBlock.forEach((lines, block) => {
             cnDebug("new message", block.dataset.type, block.dataset.username,
@@ -4507,9 +4641,9 @@ function buildSimpleColorRowsHTML() {
             const m = known
                 ? [line, known, line.slice(known.length).replace(/^\s*:/, "")]
                 : line.match(/^([^:\s][^:]{0,39}?)\s*:\s*([\s\S]*)$/);
-            if (m && (m[2].trim() || hasImg)) {
+            if (m && m[2].trim()) {
                 user = m[1].trim();
-                text = m[2].trim() || "[image]";
+                text = m[2].trim();
                 /* take "Name:" off the copy too */
                 const first = src && [...src.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
                 const cut = first ? first.textContent.indexOf(":", known && first.textContent.trimStart().startsWith(known) ? first.textContent.indexOf(known) + known.length : 0) : -1;
@@ -4518,14 +4652,18 @@ function buildSimpleColorRowsHTML() {
                 } else {
                     src = null;
                 }
-            } else if (m || /:\s*$/.test(line)) {
-                /* Just "Name:" — a picture or something the bar can't show.
+            } else if (m || hasImg || /:\s*$/.test(line)) {
+                /* Just "Name:" or a picture: the bar can't show it properly.
                    The full message comes from the chat a moment later. */
                 return;
             } else if (!text) {
                 text = rest;
                 src = null;
             }
+        }
+
+        if (!text.trim() || text === "[image]") {
+            return;   /* a picture: the chat's copy (with the picture) shows it */
         }
 
         user = user.replace(/^[@#]/, "").replace(/:$/, "");

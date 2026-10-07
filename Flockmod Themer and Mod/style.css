@@ -6329,3 +6329,19 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .fmNewDot {
 @keyframes fmNewDotPulse {
     50% { box-shadow: 0 0 10px 2px rgba(244, 143, 177, .95); }
 }
+
+/* v1.6.4: unread counts on the chat tabs and PM name chips */
+.fmCnStack .fmCnDot.fmCnCount1 {
+    width: auto;
+    height: auto;
+    min-width: 1.4em;
+    padding: 0 .35em;
+    border-radius: 999px;
+    color: #222;
+    font-size: .8em;
+    font-weight: 700;
+    line-height: 1.4em;
+    text-align: center;
+    vertical-align: .05em;
+}
+.fmCnStack .fmCnTabs .on .fmCnDot.fmCnCount1 { color: #fff; }
