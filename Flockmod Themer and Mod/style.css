@@ -6288,6 +6288,24 @@ html.flockmodFontWeightActive:not(.flockmodCustomizationsDisabled) .fmCnStack .f
     box-shadow: 0 3px 10px rgba(0, 0, 0, .3);
 }
 .fmCnStack .fmCnTagList button { border-radius: 6px; padding: 3px 8px; text-align: left; }
+/* Start a PM: the list of people in the room (name in their rank color) */
+.fmCnStack .fmCnPmList {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    max-height: calc(180px * var(--fmcn-s));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 3px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--fmcn-bg) 97%, transparent);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .3);
+}
+.fmCnStack .fmCnPmList .fmCnPmHead { padding: 2px 8px 4px; font-size: .85em; opacity: .7; }
+.fmCnStack .fmCnPmList button { border-radius: 6px; padding: 3px 8px; text-align: left; font-weight: 600; }
+.fmCnStack .fmCnPmList button:hover { background: color-mix(in srgb, var(--fmcn-pm) 25%, transparent); }
+.fmCnStack .fmCnNewPm { border-radius: 6px; padding: 0 7px; opacity: .8; }
+.fmCnStack .fmCnNewPm:hover { opacity: 1; color: var(--fmcn-pm); }
 .fmCnStack .fmCnTagList button.active,
 .fmCnStack .fmCnTagList button:hover { background: color-mix(in srgb, #d6b147 25%, transparent); }
 

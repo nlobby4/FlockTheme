@@ -16,6 +16,17 @@
        ========================================================= */
     const CHANGELOG = [
         {
+            version: "1.6.4",
+            notes: [
+                "Message anyone in the room: the new button beside the chat reply box.",
+                "Hover the chat pill to bring back messages that faded away.",
+                "Pink dots in the menu show what's new after an update.",
+                "Search only shows settings that match.",
+                "FlockTheme has its own flower icon in your extensions list.",
+                "Fixes: no pings for your own PMs, no double messages from names with a colon, and the Staff tab only shows for staff."
+            ]
+        },
+        {
             version: "1.6.3",
             notes: [
                 "Saved themes keep your background images and sounds. Requested by {teal:Mazda}.",
@@ -26,7 +37,7 @@
                 "Safety: Show in list highlights the person's name.",
                 "13 new built-in sounds.",
                 "Section resets for Animations, Sounds, Safety and Backgrounds.",
-                "A pink dot on the flower when an update is out, and pink dots in the menu on what's new.",
+                "A pink dot on the flower when an update is out.",
                 "Report a bug fills in your mod version for you."
             ],
             spots: [
@@ -2527,9 +2538,23 @@ function buildSimpleColorRowsHTML() {
 
     function cnCanUseStaff() {
         const t = cnTitleFor("#staff");
-        /* FlockMod only shows #staff to staff. Its lock icon just means
-           "staff only", not that you can't post there. */
-        return Boolean(t);
+        if (!t) return false;
+        /* Staff messages in it: you're staff */
+        if (document.querySelector('#chatMessages .channelMessages[name="#staff"] .chatBlock.messageBlock')) return true;
+        /* No access: FlockMod marks the tab "locked" */
+        if (t.classList.contains("locked")) return false;
+        /* FlockMod can keep the #staff tab in the page but hidden for people
+           without access. Only count it when FlockMod itself shows it
+           (checked on the tab and its parents up to the chat window, so it
+           still works while the chat window is closed). */
+        const d = cnChatDialog();
+        for (let el = t; el && el !== d; el = el.parentElement) {
+            if (el.hidden || el.classList.contains("d-none") || el.classList.contains("hidden") ||
+                getComputedStyle(el).display === "none" || getComputedStyle(el).visibility === "hidden") {
+                return false;
+            }
+        }
+        return true;
     }
 
     function cnPmChannels() {
@@ -2611,6 +2636,77 @@ function buildSimpleColorRowsHTML() {
             d.style.visibility = vis;
             d.style.pointerEvents = pe;
         };
+    }
+
+    /* Opens a PM with someone in the room the way you would: FlockMod's
+       "Private Msg." button, pick the name in its "Select a user" box, OK.
+       That box is kept invisible while it's filled in. If anything doesn't
+       go as expected, the box is shown so you can finish it yourself. */
+    async function cnOpenPm(name) {
+        const channel = `@${name}`;
+        if (cnTitleFor(channel)) return true;
+
+        const d = cnChatDialog();
+        const pmButton = d && ([...d.querySelectorAll(".fa-user-plus")].map((i) => i.closest("button, a")).find(Boolean) ||
+            [...d.querySelectorAll("button, a")].find((b) => /private\s*msg/i.test(b.textContent || "")));
+        if (!pmButton) return false;
+
+        const old = new Set(document.querySelectorAll('select[name="userspm"]'));
+        const waitForSelect = async (ms) => {
+            for (let t = 0; t < ms; t += 30) {
+                const found = [...document.querySelectorAll('select[name="userspm"]')].find((s) => !old.has(s) || s.offsetParent !== null);
+                if (found) return found;
+                await cnWait(30);
+            }
+            return null;
+        };
+
+        pmButton.click();
+        let select = await waitForSelect(800);
+
+        /* FlockMod may ignore it while its chat is closed: open it invisibly and try again */
+        let restoreChat = () => {};
+        if (!select) {
+            restoreChat = cnRevealChat(d);
+            pmButton.click();
+            select = await waitForSelect(1200);
+        }
+        if (!select) {
+            restoreChat();
+            return false;
+        }
+
+        const box = select.closest('.dialog, .modal, [role="dialog"]') || select.parentElement;
+        const show = () => { if (box) box.style.visibility = ""; };
+        if (box) box.style.visibility = "hidden";
+
+        const option = [...select.options].find((o) => o.value === name || o.textContent.trim() === name);
+        const ok = box && [...box.querySelectorAll("button, a.btn, input[type=button], input[type=submit]")]
+            .find((b) => /^\s*ok\s*$/i.test(b.textContent || b.value || "") || b.querySelector(".fa-plus"));
+
+        if (!option || !ok) {
+            restoreChat();
+            show();
+            return false;
+        }
+
+        select.value = option.value;
+        select.dispatchEvent(new Event("input", { bubbles: true }));
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        ok.click();
+
+        for (let t = 0; t < 2000; t += 50) {
+            if (cnTitleFor(channel)) {
+                restoreChat();
+                show();   /* in case FlockMod reuses the box next time */
+                return true;
+            }
+            await cnWait(50);
+        }
+
+        restoreChat();
+        show();
+        return false;
     }
 
     /* Sends with FlockMod's own chat box + Send button. Resolves true when
@@ -2842,7 +2938,9 @@ function buildSimpleColorRowsHTML() {
     <div class="fmCnAttach" hidden><img alt=""><button type="button" class="fmCnUnattach" title="Remove picture" aria-label="Remove picture"><i class="fas fa-times"></i></button></div>
     <div class="fmCnEmojiPanel" hidden><div class="fmCnEmojiCats"></div><div class="fmCnEmojiGrid"></div></div>
     <div class="fmCnTagList" hidden></div>
+    <div class="fmCnPmList" hidden></div>
     <div class="fmCnReplyRow">
+        <button type="button" class="fmCnNewPm" title="Message someone in the room" aria-label="Message someone in the room"><i class="fas fa-user-plus"></i></button>
         <button type="button" class="fmCnEmo" title="Emoji" aria-label="Emoji"><i class="fas fa-smile"></i></button>
         <button type="button" class="fmCnPic" title="Add a picture (or paste one)" aria-label="Add a picture"><i class="fas fa-image"></i></button>
         <input class="fmCnFile" type="file" accept="image/*" hidden>
@@ -3113,6 +3211,54 @@ function buildSimpleColorRowsHTML() {
         tagList.addEventListener("mousedown", (event) => event.preventDefault());   /* keep typing focus */
         tagList.addEventListener("click", (event) => pickTag(event.target.closest("button")?.dataset.name));
 
+        /* Start a PM with someone in the room (FlockMod's own "Private Msg." does the opening) */
+        const pmList = cnStack.querySelector(".fmCnPmList");
+        const closePmList = () => {
+            pmList.hidden = true;
+            pmList.textContent = "";
+        };
+        const openPmList = () => {
+            const users = [...readUserRows()].sort(([a], [b]) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+            pmList.textContent = "";
+            const head = document.createElement("div");
+            head.className = "fmCnPmHead";
+            head.textContent = users.length ? "Message someone in the room" : "Nobody else is in the room";
+            pmList.appendChild(head);
+            users.forEach(([name, u]) => {
+                const b = document.createElement("button");
+                b.type = "button";
+                b.textContent = name;
+                b.dataset.name = name;
+                const rank = cnRankOf(u.cell);
+                if (rank) b.classList.add(rank);
+                if (cnTitleFor(`@${name}`)) b.title = "PM already open";
+                pmList.appendChild(b);
+            });
+            pmList.hidden = false;
+        };
+        cnStack.querySelector(".fmCnNewPm").addEventListener("click", (event) => {
+            event.currentTarget.blur();
+            if (pmList.hidden) openPmList(); else closePmList();
+        });
+        pmList.addEventListener("click", async (event) => {
+            const name = event.target.closest("button")?.dataset.name;
+            if (!name) return;
+            closePmList();
+            const ok = await cnOpenPm(name);
+            if (ok) {
+                cnTouchPm(`@${name}`);
+                cnSetTarget(`@${name}`);
+                cnRenderControls();
+                input.focus();
+            } else {
+                cnNote("Couldn't open a PM. Finish it in FlockMod's Private Msg. box.");
+            }
+        });
+        /* clicking anywhere else closes it */
+        document.addEventListener("pointerdown", (event) => {
+            if (!pmList.hidden && !event.target.closest(".fmCnPmList, .fmCnNewPm")) closePmList();
+        }, true);
+
         input.addEventListener("themeModKey", (event) => {
             if (tagList.hidden) return;
             const items = [...tagList.children];
@@ -3382,6 +3528,9 @@ function buildSimpleColorRowsHTML() {
 
         const collapsed = cnStack.classList.contains("fmCnCollapsed");
         cnStack.querySelector(".fmCnPillText").textContent = collapsed ? "Show chat" : "Hide chat";
+        cnStack.querySelector(".fmCnPill").title = collapsed
+            ? "Show the chat notifications again"
+            : "Hover to see recent messages. Click to hide.";
         const badge = cnStack.querySelector(".fmCnBadge");
         badge.textContent = cnUnread > 99 ? "99+" : String(cnUnread);
         badge.hidden = !(collapsed && cnUnread > 0);
@@ -3459,6 +3608,19 @@ function buildSimpleColorRowsHTML() {
         if (cnStack.classList.contains("fmCnOpen")) return;
         cnRenderControls();
         cnStack.classList.add("fmCnOpen");
+
+        /* Everything faded away: hovering the pill (or tabs) brings back
+           the latest few messages of this chat. They fade again normally
+           once you move away. */
+        if (!cnStack.classList.contains("fmCnCollapsed")) {
+            const list = cnStack.querySelector(".fmCnList");
+            const left = [...list.children].filter((c) => !c.classList.contains("fmCnOut") && !c.dataset.sample);
+            if (!left.length && !list._swapT) {
+                list.querySelectorAll(":scope > .fmCnOut").forEach((c) => { clearTimeout(c._t); c.remove(); });
+                cnShowPending(cnViewKey(cnTarget.kind, cnTarget.channel), CN_MAX_CARDS);
+                list.scrollTop = list.scrollHeight;
+            }
+        }
         document.addEventListener("pointermove", cnOnMove, { passive: true });
         window.addEventListener("wheel", cnWheelCatch, { capture: true, passive: false });
     }
@@ -4057,7 +4219,7 @@ function buildSimpleColorRowsHTML() {
             return;
         }
 
-        if (block && block.classList.contains("messageBlock") && block.dataset.type === "MYMSG") {
+        if (block && block.classList.contains("messageBlock") && isOwnBlock(block)) {
             cnHandleOwnBlock(block, lines);
             return;
         }
@@ -4367,8 +4529,8 @@ function buildSimpleColorRowsHTML() {
         /* "To Name:" / "From Name:" styles, just in case */
         user = user.replace(/^(from|to)\s+/i, "");
 
-        if (!text || Date.now() - lastSentAt < 1500) {
-            return;   /* probably your own message */
+        if (!text || Date.now() - lastSentAt < 1500 || (user && user === myOwnName())) {
+            return;   /* your own message */
         }
 
         const channel = kind === "pm" ? `@${user}` : (kind === "staff" ? "#staff" : "#public");
@@ -5876,6 +6038,21 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
     let drawingNow = false;
     let lastSentAt = 0;
+
+    /* Your own username (your row in the user list) */
+    function myOwnName() {
+        const cell = document.querySelector('#sidebar tr.myself td[class*="rank"]');
+        try { return cell ? trollNameFromCell(cell) : ""; } catch (error) { return ""; }
+    }
+
+    /* A chat message block written by you (PMs don't always mark it MYMSG) */
+    function isOwnBlock(block) {
+        if (!block) return false;
+        if (block.dataset.type === "MYMSG") return true;
+        const me = myOwnName();
+        const who = block.dataset.username || block.querySelector(".msgUsername")?.textContent?.trim() || "";
+        return Boolean(me && who && who.replace(/:$/, "") === me);
+    }
     let lastAnySoundAt = 0;
     const lastSoundAt = {};
 
@@ -6043,8 +6220,8 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
             if (block.classList.contains("eventBlock")) {
                 key = /(entered|left|joined)/i.test(text) ? "JoinLeave" : null;
-            } else if (block.dataset.type === "MYMSG" || Date.now() - lastSentAt < 2000) {
-                return;   /* your own message */
+            } else if (isOwnBlock(block) || Date.now() - lastSentAt < 2000) {
+                return;   /* your own message (in PMs too) */
             } else {
                 const channelName = block.closest(".channelMessages")?.getAttribute("name") || "";
                 key = channelName && !channelName.startsWith("#") ? "Private"
