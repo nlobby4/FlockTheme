@@ -21,7 +21,8 @@
                 "Fix: after hiding the chat, holding Space pans again instead of drawing a line.",
                 "Holding Space with the chat reply box empty pans the board too.",
                 "Fix: pictures in chat (like a picture with an @mention) now show in the chat overlay.",
-                "Small pictures in the chat overlay show bigger and open in the viewer when clicked."
+                "Small pictures in the chat overlay show bigger and open in the viewer when clicked.",
+                "Fix: messages sent or seen while FlockMod's own chat was open now show in the chat overlay too (Public, Staff and PMs)."
             ]
         },
         {
@@ -2437,7 +2438,7 @@ function buildSimpleColorRowsHTML() {
     const cnViewUnread = new Set();   /* "public", "staff", "@Name": new messages you haven't viewed */
     const cnRecent = new Map();       /* each chat -> its last few messages (yours too) */
     const cnMissed = new Map();       /* each chat -> how many of those you haven't seen */
-    const CN_MAX_RECENT = 50;         /* per chat, since you joined the room (scroll up to see them) */
+    const CN_MAX_RECENT = 150;        /* per chat, since you joined the room (scroll up to see them) */
     const CN_CONTEXT = 2;             /* already-read messages shown again when you come back */
     let cnNextId = 1;
 
@@ -4504,6 +4505,56 @@ function buildSimpleColorRowsHTML() {
         return false;
     }
 
+    /* v1.6.5: while FlockMod's own chat is on screen (and the overlay is
+       set to show only with it closed), messages are saved to the overlay's
+       history without popping up. Returns true when it did that. */
+    function cnQuietRecord(m) {
+        if (!(liveCn.closedOnly && cnChatIsOpen()) || !cnStack) {
+            return false;
+        }
+        const view = cnCardView(m);
+        cnRemember(view, m);
+        cnStack._behind = true;   /* the cards on screen are out of date now */
+        if (!m.own && !m.event) {
+            (cnStack._quiet ||= new Map()).set(view, (cnStack._quiet.get(view) || 0) + 1);
+        }
+        return true;
+    }
+
+    /* v1.6.5: FlockMod's chat was just closed. The overlay drops its old
+       cards, so it doesn't show a gap; hovering it (or scrolling up) brings
+       back the latest messages, including everything said meanwhile. */
+    function cnCatchUp() {
+        if (!cnStack || !cnStack._behind) {
+            return;
+        }
+        cnStack._behind = false;
+
+        /* Unread dots: only for chats FlockMod itself still marks unread
+           (the ones you didn't look at in FlockMod's chat) */
+        (cnStack._quiet || new Map()).forEach((count, view) => {
+            const channel = view === "public" ? "#public" : view === "staff" ? "#staff" : view;
+            if (cnTitleFor(channel)?.querySelector(".channelIcons .badge")) {
+                cnViewUnread.add(view);
+                cnMissed.set(view, (cnMissed.get(view) || 0) + count);
+            }
+        });
+        cnStack._quiet = new Map();
+        cnRenderControls();
+
+        const list = cnStack.querySelector(".fmCnList");
+        list.querySelectorAll(":scope > .fmCnCard:not([data-sample])").forEach((card) => {
+            clearTimeout(card._t);
+            card.remove();
+        });
+        cnToBottom(list);
+        if (cnStack.classList.contains("fmCnOpen") && !cnStack.classList.contains("fmCnCollapsed")) {
+            cnShowPending(cnViewKey(cnTarget.kind, cnTarget.channel), CN_MAX_CARDS);
+            cnToBottom(list);
+        }
+        cnScrollRowRefresh();
+    }
+
     function cnHandleOwnBlock(block, lines) {
         const channel = block.closest(".channelMessages")?.getAttribute("name") || "";
         const text = lines.map(cnReadLine).filter(Boolean).join(" ");
@@ -4537,7 +4588,7 @@ function buildSimpleColorRowsHTML() {
 
         const kind = cnKindOf(channel);
         cnTouchPm(channel);
-        cnAddCard({
+        const message = {
             key: `you|${channel}`,
             kind,
             user: "You",
@@ -4546,7 +4597,11 @@ function buildSimpleColorRowsHTML() {
             text,
             srcs: lines.map((l) => l.querySelector?.(".msgText") || l),
             own: true
-        });
+        };
+
+        if (!cnQuietRecord(message)) {
+            cnAddCard(message);
+        }
     }
 
     function cnAlreadyShown(user, text) {
@@ -4672,7 +4727,7 @@ function buildSimpleColorRowsHTML() {
             cnRecentPm.unshift(channel);
         }
 
-        if (!liveCn.on || !customizationsEnabled || (liveCn.closedOnly && cnChatIsOpen())) {
+        if (!liveCn.on || !customizationsEnabled) {
             return;
         }
 
@@ -4692,7 +4747,7 @@ function buildSimpleColorRowsHTML() {
             return;
         }
 
-        cnAddCard({
+        const message = {
             key: kind === "pm" ? channel : `${channel}|${user}`,
             kind,
             channel,
@@ -4704,7 +4759,15 @@ function buildSimpleColorRowsHTML() {
             text,
             srcs: lines.map((l) => l.querySelector?.(".msgText") || l),
             mention: isMention(text)
-        });
+        };
+
+        /* v1.6.5: FlockMod's own chat is open: no pop-up, but the message
+           still goes in the overlay's history, so nothing is missing later */
+        if (cnQuietRecord(message)) {
+            return;
+        }
+
+        cnAddCard(message);
 
         if (cnStack?.classList.contains("fmCnOpen")) {
             cnRenderControls();
@@ -4721,11 +4784,11 @@ function buildSimpleColorRowsHTML() {
         if (cnKindOf(channel) !== "public" || !text || cnSeenBefore(channel, "\u0000event", lines, block, text)) {
             return;
         }
-        if (!liveCn.on || !customizationsEnabled || (liveCn.closedOnly && cnChatIsOpen())) {
+        if (!liveCn.on || !customizationsEnabled) {
             return;
         }
 
-        cnAddCard({
+        const message = {
             key: `event|${text}`,
             kind: "public",
             event: true,
@@ -4736,7 +4799,11 @@ function buildSimpleColorRowsHTML() {
             where: "",
             text,
             srcs: lines.map((l) => l.querySelector?.(".msgText") || l)
-        });
+        };
+
+        if (!cnQuietRecord(message)) {
+            cnAddCard(message);
+        }
     }
 
     /* Every message line we've already looked at. Anything in the chat
@@ -5069,7 +5136,9 @@ function buildSimpleColorRowsHTML() {
         }
 
         const sample = Date.now() < (cnStack._sampleUntil || 0);
-        const hide = !sample && (!liveCn.on || !customizationsEnabled || (liveCn.closedOnly && cnChatIsOpen()));
+        const fmChatOpen = liveCn.closedOnly && cnChatIsOpen();
+        if (!fmChatOpen) cnCatchUp();
+        const hide = !sample && (!liveCn.on || !customizationsEnabled || fmChatOpen);
         cnStack.classList.toggle("fmCnHide", hide);
 
         if (hide) {
