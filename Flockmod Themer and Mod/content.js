@@ -20,7 +20,8 @@
             notes: [
                 "Fix: after hiding the chat, holding Space pans again instead of drawing a line.",
                 "Holding Space with the chat reply box empty pans the board too.",
-                "Fix: pictures in chat (like a picture with an @mention) now show in the chat overlay."
+                "Fix: pictures in chat (like a picture with an @mention) now show in the chat overlay.",
+                "Small pictures in the chat overlay show bigger and open in the viewer when clicked."
             ]
         },
         {
@@ -4082,14 +4083,22 @@ function buildSimpleColorRowsHTML() {
                 const ok = /^(https?:|data:image\/|blob:)/i.test(url);
                 if (!ok) return;
                 const img = document.createElement("img");
-                const small = /emoji|emote|smiley/i.test(node.className + " " + url) ||
-                    (node.naturalHeight && node.naturalHeight <= 40);
-                img.className = small ? "fmCnEmoji" : "fmCnImg";
+                /* v1.6.5: a tiny picture counts as an emoji only when it sits
+                   in a line of words; sent on its own it's a picture (shown
+                   bigger, and it opens in the viewer) */
+                const words = ((node.closest(".msgText") || src).textContent || "").trim();
+                const tiny = Boolean(node.naturalHeight && node.naturalHeight <= 40);
+                const small = /emoji|emote|smiley/i.test(node.className + " " + url) || (tiny && words);
+                img.className = small ? "fmCnEmoji" : (node.naturalHeight && node.naturalHeight <= 64 && node.naturalWidth <= 64 ? "fmCnImg fmCnImgTiny" : "fmCnImg");
                 img.src = url;
                 img.alt = node.alt || "";
                 img.loading = "lazy";
                 img.draggable = false;
                 if (!small) {
+                    /* size unknown until it loads: check again then */
+                    img.addEventListener("load", () => {
+                        img.classList.toggle("fmCnImgTiny", img.naturalHeight <= 64 && img.naturalWidth <= 64);
+                    }, { once: true });
                     const href = cnSafeUrl(node.closest("a")?.href || url);
                     img.title = "Open picture";
                     img.addEventListener("click", (event) => {

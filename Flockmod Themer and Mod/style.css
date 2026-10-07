@@ -6051,6 +6051,15 @@ html.fmAnimMenu .fmCnStack .fmCnCard.fmCnEarlier:not(.fmCnOut) { animation: fmCn
     border-radius: 6px;
     cursor: zoom-in;
 }
+/* v1.6.5: tiny pictures are scaled up so you can see (and click) them;
+   pixelated keeps small pixel art crisp instead of blurry */
+.fmCnStack .fmCnImg.fmCnImgTiny {
+    height: calc(64px * var(--fmcn-s));
+    width: auto;
+    min-width: calc(32px * var(--fmcn-s));
+    object-fit: contain;
+    image-rendering: pixelated;
+}
 
 /* Reply box + switcher: shown while you hover or type. Opens with a
    real height animation (grid rows 0fr -> 1fr), so it is smooth both
