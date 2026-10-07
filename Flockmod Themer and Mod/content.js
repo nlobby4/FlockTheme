@@ -3165,6 +3165,13 @@ function buildSimpleColorRowsHTML() {
             const shown = file ? URL.createObjectURL(file) : "";
             if (file) setPending(null);
 
+            /* Note it as "sent from the cards" BEFORE sending: FlockMod can add
+               its copy to the chat while we're still finishing up, and that
+               copy must not become a second card */
+            const sentKeys = [cnSentKey(target.channel, text || "[image]")];
+            if (file && text) sentKeys.push(cnSentKey(target.channel, `${text} [image]`));
+            sentKeys.forEach((k) => cnSentByCards.set(k, Date.now()));
+
             const ok = await cnSend(target.channel, text, file);
 
             /* FlockMod moves the cursor to its own chat box when it switches
@@ -3178,6 +3185,7 @@ function buildSimpleColorRowsHTML() {
             setTimeout(refocus, 120);
 
             if (ok !== true) {
+                sentKeys.forEach((k) => cnSentByCards.delete(k));
                 if (!input.value) input.value = text;   /* keep what you wrote */
                 if (file && !pending) setPending(file);
                 if (shown) URL.revokeObjectURL(shown);
@@ -3195,9 +3203,9 @@ function buildSimpleColorRowsHTML() {
                 src.append(img);
             }
 
-            cnSentByCards.set(cnSentKey(target.channel, text || "[image]"), Date.now());
+            /* still waiting for FlockMod's copy: restart its clock (a used one stays used) */
+            sentKeys.forEach((k) => { if (cnSentByCards.has(k)) cnSentByCards.set(k, Date.now()); });
             if (target.kind === "pm") cnReadAt.set(target.channel, Date.now());
-            if (file && text) cnSentByCards.set(cnSentKey(target.channel, `${text} [image]`), Date.now());
             cnTouchPm(target.channel);
 
             cnAddCard({
