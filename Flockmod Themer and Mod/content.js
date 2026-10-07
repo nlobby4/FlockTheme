@@ -3415,8 +3415,18 @@ function buildSimpleColorRowsHTML() {
             cnUpdatePill();
         });
 
+        /* v1.6.4: a button you click or tap lets go of the keyboard straight
+           away. A focused button (like Hide chat) caught every key, so Space
+           pressed it again instead of panning, until you drew a line.
+           Buttons reached with Tab (keyboard) keep focus as usual. */
+        cnStack.addEventListener("click", (event) => {
+            const button = event.target.closest?.("button");
+            if (button && event.detail > 0) button.blur();
+        }, true);
+
         cnStack.addEventListener("mouseenter", cnOpenControls);
         cnSetupPenTouch();
+        cnSetupFollow(cnStack.querySelector(".fmCnList"));
 
         /* Back on FlockMod's tab: fill in any name colors that were missing */
         document.addEventListener("visibilitychange", () => {
@@ -3526,7 +3536,7 @@ function buildSimpleColorRowsHTML() {
             if (!cnStack.classList.contains("fmCnCollapsed")) {
                 cnShowPending(cnStack._view);
             }
-            list.scrollTop = list.scrollHeight;
+            cnToBottom(list);
             list.classList.remove("fmCnSwapOut");
         };
 
@@ -3714,8 +3724,40 @@ function buildSimpleColorRowsHTML() {
         const dy = event.deltaMode === 1 ? event.deltaY * 16
             : event.deltaMode === 2 ? event.deltaY * list.clientHeight
             : event.deltaY;
+        if (dy < 0) list._fmFollow = false;
         list.scrollTop += dy;
         if (dy < 0 && list.scrollTop <= 0) cnWheelUp();
+    }
+
+    /* ---------- Following new messages (v1.6.4) ----------
+       New messages pull you down only while you're "following" the bottom.
+       Any scroll up stops following straight away (even a tiny one or one
+       still gliding); reaching the very bottom yourself, Newest, or moving
+       away from the cards starts it again. */
+    function cnToBottom(list) {
+        if (!list) return;
+        list._fmFollow = true;
+        list._fmProg = true;
+        list.scrollTop = list.scrollHeight;
+        requestAnimationFrame(() => { list._fmProg = false; list._fmLastTop = list.scrollTop; });
+    }
+
+    function cnSetupFollow(list) {
+        if (!list || list._fmFollowSetup) return;
+        list._fmFollowSetup = true;
+        list._fmFollow = true;
+        list._fmLastTop = list.scrollTop;
+        list.addEventListener("wheel", (event) => {
+            if (event.deltaY < 0 && list.scrollHeight > list.clientHeight + 2) list._fmFollow = false;
+        }, { passive: true });
+        list.addEventListener("scroll", () => {
+            if (!list._fmProg) {
+                const gap = list.scrollHeight - list.scrollTop - list.clientHeight;
+                if (list.scrollTop < list._fmLastTop - 1) list._fmFollow = false;
+                else if (gap < 3) list._fmFollow = true;
+            }
+            list._fmLastTop = list.scrollTop;
+        }, { passive: true });
     }
 
     /* ---------- Pen & touch (v1.6.4) ----------
@@ -3795,6 +3837,7 @@ function buildSimpleColorRowsHTML() {
         let holdT = 0;
 
         const stepUp = () => {
+            list._fmFollow = false;
             if (list.scrollTop <= 2) {
                 cnLoadEarlier();
             }
@@ -3813,7 +3856,7 @@ function buildSimpleColorRowsHTML() {
         up.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") stepUp(); });
 
         down.addEventListener("click", () => {
-            list.scrollTop = list.scrollHeight;
+            cnToBottom(list);
             cnScrollRowRefresh();
         });
 
@@ -3856,7 +3899,7 @@ function buildSimpleColorRowsHTML() {
             if (!left.length && !list._swapT) {
                 list.querySelectorAll(":scope > .fmCnOut").forEach((c) => { clearTimeout(c._t); c.remove(); });
                 cnShowPending(cnViewKey(cnTarget.kind, cnTarget.channel), CN_MAX_CARDS);
-                list.scrollTop = list.scrollHeight;
+                cnToBottom(list);
             }
         }
         document.addEventListener("pointermove", cnOnMove, { passive: true });
@@ -3869,6 +3912,9 @@ function buildSimpleColorRowsHTML() {
             cnCloseT = 0;
             if (cnTyping()) return;   /* typing: :focus-within keeps it */
             cnStack.classList.remove("fmCnOpen");
+
+            /* v1.6.4: closed means the keyboard goes back to FlockMod */
+            if (cnStack.contains(document.activeElement)) document.activeElement.blur();
             document.removeEventListener("pointermove", cnOnMove);
             window.removeEventListener("wheel", cnWheelCatch, { capture: true });
 
@@ -3880,7 +3926,7 @@ function buildSimpleColorRowsHTML() {
                 c.classList.add("fmCnOut");
                 setTimeout(() => c.remove(), 400);
             });
-            list.scrollTop = list.scrollHeight;
+            cnToBottom(list);
         }, 350);
     }
 
@@ -4187,7 +4233,8 @@ function buildSimpleColorRowsHTML() {
             cnKeepPending(view);   /* mid-switch: it shows with the others in a moment */
             return;
         }
-        const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 16;
+        /* following the bottom (see cnSetupFollow); closed cards always follow */
+        const atBottom = list._fmFollow !== false || !cnStack.classList.contains("fmCnOpen");
         /* Scrolled back reading: whatever card is at the top stays exactly where it is */
         const reading = !atBottom && !m.prepend && cnStack.classList.contains("fmCnOpen");
         const anchor = reading ? cnTopVisibleCard(list) : null;
@@ -4310,7 +4357,7 @@ function buildSimpleColorRowsHTML() {
         }
 
         if (!m.prepend && (atBottom || !cnStack.classList.contains("fmCnOpen"))) {
-            list.scrollTop = list.scrollHeight;
+            cnToBottom(list);
         }
 
         cnFadeLater(card);
@@ -18750,6 +18797,23 @@ const safetyControls = setupSafetyPanel(dialog);
             const target = event.target;
 
             if (!(target instanceof Element) || !target.closest(`${MOD_DIALOG_SELECTOR}, ${REF_SELECTOR}, ${CN_SELECTOR}`)) {
+                return;
+            }
+
+            /* v1.6.4: Space in the chat overlay's EMPTY reply box is
+               FlockMod's hold-to-pan, not a typed space. The box lets go of
+               the keyboard and the press goes on to FlockMod (the rest of
+               the hold and the release then reach it by themselves). Once
+               you've started a message, Space types a space as usual. */
+            if (event.type === "keydown" && (event.key === " " || event.code === "Space") &&
+                !event.ctrlKey && !event.metaKey && !event.altKey && !event.isComposing &&
+                target.matches(".fmCnInput") && !target.value) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                target.blur();
+                (document.body || document.documentElement).dispatchEvent(new KeyboardEvent("keydown", {
+                    key: " ", code: "Space", keyCode: 32, which: 32, bubbles: true, cancelable: true
+                }));
                 return;
             }
 
