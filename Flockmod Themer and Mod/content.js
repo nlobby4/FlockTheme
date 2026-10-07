@@ -3000,6 +3000,10 @@ function buildSimpleColorRowsHTML() {
         cnStack.innerHTML = `
 <div class="fmCnGrip" title="Drag to resize"></div>
 <div class="fmCnList"></div>
+<div class="fmCnScrollRow" hidden>
+    <button type="button" class="fmCnScrollUp" title="Older messages (hold to keep going)"><i class="fas fa-chevron-up"></i> Older</button>
+    <button type="button" class="fmCnScrollDown" title="Back to the newest"><i class="fas fa-chevron-down"></i> Newest</button>
+</div>
 <div class="fmCnExtra"><div class="fmCnExtraIn">
     <div class="fmCnPeople"></div>
     <div class="fmCnAttach" hidden><img alt=""><button type="button" class="fmCnUnattach" title="Remove picture" aria-label="Remove picture"><i class="fas fa-times"></i></button></div>
@@ -3781,6 +3785,57 @@ function buildSimpleColorRowsHTML() {
         }, true);
 
         ["fmCnList", "fmCnPmList", "fmCnTagList", "fmCnEmojiGrid"].forEach((c) => penDragScroll(cnStack.querySelector(`.${c}`)));
+
+        /* Older / Newest buttons: scrolling for pens that act like a mouse
+           (no wheel, no two-finger scroll). Hold Older to keep going. */
+        const list = cnStack.querySelector(".fmCnList");
+        const row = cnStack.querySelector(".fmCnScrollRow");
+        const up = row.querySelector(".fmCnScrollUp");
+        const down = row.querySelector(".fmCnScrollDown");
+        let holdT = 0;
+
+        const stepUp = () => {
+            if (list.scrollTop <= 2) {
+                cnLoadEarlier();
+            }
+            list.scrollTop -= Math.max(60, list.clientHeight * 0.7);
+            cnScrollRowRefresh();
+        };
+        const stopHold = () => { clearInterval(holdT); holdT = 0; };
+
+        up.addEventListener("pointerdown", (event) => {
+            event.preventDefault();
+            stepUp();
+            stopHold();
+            holdT = setInterval(stepUp, 350);
+        });
+        ["pointerup", "pointerleave", "pointercancel"].forEach((t) => up.addEventListener(t, stopHold));
+        up.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") stepUp(); });
+
+        down.addEventListener("click", () => {
+            list.scrollTop = list.scrollHeight;
+            cnScrollRowRefresh();
+        });
+
+        list.addEventListener("scroll", () => {
+            if (!list._fmRowRaf) list._fmRowRaf = requestAnimationFrame(() => { list._fmRowRaf = 0; cnScrollRowRefresh(); });
+        }, { passive: true });
+    }
+
+    /* Shows the Older / Newest row only when there's somewhere to go */
+    function cnScrollRowRefresh() {
+        const row = cnStack?.querySelector(".fmCnScrollRow");
+        if (!row) return;
+        const list = cnStack.querySelector(".fmCnList");
+        const view = cnViewKey(cnTarget.kind, cnTarget.channel);
+        const entries = cnRecent.get(view) || [];
+        const first = [...list.children].find((c) => c.dataset.mid && !c.classList.contains("fmCnOut"));
+        const hasEarlier = first ? entries.findIndex((e) => String(e.id) === first.dataset.mid) > 0 : false;
+        const canUp = list.scrollTop > 2 || hasEarlier;
+        const canDown = list.scrollHeight - list.scrollTop - list.clientHeight > 4;
+        row.hidden = !(canUp || canDown);
+        row.querySelector(".fmCnScrollUp").disabled = !canUp;
+        row.querySelector(".fmCnScrollDown").disabled = !canDown;
     }
 
     function cnOpenControls() {
@@ -3790,6 +3845,7 @@ function buildSimpleColorRowsHTML() {
         if (cnStack.classList.contains("fmCnOpen")) return;
         cnRenderControls();
         cnStack.classList.add("fmCnOpen");
+        requestAnimationFrame(cnScrollRowRefresh);
 
         /* Everything faded away: hovering the pill (or tabs) brings back
            the latest few messages of this chat. They fade again normally
@@ -4258,6 +4314,7 @@ function buildSimpleColorRowsHTML() {
         }
 
         cnFadeLater(card);
+        if (cnStack.classList.contains("fmCnOpen")) requestAnimationFrame(cnScrollRowRefresh);
     }
 
     /* ---------- Mod actions in events ---------- */

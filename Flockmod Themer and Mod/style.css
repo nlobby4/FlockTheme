@@ -6357,3 +6357,29 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .fmNewDot {
 .fmCnStack .fmCnPmList,
 .dialog[name="themeModMenu"] .themeModSectionsScroll { touch-action: pan-y; }
 .dialog[name="themeModMenu"] .themeModJumpBar { touch-action: pan-x; }
+
+/* v1.6.4: Older / Newest buttons under the cards (only while open) */
+.fmCnStack .fmCnScrollRow { display: none; }
+.fmCnStack.fmCnOpen:not(.fmCnCollapsed) .fmCnScrollRow:not([hidden]) {
+    display: flex;
+    gap: 4px;
+    align-self: stretch;
+    justify-content: center;
+    pointer-events: auto;
+}
+.fmCnStack .fmCnScrollRow button {
+    flex: 1 1 0;
+    max-width: 140px;
+    padding: calc(4px * var(--fmcn-s)) 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--fmcn-bg) 94%, transparent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+    color: var(--fmcn-text);
+    font-size: .88em;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.fmCnStack .fmCnScrollRow button:hover:not(:disabled) { background: color-mix(in srgb, var(--fmcn-to) 30%, var(--fmcn-bg)); }
+.fmCnStack .fmCnScrollRow button:disabled { opacity: .4; cursor: default; }
+.fmCnStack .fmCnScrollRow i { margin-right: 3px; font-size: .85em; }
