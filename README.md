@@ -20,6 +20,6 @@ A browser extension made to mod flockmod and make it customizable
 11. Reload Flockmod and enjoy!
 ---
 **How to update & Extra mods**
-11. When updating, you can remove/uninstall the outdated extension and it's files. Then follow step 1-10 with the new one
-12. Your saved settings/themes/imported images should be saved.
-13. If you're using another extension, it should still work the same, you can toggle on/off any features included in this mod to favor another!
+12. When updating, you can remove/uninstall the outdated extension and it's files. Then follow step 1-11 with the new one
+13. Your saved settings/themes/imported images should be saved.
+14. If you're using another extension, it should still work the same, you can toggle on/off any features included in this mod to favor another!
