@@ -13,7 +13,7 @@ A browser extension made to mod flockmod and make it customizable
 4. Right click and Extract all
 5. You can delete the ZIP file, keep the extracted file.
 6. Open Chrome and type chrome://extensions/ in the search
-7. Depending on your browser or if you dont have it turned on, make sure "Developer Mode" is turned on in your browser's extension tab
+7. Make sure "Developer Mode" is turned on in your browser's extension tab
 8. Click on "Load unpacked" on the top left corner
 9. Choose the extracted file
 10. Make sure the extension is turned on
