@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FlockMod Themer",
-  "version": "1.6.5",
+  "version": "1.6.6",
   "description": "The ultimate customization tool for Flockmod. Have fun!",
   "icons": {
     "16": "icons/icon16.png",
@@ -21,6 +21,16 @@
         "content.js"
       ],
       "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "style.css"
+      ],
+      "matches": [
+        "https://flockmod.com/*"
+      ]
     }
   ]
 }

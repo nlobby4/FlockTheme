@@ -1,4 +1,9 @@
 (() => {
+    /* v1.6.6: one name for the browser's storage, so theme cards can read a
+       theme through a stand-in without ever writing your real settings
+       (see THEME CARDS). Everything else uses it exactly as before. */
+    let localStorage = window.localStorage;
+
     /* =========================================================
        WHAT'S NEW  <-- edit this list for every release
        Newest version goes FIRST. The "version" must match the
@@ -8,13 +13,27 @@
        spots: where the new things are in the mod menu. People who
        update see a pink dot there (and on that tab) until they've
        opened that tab once. Two kinds:
-         "Interface > Chat Notifications"  a whole section (tab > title)
+         "Interface > Chat Overlay"  a whole section (tab > title)
          "#themeModSaveSounds"             one setting (the id of its control)
        People who update see these once in a small pink card the
        next time they open the mod menu (General > What's new
        shows them again anytime).
        ========================================================= */
     const CHANGELOG = [
+        {
+            version: "1.6.6",
+            notes: [
+                "Theme cards: share your theme as a picture (Themes > Make card).",
+                "Theme packs: share a saved theme with its pictures and sounds (Share > Theme pack).",
+                "Load a card or pack by dropping it on the Themes tab.",
+                "Pick colors from your reference images with FlockMod's color picker. Requested by {teal:Mazda}.",
+                "New: Menu text size (General).",
+                "Chat Notifications is now called Chat Overlay.",
+                "Backups are safer and work at any size.",
+                "Fix: chat backgrounds show right away after loading a theme."
+            ],
+            spots: ["#themeModMakeCard", "#themeModMenuTextSize"]
+        },
         {
             version: "1.6.5",
             notes: [
@@ -31,12 +50,12 @@
                 "Message anyone in the room: the new button beside the chat reply box.",
                 "Hover the chat pill to bring back messages that faded away.",
                 "Unread counts on the chat tabs and on each PM name.",
-                "Reading a PM in the chat notifications marks it read in FlockMod too.",
-                "Pen and touch friendly: tap the chat notifications to open them, and drag to scroll them and the mod menu.",
+                "Reading a PM in the chat overlay marks it read in FlockMod too.",
+                "Pen and touch friendly: tap the chat overlay to open it, and drag to scroll them and the mod menu.",
                 "Pink dots in the menu show what's new after an update.",
                 "Search only shows settings that match.",
                 "FlockTheme has its own flower icon in your extensions list.",
-                "Fixes: no pings for your own PMs, no double, nameless (?) or [image] messages in the chat notifications, and the Staff tab only shows for staff."
+                "Fixes: no pings for your own PMs, no double, nameless (?) or [image] messages in the chat overlay, and the Staff tab only shows for staff."
             ]
         },
         {
@@ -54,10 +73,10 @@
                 "Report a bug fills in your mod version for you."
             ],
             spots: [
-                "Interface > Chat Notifications",
+                "Interface > Chat Overlay",
                 "Interface > Chat Highlights",
                 "Interface > Clock & Time",
-                "Colors > Chat Notifications",
+                "Colors > Chat Overlay",
                 "#themeModSaveImages",
                 "#themeModSaveSounds"
             ]
@@ -153,6 +172,29 @@
     const LITE_LS = "flockmodLiteMode";
     let liteMode = localStorage.getItem(LITE_LS) === "true";
     document.documentElement.classList.toggle("fmLite", liteMode);
+
+    /* v1.6.6: Menu text size (General). Scales only the text in the
+       mod's own windows. Personal: saves right away and is never part
+       of themes, codes, cards or packs. */
+    const MENU_TEXT_LS = "flockmodMenuTextSize";
+    const MENU_TEXT_MIN = 90;
+    const MENU_TEXT_MAX = 140;
+    const MENU_TEXT_DEFAULT = 100;
+
+    function readMenuTextSize() {
+        const value = Math.round(Number(localStorage.getItem(MENU_TEXT_LS)) / 5) * 5;
+        return value >= MENU_TEXT_MIN && value <= MENU_TEXT_MAX ? value : MENU_TEXT_DEFAULT;
+    }
+
+    function applyMenuTextSize(value) {
+        if (value === MENU_TEXT_DEFAULT) {
+            document.documentElement.style.removeProperty("--fm-menu-text");
+        } else {
+            document.documentElement.style.setProperty("--fm-menu-text", String(value / 100));
+        }
+    }
+
+    applyMenuTextSize(readMenuTextSize());
 
             const SIDEBAR_COLOR_SETTINGS = [
         {
@@ -1582,11 +1624,21 @@ function buildSimpleColorRowsHTML() {
     function forgetBgDisplay(key) {
         const shown = bgDisplay.get(key);
 
-        if (shown && shown.url.startsWith("blob:")) {
-            URL.revokeObjectURL(shown.url);
+        if (shown) {
+            retireBgURL(shown.url);
         }
 
         bgDisplay.delete(key);
+    }
+
+    /* v1.6.6 fix: an old picture copy is thrown away a while later, not
+       right away. Something on the page (or the Backgrounds preview) may
+       still be showing it for a moment, and throwing it away too early
+       left chat / Messenger backgrounds blank after loading a theme. */
+    function retireBgURL(url) {
+        if (url && url.startsWith("blob:")) {
+            setTimeout(() => URL.revokeObjectURL(url), 60000);
+        }
     }
 
     function canvasToBlob(canvas, type, quality) {
@@ -1671,16 +1723,40 @@ function buildSimpleColorRowsHTML() {
     }
 
     let bgUseDataURLs = false;
+    const bgDisplayPending = new Map();   /* key -> { cacheKey, promise } being made right now */
 
-    async function getBgDisplayURL(key, blob, blur) {
+    /* v1.6.6 fix: when the page and the Backgrounds preview ask for the
+       same picture at the same time, they now share one copy instead of
+       each making their own (the second one used to throw the first
+       away, leaving that background blank). */
+    function getBgDisplayURL(key, blob, blur) {
         const isGif = blob.type === "image/gif";
         const cacheKey = `${blob.size}|${blob.type}|${isGif ? 0 : blur}`;
         const shown = bgDisplay.get(key);
 
         if (shown && shown.cacheKey === cacheKey) {
-            return shown.url;
+            return Promise.resolve(shown.url);
         }
 
+        const pending = bgDisplayPending.get(key);
+
+        if (pending && pending.cacheKey === cacheKey) {
+            return pending.promise;
+        }
+
+        const promise = makeBgDisplayURL(key, blob, blur, isGif, cacheKey);
+        bgDisplayPending.set(key, { cacheKey, promise });
+
+        const done = () => {
+            if (bgDisplayPending.get(key)?.promise === promise) {
+                bgDisplayPending.delete(key);
+            }
+        };
+        promise.then(done, done);
+        return promise;
+    }
+
+    async function makeBgDisplayURL(key, blob, blur, isGif, cacheKey) {
         const source = !isGif && blur > 0 ? await blurBgImage(blob, blur) : blob;
         let url;
 
@@ -1699,8 +1775,19 @@ function buildSimpleColorRowsHTML() {
             url = await blobToDataURL(source);
         }
 
-        forgetBgDisplay(key);
-        bgDisplay.set(key, { cacheKey, url });
+        /* A newer, different request for this place got here first:
+           keep its copy and let this one go later */
+        const newest = bgDisplay.get(key);
+        const pending = bgDisplayPending.get(key);
+        if (pending && pending.cacheKey !== cacheKey) {
+            retireBgURL(url);
+            return url;
+        }
+
+        if (!newest || newest.url !== url) {
+            forgetBgDisplay(key);
+            bgDisplay.set(key, { cacheKey, url });
+        }
         return url;
     }
 
@@ -3666,7 +3753,7 @@ function buildSimpleColorRowsHTML() {
         const collapsed = cnStack.classList.contains("fmCnCollapsed");
         cnStack.querySelector(".fmCnPillText").textContent = collapsed ? "Show chat" : "Hide chat";
         cnStack.querySelector(".fmCnPill").title = collapsed
-            ? "Show the chat notifications again"
+            ? "Show the chat overlay again"
             : "Hover to see recent messages. Click to hide.";
         const badge = cnStack.querySelector(".fmCnBadge");
         badge.textContent = cnUnread > 99 ? "99+" : String(cnUnread);
@@ -5194,14 +5281,14 @@ function buildSimpleColorRowsHTML() {
 
         return `
 <div class="themeModSubsectionTitle themeModSpacingSubsection">
-    Chat Notifications
+    Chat Overlay
 </div>
 
 <div class="themeModSetting themeModNoDivider">
     <div class="themeModSettingText">
-        <div class="themeModSettingName">Chat notifications</div>
+        <div class="themeModSettingName">Chat overlay</div>
         <div class="themeModSettingDescription">
-            New messages pop up beside the canvas. The tabs pick which chat you see; a dot means news in another. Hover to reply. Colors: Colors &gt; Chat Notifications.
+            New messages pop up beside the canvas. The tabs pick which chat you see; a dot means news in another. Hover to reply. Colors: Colors &gt; Chat Overlay.
         </div>
     </div>
     ${toggle("themeModChatNotif", true)}
@@ -7427,6 +7514,93 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         createRefWindow();
     }
 
+    /* v1.6.6: sets FlockMod's drawing color the same way you would by
+       hand: its own color window (hex box, then OK), kept out of sight
+       for that moment. Only the page here changes, nothing is sent.
+       Returns "set", "dialog" (the color window was already open, so
+       the color waits there for your OK) or "failed". */
+    function setFlockModColor(hex) {
+        const value = String(hex || "").replace(/^#/, "").toLowerCase();
+
+        if (!/^[0-9a-f]{6}$/.test(value)) {
+            return "failed";
+        }
+
+        const typeHex = (dialog) => {
+            const input = dialog && dialog.querySelector('input[name="hex"]');
+
+            if (!input) {
+                return false;
+            }
+
+            input.value = value;
+            input.dispatchEvent(new KeyboardEvent("keyup", { key: value.slice(-1), bubbles: true }));
+            return true;
+        };
+
+        const openDialog = document.querySelector('.dialog[name="color"].dialogVisible');
+
+        if (openDialog) {
+            return typeHex(openDialog) ? "dialog" : "failed";
+        }
+
+        const primary = document.querySelector("#colorBox .primary");
+
+        if (!primary) {
+            return "failed";
+        }
+
+        const active = document.activeElement;
+        const root = document.documentElement;
+        root.classList.add("themeModQuietColorDialog");
+        const token = (setFlockModColor._token = (setFlockModColor._token || 0) + 1);
+
+        let ok = false;
+
+        try {
+            primary.click();
+            const dialog = document.querySelector('.dialog[name="color"]');
+            const okButton = dialog && dialog.querySelector('a[name="okButton"]');
+
+            if (okButton && typeHex(dialog)) {
+                okButton.click();
+                ok = true;
+            } else if (dialog) {
+                dialog.querySelector(".closeButton")?.click();
+            }
+        } catch (error) {
+            ok = false;
+        }
+
+        /* the color window steals the keyboard; hand it back */
+        if (active instanceof HTMLElement && document.activeElement !== active) {
+            active.focus({ preventScroll: true });
+        }
+
+        /* Stay hidden until FlockMod has really closed it. It fades in and
+           then out, and when FlockMod is busy that can take longer, so
+           this waits for the window to be gone instead of using a timer. */
+        const holder = document.querySelector('.dialog[name="color"]')?.parentElement;
+        const started = performance.now();
+
+        const release = () => {
+            if (token !== setFlockModColor._token) {
+                return;   /* a newer pick is using it now */
+            }
+
+            const gone = !holder || !holder.isConnected || getComputedStyle(holder).display === "none";
+
+            if (gone || performance.now() - started > 4000) {
+                root.classList.remove("themeModQuietColorDialog");
+            } else {
+                requestAnimationFrame(release);
+            }
+        };
+
+        requestAnimationFrame(release);
+        return ok ? "set" : "failed";
+    }
+
     function createRefWindow() {
         const container = document.querySelector("#dialogContainer");
 
@@ -8527,6 +8701,278 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
             }
         });
 
+        /* ---------- v1.6.6: FlockMod's color picker works on references ----------
+           When FlockMod's picker tool is on (clicked, or held with its
+           key, Tab by default), tapping a reference picks that color
+           instead of moving the image. Hold and drag to preview, let go
+           to pick. Reads the full-size picture (not the smaller board
+           copy) and picks what you see: flip and grayscale count.
+           Everything else (shortcuts, zoom, panning) works as before. */
+        const pickSwatch = document.createElement("div");
+        pickSwatch.className = "themeModRefPickSwatch";
+        stage.appendChild(pickSwatch);
+
+        let pickSource = null;        /* { id, ctx, w, h } for one picture at a time */
+        let pickSourceJob = null;
+        let pickActive = null;        /* { pointerId, id, color } while held */
+        let pickLastTool = null;      /* FlockMod tool before the picker, for "switch back" */
+        let pickToolObserver = null;
+
+        function refPickerOn() {
+            return Boolean(document.querySelector('#drawingTools a[name="picker"].selectedTool'));
+        }
+
+        /* Remember the tool used before the picker, like FlockMod does,
+           so its "switch back after picking" setting works here too */
+        function watchPickerTool() {
+            const tools = document.querySelector("#drawingTools");
+
+            if (!tools || pickToolObserver) {
+                return;
+            }
+
+            const note = () => {
+                const sel = tools.querySelector("a.selectedTool");
+                const name = sel && sel.getAttribute("name");
+
+                if (name && name !== "picker") {
+                    pickLastTool = name;
+                }
+            };
+
+            note();
+            pickToolObserver = new MutationObserver(note);
+            pickToolObserver.observe(tools, { subtree: true, attributes: true, attributeFilter: ["class"] });
+        }
+
+        function flockModPrefersSwitchBack() {
+            try {
+                const prefs = JSON.parse(JSON.parse(localStorage.getItem("fmod") || "{}").preferences || "{}");
+                return Boolean(prefs.groupOptions && prefs.groupOptions.tools && prefs.groupOptions.tools.colorpickerswitch);
+            } catch (error) {
+                return false;
+            }
+        }
+
+        /* Full-size pixels of one picture, kept until another is picked from */
+        function loadPickSource(id) {
+            if (pickSource && pickSource.id === id) {
+                return Promise.resolve(pickSource);
+            }
+
+            if (pickSourceJob && pickSourceJob.id === id) {
+                return pickSourceJob.promise;
+            }
+
+            const promise = (async () => {
+                const blob = await refDB("readonly", (store) => store.get(id)).catch(() => null);
+
+                if (!blob) {
+                    return null;
+                }
+
+                const bmp = await createImageBitmap(blob);
+                const canvas = document.createElement("canvas");
+                canvas.width = bmp.width;
+                canvas.height = bmp.height;
+                const ctx = canvas.getContext("2d", { willReadFrequently: true });
+                ctx.drawImage(bmp, 0, 0);
+                bmp.close?.();
+                pickSource = { id, ctx, w: canvas.width, h: canvas.height };
+                return pickSource;
+            })().catch(() => null).finally(() => {
+                if (pickSourceJob && pickSourceJob.promise === promise) {
+                    pickSourceJob = null;
+                }
+            });
+
+            pickSourceJob = { id, promise };
+            return promise;
+        }
+
+        /* Which picture is under the pointer, and where on it (0..1) */
+        function pickTarget(clientX, clientY) {
+            let id = null;
+            let el = null;
+            let flip = false;
+
+            if (view.board) {
+                const item = document.elementsFromPoint(clientX, clientY)
+                    .find((node) => node.classList && node.classList.contains("themeModRefItem") && world.contains(node));
+
+                if (!item) {
+                    return null;
+                }
+
+                id = item.dataset.id;
+                el = item.querySelector("img");
+                flip = Boolean(board.items[id] && board.items[id].flip);
+            } else {
+                if (!list.length || !natW) {
+                    return null;
+                }
+
+                id = list[index];
+                el = img;
+                flip = view.flip;
+            }
+
+            const r = el && el.getBoundingClientRect();
+
+            if (!r || !r.width || !r.height) {
+                return null;
+            }
+
+            let u = (clientX - r.left) / r.width;
+            const v = (clientY - r.top) / r.height;
+
+            if (u < 0 || u >= 1 || v < 0 || v >= 1) {
+                return null;
+            }
+
+            if (flip) {
+                u = 1 - u;
+            }
+
+            return { id, u, v };
+        }
+
+        function pickColorAt(src, target) {
+            const x = Math.min(src.w - 1, Math.floor(target.u * src.w));
+            const y = Math.min(src.h - 1, Math.floor(target.v * src.h));
+            const [r, g, b, a] = src.ctx.getImageData(x, y, 1, 1).data;
+
+            if (a < 8) {
+                return null;   /* see-through spot */
+            }
+
+            let rgb = [r, g, b];
+
+            if (view.gray) {
+                const l = Math.round(0.2126 * r + 0.7152 * g + 0.0722 * b);
+                rgb = [l, l, l];
+            }
+
+            return `#${rgb.map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+        }
+
+        async function updatePick(event) {
+            const target = pickTarget(event.clientX, event.clientY);
+            const p = stage.getBoundingClientRect();
+            pickSwatch.style.transform = `translate(${event.clientX - p.left}px, ${event.clientY - p.top}px)`;
+
+            if (!target) {
+                pickActive.color = null;
+                pickSwatch.classList.remove("visible");
+                return;
+            }
+
+            const src = await loadPickSource(target.id);
+
+            if (!pickActive || !src || src.id !== target.id) {
+                return;
+            }
+
+            pickActive.color = pickColorAt(src, target);
+            pickSwatch.style.backgroundColor = pickActive.color || "transparent";
+            pickSwatch.classList.toggle("visible", Boolean(pickActive.color));
+        }
+
+        stage.addEventListener("pointerdown", (event) => {
+            if (!refPickerOn() || event.target.closest(".themeModRefNav, .themeModRefMenu") || !list.length) {
+                return;
+            }
+
+            /* The picker has the picture now: no moving, panning or double-tap zoom */
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
+            if (pickActive || (event.pointerType === "mouse" && event.button !== 0)) {
+                return;
+            }
+
+            watchPickerTool();
+            stage.focus({ preventScroll: true });
+            stage.setPointerCapture(event.pointerId);
+            pickActive = { pointerId: event.pointerId, color: null };
+            updatePick(event);
+        }, true);
+
+        stage.addEventListener("pointermove", (event) => {
+            /* crosshair while the picker is on (one cheap check per move) */
+            stage.classList.toggle("themeModRefPicking", refPickerOn() && list.length > 0);
+
+            if (pickActive && event.pointerId === pickActive.pointerId) {
+                event.stopImmediatePropagation();
+                updatePick(event);
+            }
+        }, true);
+
+        const endPick = async (event) => {
+            if (!pickActive || event.pointerId !== pickActive.pointerId) {
+                return;
+            }
+
+            event.stopImmediatePropagation();
+            const cancelled = event.type === "pointercancel";
+
+            /* wait for the picture if it was still loading */
+            if (!cancelled) {
+                const target = pickTarget(event.clientX, event.clientY);
+                const src = target ? await loadPickSource(target.id) : null;
+
+                if (!pickActive) {
+                    return;
+                }
+
+                /* let go off the picture = no pick */
+                pickActive.color = src && src.id === target.id ? pickColorAt(src, target) : null;
+            }
+
+            const color = cancelled ? null : pickActive.color;
+            pickActive = null;
+            setTimeout(() => pickSwatch.classList.remove("visible"), 250);
+
+            if (!color) {
+                return;
+            }
+
+            const result = setFlockModColor(color);
+
+            if (result === "failed") {
+                showToast("Couldn't reach FlockMod's color box. Try again in a moment.");
+                return;
+            }
+
+            if (result === "dialog") {
+                showToast(`Picked ${color}. Press OK in the color window to use it.`);
+                return;
+            }
+
+            /* FlockMod's "switch back to the previous tool after picking" */
+            if (pickLastTool && flockModPrefersSwitchBack()) {
+                document.querySelector(`#drawingTools a[name="${pickLastTool}"]`)?.click();
+            }
+        };
+
+        stage.addEventListener("pointerup", endPick, true);
+        stage.addEventListener("pointercancel", endPick, true);
+
+        stage.addEventListener("pointerleave", () => {
+            if (!pickActive) {
+                stage.classList.remove("themeModRefPicking");
+            }
+        });
+
+        /* two quick picks shouldn't count as a double-click (open / fit) */
+        stage.addEventListener("dblclick", (event) => {
+            if (refPickerOn()) {
+                event.stopImmediatePropagation();
+            }
+        }, true);
+
+        watchPickerTool();
+
         /* ---------- window behaviour ---------- */
 
         win.addEventListener("pointerdown", () => raiseRefWindow(win), true);
@@ -8587,6 +9033,8 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
             saveRect();
             saveRefView(view);
             resizeObserver.disconnect();
+            pickToolObserver?.disconnect();
+            pickSource = null;
             boardClear();
             thumbURLs.forEach((u) => URL.revokeObjectURL(u));
 
@@ -8665,6 +9113,13 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                 text: "Flip mirrors the image, and grayscale helps you compare light and dark values.",
                 before: open,
                 target: el('[data-ref="gray"]')
+            },
+            {
+                icon: "fa-eye-dropper",
+                title: "Pick colors",
+                text: "With FlockMod's color picker on (or Tab held), tap a reference to take its color. Hold and drag to preview first.",
+                before: open,
+                target: el(".themeModRefStage")
             },
             {
                 icon: "fa-eye",
@@ -9670,6 +10125,20 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     /* Redraws each maid headpiece when its popup is resized (cheap: only
        when the width really changes, by a few px) */
     let maidCapObserver = null;
+    /* Fits one maid headpiece to its popup (also used by theme cards) */
+    function sizeMaidCap(el, width, height) {
+        if (!height) return;
+        /* wider popups get a slightly taller, rounder band (up to 1.5x) */
+        const s = parseFloat(getComputedStyle(el).getPropertyValue("--fmd-s")) || 1;
+        const k = Math.min(1.5, Math.max(1, 1 + (width / s - 260) / 800)).toFixed(2);
+        if (el.style.getPropertyValue("--fm-cap-k") !== k) el.style.setProperty("--fm-cap-k", k);
+        const units = Math.round((width / (height / 1)) * 30 / 4) * 4;
+        if (units > 0 && String(units) !== el.dataset.fmCapW) {
+            el.dataset.fmCapW = String(units);
+            el.innerHTML = maidCapSVGFor(units);
+        }
+    }
+
     function watchMaidCaps() {
         const caps = document.querySelectorAll(".fmDecoFill-maidcap:not([data-fm-cap])");
         if (!caps.length) return;
@@ -9678,17 +10147,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                 entries.forEach((entry) => {
                     const el = entry.target;
                     if (!el.isConnected) { maidCapObserver.unobserve(el); return; }
-                    const h = entry.contentRect.height;
-                    if (!h) return;
-                    /* wider popups get a slightly taller, rounder band (up to 1.5x) */
-                    const s = parseFloat(getComputedStyle(el).getPropertyValue("--fmd-s")) || 1;
-                    const k = Math.min(1.5, Math.max(1, 1 + (entry.contentRect.width / s - 260) / 800)).toFixed(2);
-                    if (el.style.getPropertyValue("--fm-cap-k") !== k) el.style.setProperty("--fm-cap-k", k);
-                    const units = Math.round((entry.contentRect.width / (h / 1)) * 30 / 4) * 4;
-                    if (units > 0 && String(units) !== el.dataset.fmCapW) {
-                        el.dataset.fmCapW = String(units);
-                        el.innerHTML = maidCapSVGFor(units);
-                    }
+                    sizeMaidCap(el, entry.contentRect.width, entry.contentRect.height);
                 });
             });
         }
@@ -13211,6 +13670,2351 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         return dialog;
     }
 
+    /* =========================================================
+       THEME CARDS (v1.6.6, Themes tab)
+       A theme card is a picture of a theme that also carries its
+       theme code, so a theme can be shared as an image.
+
+       The preview: a small copy of FlockMod's layout (sidebar, top
+       and bottom bar, chat, one popup) with made-up sample content,
+       so no real names, chat or drawings ever end up in a card.
+       It is styled by the same CSS that styles FlockMod (FlockMod's
+       own stylesheets + style.css) with the theme's settings
+       switched on, then turned into a picture. So the card looks
+       exactly like the theme, and new popup / bubble / thumb styles
+       show up on cards without extra work.
+
+       The theme code is hidden twice:
+         1. in the PNG file (a "FlockTheme" text chunk), and
+         2. in the colored strip along the bottom edge, so a copy
+            that went through copy + paste (which drops file data)
+            still loads.
+       Background images, sounds and uploaded fonts are never in a
+       card (only a picture of the backgrounds, if the person wants).
+
+       FORMAT RULES (cards must keep loading in every later version):
+         - never change CARD_W/H, the strip layout or the header;
+           a new layout gets a new CARD_FORMAT number and the reader
+           keeps reading the old ones
+         - the code inside is a normal theme code, so old cards go
+           through the same upgrades (THEME_MIGRATIONS) as old codes
+       Everything happens on this computer. Nothing is uploaded.
+       ========================================================= */
+
+    const CARD_W = 1280;
+    const CARD_H = 720;
+    const CARD_FORMAT = 1;
+    const CARD_PNG_KEYWORD = "FlockTheme";
+    const CARD_CELL = 3;                                /* px per strip cell */
+    const CARD_ROWS = 8;                                /* strip rows at the bottom */
+    const CARD_STRIP_Y = CARD_H - CARD_CELL * CARD_ROWS;
+    const CARD_COLS = Math.floor(CARD_W / CARD_CELL);
+    const CARD_STEP = 28;                               /* color gap between the 4 levels */
+    const CARD_CALIBRATION = 4;                         /* first cells: the 4 levels, for reading */
+    const CARD_HEADER = 10;                             /* "FT", format, flags, length x2, crc x4 */
+    const CARD_CAPACITY = Math.floor((CARD_COLS * CARD_ROWS - CARD_CALIBRATION) * 6 / 8);
+
+    /* The hidden FlockMod copy is laid out at this size, then
+       scaled into the card */
+    const CARD_STAGE_W = 1180;
+    const CARD_STAGE_H = 760;
+    const CARD_PREVIEW = { x: 32, y: 32, w: 880, h: Math.round(880 * CARD_STAGE_H / CARD_STAGE_W) };
+
+    /* ---- small helpers ---- */
+
+    const CRC_TABLE = (() => {
+        const table = new Uint32Array(256);
+        for (let n = 0; n < 256; n++) {
+            let c = n;
+            for (let k = 0; k < 8; k++) {
+                c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+            }
+            table[n] = c >>> 0;
+        }
+        return table;
+    })();
+
+    function crc32(bytes, start = 0, end = bytes.length) {
+        let c = 0xffffffff;
+        for (let i = start; i < end; i++) {
+            c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+        }
+        return (c ^ 0xffffffff) >>> 0;
+    }
+
+    async function streamBytes(bytes, stream) {
+        const out = new Response(new Blob([bytes]).stream().pipeThrough(stream));
+        return new Uint8Array(await out.arrayBuffer());
+    }
+
+    const canCompress = typeof CompressionStream === "function" && typeof DecompressionStream === "function";
+
+    async function deflateBytes(bytes) {
+        return streamBytes(bytes, new CompressionStream("deflate-raw"));
+    }
+
+    async function inflateBytes(bytes) {
+        return streamBytes(bytes, new DecompressionStream("deflate-raw"));
+    }
+
+    function readBlobAsDataURL(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result));
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    /* ---- the code inside a card ---- */
+
+    /* Theme code -> bytes for the strip. Stores the code's JSON (it
+       packs much smaller than the base64 text) and rebuilds the exact
+       same code when read. */
+    async function packCardPayload(code) {
+        const match = String(code).match(/^FMTHEME(\d+):([A-Za-z0-9_-]+)$/);
+        if (!match) {
+            throw new Error("Not a theme code.");
+        }
+
+        const json = new TextEncoder().encode(fromBase64Url(match[2]));
+        let data = json;
+        let flags = 0;
+
+        if (canCompress) {
+            const packed = await deflateBytes(json);
+            if (packed.length < json.length) {
+                data = packed;
+                flags = 1;
+            }
+        }
+
+        const out = new Uint8Array(CARD_HEADER + data.length);
+        out.set([0x46, 0x54, CARD_FORMAT, flags, (data.length >> 8) & 0xff, data.length & 0xff], 0);
+        const crc = crc32(data);
+        out.set([(crc >>> 24) & 0xff, (crc >>> 16) & 0xff, (crc >>> 8) & 0xff, crc & 0xff], 6);
+        out.set(data, CARD_HEADER);
+        return out;
+    }
+
+    /* bytes from the strip -> theme code, or throws a friendly error */
+    async function unpackCardPayload(bytes) {
+        if (bytes.length < CARD_HEADER || bytes[0] !== 0x46 || bytes[1] !== 0x54) {
+            throw new Error("noCard");
+        }
+
+        if (bytes[2] > CARD_FORMAT) {
+            throw new Error("This card was made with a newer version of FlockTheme. Update the mod to load it.");
+        }
+
+        const len = (bytes[4] << 8) | bytes[5];
+        const data = bytes.slice(CARD_HEADER, CARD_HEADER + len);
+        const crc = ((bytes[6] << 24) | (bytes[7] << 16) | (bytes[8] << 8) | bytes[9]) >>> 0;
+
+        if (data.length !== len || crc32(data) !== crc) {
+            throw new Error("damaged");
+        }
+
+        let json = data;
+        if (bytes[3] & 1) {
+            if (!canCompress) {
+                throw new Error("This browser can't read this card. Ask for the theme code instead.");
+            }
+            json = await inflateBytes(data);
+        }
+
+        const text = new TextDecoder().decode(json);
+        const payload = JSON.parse(text);
+        const version = Number(payload && payload.v) || 1;
+        return `${THEME_CODE_PREFIX}${version}:${toBase64Url(text)}`;
+    }
+
+    /* Bytes -> cells along the bottom edge, 6 bits per cell (2 bits per
+       color channel). The cells are 4 close shades of the card's own
+       color, so the strip looks like a calm woven band. The first 4
+       cells show the 4 shades, so the reader learns them from the
+       picture itself. Unused cells repeat a gentle pattern. */
+    function cardStripLevels(base) {
+        return base.map((v) => {
+            const mid = Math.max(6 + CARD_STEP * 1.5, Math.min(249 - CARD_STEP * 1.5, v));
+            return [0, 1, 2, 3].map((k) => Math.round(mid + (k - 1.5) * CARD_STEP));
+        });
+    }
+
+    function drawCardStrip(ctx, bytes, base) {
+        const levels = cardStripLevels(base);
+        const symbols = [0, 21, 42, 63];   /* calibration: level k on every channel */
+        let acc = 0;
+        let bits = 0;
+
+        bytes.forEach((b) => {
+            acc = (acc << 8) | b;
+            bits += 8;
+            while (bits >= 6) {
+                bits -= 6;
+                symbols.push((acc >> bits) & 63);
+            }
+            acc &= (1 << bits) - 1;
+        });
+
+        if (bits > 0) {
+            symbols.push((acc << (6 - bits)) & 63);
+        }
+
+        const used = symbols.length;
+        const total = CARD_COLS * CARD_ROWS;
+        for (let i = 0; i < total; i++) {
+            const s = i < used ? symbols[i] : [21, 22, 25, 37, 42, 41, 38, 26][(i + Math.floor(i / CARD_COLS)) % 8];
+            const x = (i % CARD_COLS) * CARD_CELL;
+            const y = CARD_STRIP_Y + Math.floor(i / CARD_COLS) * CARD_CELL;
+            ctx.fillStyle = `rgb(${levels[0][(s >> 4) & 3]}, ${levels[1][(s >> 2) & 3]}, ${levels[2][s & 3]})`;
+            ctx.fillRect(x, y, CARD_CELL, CARD_CELL);
+        }
+    }
+
+    function readCardStrip(imageData) {
+        const pixel = (i) => {
+            const x = (i % CARD_COLS) * CARD_CELL + 1;
+            const y = Math.floor(i / CARD_COLS) * CARD_CELL + 1;
+            const p = (y * imageData.width + x) * 4;
+            return [imageData.data[p], imageData.data[p + 1], imageData.data[p + 2]];
+        };
+
+        /* The 4 shades, per channel, from the calibration cells */
+        const cal = [0, 1, 2, 3].map(pixel);
+        const nearest = (value, channel) => {
+            let best = 0;
+            for (let k = 1; k < 4; k++) {
+                if (Math.abs(cal[k][channel] - value) < Math.abs(cal[best][channel] - value)) best = k;
+            }
+            return best;
+        };
+
+        const out = [];
+        let acc = 0;
+        let bits = 0;
+
+        for (let i = CARD_CALIBRATION; i < CARD_COLS * CARD_ROWS; i++) {
+            const [r, g, b] = pixel(i);
+            const s = (nearest(r, 0) << 4) | (nearest(g, 1) << 2) | nearest(b, 2);
+            acc = (acc << 6) | s;
+            bits += 6;
+            if (bits >= 8) {
+                bits -= 8;
+                out.push((acc >> bits) & 0xff);
+            }
+            acc &= (1 << bits) - 1;
+        }
+
+        return new Uint8Array(out);
+    }
+
+    /* ---- PNG text chunk ---- */
+
+    function pngChunks(bytes) {
+        const sig = [137, 80, 78, 71, 13, 10, 26, 10];
+        if (bytes.length < 8 || sig.some((v, i) => bytes[i] !== v)) {
+            return null;
+        }
+
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        const chunks = [];
+        let p = 8;
+
+        while (p + 12 <= bytes.length) {
+            const len = view.getUint32(p);
+            const type = String.fromCharCode(bytes[p + 4], bytes[p + 5], bytes[p + 6], bytes[p + 7]);
+            if (p + 12 + len > bytes.length) {
+                break;
+            }
+            chunks.push({ type, start: p, dataStart: p + 8, len });
+            p += 12 + len;
+            if (type === "IEND") {
+                break;
+            }
+        }
+
+        return chunks;
+    }
+
+    function addPngText(bytes, keyword, text) {
+        const chunks = pngChunks(bytes);
+        const iend = chunks && chunks.find((c) => c.type === "IEND");
+        if (!iend) {
+            return bytes;
+        }
+
+        const body = new TextEncoder().encode(`tEXt${keyword}\0${text}`);
+        const chunk = new Uint8Array(body.length + 8);
+        const view = new DataView(chunk.buffer);
+        view.setUint32(0, body.length - 4);
+        chunk.set(body, 4);
+        view.setUint32(4 + body.length, crc32(body));
+
+        const out = new Uint8Array(bytes.length + chunk.length);
+        out.set(bytes.subarray(0, iend.start), 0);
+        out.set(chunk, iend.start);
+        out.set(bytes.subarray(iend.start), iend.start + chunk.length);
+        return out;
+    }
+
+    function readPngText(bytes, keyword) {
+        const chunks = pngChunks(bytes) || [];
+
+        for (const c of chunks) {
+            if (c.type !== "tEXt") {
+                continue;
+            }
+            const data = bytes.subarray(c.dataStart, c.dataStart + c.len);
+            const zero = data.indexOf(0);
+            if (zero > 0 && new TextDecoder("latin1").decode(data.subarray(0, zero)) === keyword) {
+                return new TextDecoder("latin1").decode(data.subarray(zero + 1));
+            }
+        }
+
+        return null;
+    }
+
+    /* Any picture -> its theme code (or a friendly error) */
+    async function readThemeCard(file) {
+        if (!file || !/^image\//.test(file.type || "image/png")) {
+            throw new Error("That file isn't a picture.");
+        }
+
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const fromText = readPngText(bytes, CARD_PNG_KEYWORD);
+
+        if (fromText && /^FMTHEME\d+:/.test(fromText.trim())) {
+            return fromText.trim();
+        }
+
+        let bitmap;
+        try {
+            bitmap = await createImageBitmap(file);
+        } catch (error) {
+            throw new Error("That picture couldn't be opened.");
+        }
+
+        const w = bitmap.width;
+        const h = bitmap.height;
+
+        if (w !== CARD_W || h !== CARD_H) {
+            bitmap.close();
+            throw new Error(w / h > 1.7 && w / h < 1.8
+                ? "This copy of the card was resized, so its theme can't be read. Ask for the original picture or the theme code."
+                : "That picture isn't a theme card.");
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = CARD_W;
+        canvas.height = CARD_CELL * CARD_ROWS;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        ctx.drawImage(bitmap, 0, -CARD_STRIP_Y);
+        bitmap.close();
+
+        try {
+            return await unpackCardPayload(readCardStrip(ctx.getImageData(0, 0, canvas.width, canvas.height)));
+        } catch (error) {
+            if (error.message === "noCard") {
+                throw new Error("That picture isn't a theme card.");
+            }
+            if (error.message === "damaged") {
+                throw new Error("This copy of the card was changed (resized or compressed), so its theme can't be read. Ask for the original picture or the theme code.");
+            }
+            throw error;
+        }
+    }
+
+    /* ---- the theme's look, without touching yours ----
+       The mod's own code switches a theme on by setting classes and
+       variables on <html>. To get them for ANY theme, that same code
+       runs once with the theme's settings in a stand-in storage (your
+       real settings are never written), all in one go, and then your
+       own look is put straight back before the browser draws, so
+       nothing on your screen changes. */
+
+    function makeOverlayStorage(real) {
+        const over = new Map();
+        return {
+            getItem: (key) => (over.has(String(key)) ? over.get(String(key)) : real.getItem(key)),
+            setItem: (key, value) => { over.set(String(key), String(value)); },
+            removeItem: (key) => { over.set(String(key), null); },
+            key: (i) => real.key(i),
+            get length() { return real.length; },
+            clear() { /* never */ }
+        };
+    }
+
+    /* Only the parts of loadSavedCustomizations() that paint the look,
+       in the same order. All of them finish right away (no waiting). */
+    const CARD_APPLIERS = [
+        () => applySavedFont(),
+        () => applySavedFontSize(),
+        () => applySavedFontWeight(),
+        () => applySavedSpacing(),
+        () => applySavedSelectedColor(),
+        () => applySavedHoverColor(),
+        () => applySavedText1Color(),
+        () => applySavedText2Color(),
+        () => applySavedTopBarColors(),
+        () => applySavedSidebarColors(),
+        () => applySavedSimpleColorsIfActive(),
+        () => applySavedGradients(),
+        () => applySavedDeco(),
+        () => applySavedBubbles(),
+        () => applySavedCanvasDim(),
+        () => { if (customizationsEnabled) applyRadiusPreview(localStorage.getItem("flockmodCustomUIRadius") || "5"); }
+    ];
+
+    /* Personal / moving things that don't belong on a still picture */
+    const CARD_DROP_CLASSES = ["fmLite", "flockmodCustomizationsDisabled", ...ANIM_EFFECTS.map((e) => e.cls)];
+
+    function captureCardLook(settings) {
+        const root = document.documentElement;
+        const before = {
+            cls: root.className,
+            style: root.getAttribute("style"),
+            deco: root.dataset.fmDeco,
+            bub: root.dataset.fmBub
+        };
+        const realStorage = localStorage;
+        const realEnabled = customizationsEnabled;
+        const realLite = liteMode;
+        let look = null;
+
+        try {
+            localStorage = makeOverlayStorage(realStorage);
+            customizationsEnabled = true;
+            liteMode = false;
+            writeThemeSettings(settings, true);
+            CARD_APPLIERS.forEach((apply) => apply());
+
+            look = {
+                classes: root.className.split(/\s+/).filter((c) => c && !CARD_DROP_CLASSES.includes(c)),
+                style: root.getAttribute("style") || "",
+                deco: root.dataset.fmDeco || "",
+                bub: root.dataset.fmBub || "",
+                decoSt: readSavedDeco(),
+                bubSt: readSavedBubbles(),
+                thumb: readSavedThumbShape(),
+                font: localStorage.getItem("flockmodCustomUIFont") || "default",
+                simple: isSimpleModeSaved(),
+                bg: Object.fromEntries(BACKGROUND_PLACES.map((place) => [place.key, readBgSettings(place)]))
+            };
+        } finally {
+            localStorage = realStorage;
+            customizationsEnabled = realEnabled;
+            liteMode = realLite;
+
+            try {
+                CARD_APPLIERS.forEach((apply) => apply());
+            } catch (error) { /* the exact copy below puts everything back anyway */ }
+
+            root.className = before.cls;
+            if (before.style === null) root.removeAttribute("style");
+            else root.setAttribute("style", before.style);
+            if (before.deco === undefined) delete root.dataset.fmDeco;
+            else root.dataset.fmDeco = before.deco;
+            if (before.bub === undefined) delete root.dataset.fmBub;
+            else root.dataset.fmBub = before.bub;
+        }
+
+        return look;
+    }
+
+    /* ---- the hidden FlockMod copy (the "stage") ---- */
+
+    let cardModCSS = null;
+
+    async function getModStylesheetText() {
+        if (cardModCSS === null) {
+            const url = chrome.runtime.getURL("style.css");
+            cardModCSS = await (await fetch(url)).text();
+        }
+        return cardModCSS;
+    }
+
+    function cardShapeMaskURL(shape) {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#000">${THUMB_SHAPES[shape].svg}</svg>`;
+        return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    }
+
+    /* Background pictures for the card, as small data: images */
+    async function cardBackgroundImages(look, images) {
+        const out = {};
+
+        for (const place of BACKGROUND_PLACES) {
+            const st = look.bg[place.key];
+            if (!st || !st.Enabled) {
+                continue;
+            }
+
+            let blob = null;
+            try {
+                if (images === "current") {
+                    blob = await getBgBlob(place.key);
+                } else if (images && images[place.key]) {
+                    blob = await bgDB("readonly", (s) => s.get(images[place.key]));
+                }
+            } catch (error) {
+                blob = null;
+            }
+
+            if (!blob) {
+                continue;
+            }
+
+            try {
+                /* GIFs show their first frame; everything is kept small */
+                const shown = st.Blur > 0 ? await blurBgImage(blob, st.Blur) : await shrinkForCard(blob);
+                out[place.key] = await readBlobAsDataURL(shown || blob);
+            } catch (error) { /* skip this one */ }
+        }
+
+        return out;
+    }
+
+    async function shrinkForCard(blob) {
+        const bitmap = await createImageBitmap(blob);
+        const scale = Math.min(1, 900 / Math.max(bitmap.width, bitmap.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        bitmap.close();
+        return canvasToBlob(canvas, "image/jpeg", 0.86);
+    }
+
+    /* The theme's font as an @font-face rule (pictures can't use fonts
+       that were only added with JavaScript) */
+    async function cardFontFaceCSS(value) {
+        if (!isCustomFontValue(value)) {
+            return "";
+        }
+
+        const family = customFontFamily(value);
+        const name = fontValueLabel(value);
+        const rules = [];
+
+        try {
+            if (value.startsWith("google:")) {
+                const css = await fetchGoogleFontCSS(name);
+                const blocks = (css.match(/@font-face\s*{[^}]*}/g) || []).filter((block) => {
+                    const range = (block.match(/unicode-range:\s*([^;]+);/) || [])[1] || "";
+                    return !range || /U\+0000-00FF/i.test(range);
+                });
+
+                for (const block of blocks) {
+                    const url = (block.match(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/) || [])[1];
+                    if (!url) continue;
+                    const weight = ((block.match(/font-weight:\s*([^;]+);/) || [])[1] || "400").trim();
+                    const style = ((block.match(/font-style:\s*([^;]+);/) || [])[1] || "normal").trim();
+                    const data = await readBlobAsDataURL(await (await fetch(url)).blob());
+                    rules.push(`@font-face{font-family:"${family}";font-weight:${weight};font-style:${style};src:url("${data}");}`);
+                }
+            } else {
+                const buffer = await getFontFile(name);
+                if (buffer) {
+                    const data = await readBlobAsDataURL(new Blob([buffer]));
+                    rules.push(`@font-face{font-family:"${family}";src:url("${data}");}`);
+                }
+            }
+        } catch (error) { /* falls back to FlockMod's font */ }
+
+        return rules.join("\n");
+    }
+
+    function waitFor(promise, ms) {
+        return Promise.race([promise, new Promise((resolve) => setTimeout(resolve, ms))]);
+    }
+
+    /* Builds the hidden copy, styled with the theme. Returns the iframe. */
+    async function buildCardStage(look, bgImages, fontCSS) {
+        const frame = document.createElement("iframe");
+        frame.setAttribute("aria-hidden", "true");
+        frame.tabIndex = -1;
+        frame.style.cssText = `position: fixed; left: -${CARD_STAGE_W + 4000}px; top: 0; width: ${CARD_STAGE_W}px; ` +
+            `height: ${CARD_STAGE_H}px; border: 0; visibility: hidden; pointer-events: none; z-index: -1;`;
+        document.body.appendChild(frame);
+
+        try {
+            await fillCardStage(frame, look, bgImages, fontCSS);
+        } catch (error) {
+            frame.remove();
+            throw error;
+        }
+
+        return frame;
+    }
+
+    async function fillCardStage(frame, look, bgImages, fontCSS) {
+        const doc = frame.contentDocument;
+        doc.open();
+        doc.write("<!doctype html><html><head><meta charset=\"utf-8\"></head><body></body></html>");
+        doc.close();
+
+        /* FlockMod's own stylesheets, in the same order */
+        const loads = [];
+        [...document.querySelectorAll('link[rel="stylesheet"], style')].forEach((el) => {
+            if (el.tagName === "STYLE") {
+                if (el.dataset.fmBgImage !== undefined || /emojiContainer/.test(el.textContent)) {
+                    return;   /* your own background pictures / a mod helper */
+                }
+                const copy = doc.createElement("style");
+                copy.textContent = el.textContent;
+                doc.head.appendChild(copy);
+                return;
+            }
+
+            const link = doc.createElement("link");
+            link.rel = "stylesheet";
+            link.href = el.href;
+            loads.push(new Promise((resolve) => {
+                link.onload = resolve;
+                link.onerror = resolve;
+            }));
+            doc.head.appendChild(link);
+        });
+
+        /* style.css (the mod's look) */
+        const modStyle = doc.createElement("style");
+        modStyle.dataset.fmCard = "mod";
+        modStyle.textContent = await getModStylesheetText();
+        doc.head.appendChild(modStyle);
+
+        /* Card-only rules: the theme's pictures + font, and no motion */
+        const extra = doc.createElement("style");
+        extra.dataset.fmCard = "extra";
+        extra.textContent = [
+            fontCSS,
+            ...BACKGROUND_PLACES.filter((place) => bgImages[place.key]).map((place) =>
+                `${place.host}, ${place.host}::before { ${place.cssVar}-image: url("${bgImages[place.key]}"); }`),
+            "*, *::before, *::after { animation: none !important; transition: none !important; caret-color: transparent !important; }",
+            `html, body { width: ${CARD_STAGE_W}px; height: ${CARD_STAGE_H}px; overflow: hidden; margin: 0; }`
+        ].join("\n");
+        doc.head.appendChild(extra);
+
+        /* The theme's switches + variables on <html> */
+        const root = doc.documentElement;
+        root.setAttribute("style", look.style);
+        root.className = look.classes.join(" ");
+        if (look.deco) root.dataset.fmDeco = look.deco;
+        if (look.bub) root.dataset.fmBub = look.bub;
+
+        /* Slider thumb shape */
+        root.style.setProperty("--flockmod-thumb-size", String(look.thumb.size / 100));
+        root.classList.remove("flockmodThumbShapeActive");
+        if (look.thumb.enabled && THUMB_SHAPES[look.thumb.shape]) {
+            const fit = THUMB_TEXT_FIT[look.thumb.shape] || THUMB_TEXT_FIT.circle;
+            root.style.setProperty("--flockmod-thumb-font", `${fit.size}px`);
+            root.style.setProperty("--flockmod-thumb-text-x", `${fit.x}px`);
+            root.style.setProperty("--flockmod-thumb-text-y", `${fit.y}px`);
+            root.style.setProperty("--flockmod-thumb-mask", `url("${cardShapeMaskURL(look.thumb.shape)}")`);
+            root.classList.add("flockmodThumbShapeActive");
+        }
+
+        /* Background settings (same variables applyBackgroundState sets) */
+        BACKGROUND_PLACES.forEach((place) => {
+            const st = look.bg[place.key];
+            const on = Boolean(bgImages[place.key]);
+            root.style.setProperty(`${place.cssVar}-size`, st.Fit === "tile" ? "auto" : st.Fit);
+            root.style.setProperty(`${place.cssVar}-repeat`, st.Fit === "tile" ? "repeat" : "no-repeat");
+            root.style.setProperty(`${place.cssVar}-shade`, st.Shade === "light" ? "255, 255, 255" : "0, 0, 0");
+            root.style.setProperty(`${place.cssVar}-dim`, String(st.Dim / 100));
+            root.style.setProperty(`${place.cssVar}-see`, String(st.SeeThrough || 0));
+            root.style.setProperty(`${place.cssVar}-see-channels`, String(st.ChannelSeeThrough || 0));
+            root.style.removeProperty(`${place.cssVar}-image`);
+            root.classList.toggle(place.cls, on);
+            root.classList.toggle(place.seeCls, on && (st.SeeThrough > 0 || (st.ChannelSeeThrough || 0) > 0));
+        });
+
+        doc.body.className = document.body.className;
+        doc.body.innerHTML = cardStageHTML();
+
+        await waitFor(Promise.all(loads), 8000);
+        await waitFor(doc.fonts.ready, 5000);
+
+        finishCardStage(doc, look);
+        await waitFor(doc.fonts.ready, 3000);
+    }
+
+    /* The things the mod normally does live on the page, done once on
+       the copy: popup decorations, bubble decorations, see-through */
+    function finishCardStage(doc, look) {
+        const root = doc.documentElement;
+
+        /* Background hosts get their own layer, like markBgHosts() */
+        BACKGROUND_PLACES.forEach((place) => {
+            if (!root.classList.contains(place.cls) || place.noLayer) return;
+            doc.querySelectorAll(place.host).forEach((el) => {
+                const cs = getComputedStyle(el);
+                if (/auto|scroll/.test(cs.overflowY + cs.overflowX)) return;
+                el.dataset.fmBgLayer = cs.position === "static" ? "rel" : "on";
+            });
+        });
+
+        /* See-through: read each panel's own color, like refreshSeeThrough() */
+        BACKGROUND_PLACES.forEach((place) => {
+            if (!root.classList.contains(place.seeCls)) return;
+            root.classList.remove(place.seeCls);
+            place.see.forEach((target) => {
+                const el = doc.querySelector(target.detect);
+                if (el) root.style.setProperty(`--fmst-${target.id}`, getComputedStyle(el).backgroundColor);
+            });
+            root.classList.add(place.seeCls);
+        });
+
+        /* Popup decorations, like updateDecorations() */
+        const st = look.decoSt;
+        if (st && st.style !== "none") {
+            doc.querySelectorAll(".dialog").forEach((dialog) => {
+                const box = doc.createElement("div");
+                box.className = "fmDeco";
+                box.setAttribute("aria-hidden", "true");
+                box.dataset.sig = decoSignature(st);
+                box.innerHTML = buildDecoHTML(st);
+                dialog.appendChild(box);
+                dialog.classList.add("fmHasDeco");
+                measureDecoFrame(dialog, box);
+            });
+
+            doc.querySelectorAll(".fmDecoFill-maidcap").forEach((el) => {
+                const r = el.getBoundingClientRect();
+                sizeMaidCap(el, r.width, r.height);
+            });
+
+            if (st.match) {
+                const popup = doc.querySelector(".dialog");
+                const bar = popup && popup.querySelector(".dialogTitlebar");
+                const usable = (c) => c && c !== "transparent" && !/rgba\([^)]*,\s*0\)$/.test(c);
+                let main = bar ? getComputedStyle(bar).backgroundColor : "";
+                let outline = popup ? getComputedStyle(popup).borderTopColor : "";
+                let detail = root.classList.contains("flockmodSidebarAccentActive")
+                    ? getComputedStyle(root).getPropertyValue("--flockmod-custom-sidebar-accent").trim()
+                    : (() => {
+                        const fill = doc.querySelector("#sidebar .fmSlider .fmSelectedArea");
+                        return fill ? getComputedStyle(fill).backgroundColor : "";
+                    })();
+                if (!usable(main)) main = "#4f4f55";
+                if (!usable(outline)) outline = "#707379";
+                if (!usable(detail)) detail = "#378de4";
+                root.style.setProperty("--fmdeco-t-main", main);
+                root.style.setProperty("--fmdeco-t-outline", outline);
+                root.style.setProperty("--fmdeco-t-detail", detail);
+            }
+        }
+
+        /* Bubble decorations on "your" sample messages */
+        const bub = look.bubSt;
+        const sig = bub && bub.style !== "none" && bub.deco && BUB_STYLES[bub.style] && BUB_STYLES[bub.style].deco ? bub.style : "";
+        if (sig) {
+            doc.querySelectorAll(`#chatMessages ${MY_BLOCKS}`).forEach((block) => decorateBubbleBlock(block, sig));
+        }
+    }
+
+    /* ---- turning the copy into a picture ---- */
+
+    function cssURLs(text) {
+        const out = [];
+        text.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g, (m, q, url) => {
+            out.push(url);
+            return m;
+        });
+        return out;
+    }
+
+    /* All the CSS of the copy as one text, with relative addresses
+       made absolute */
+    async function collectCardCSS(doc) {
+        const parts = [];
+
+        for (const sheet of [...doc.styleSheets]) {
+            const base = sheet.href || doc.baseURI;
+            let text = "";
+
+            try {
+                /* one piece per rule, so a problem in one can't spill into others */
+                text = [...sheet.cssRules].map((rule) => rule.cssText);
+            } catch (error) {
+                /* Another site's stylesheet (fonts, icons): read it directly */
+                try {
+                    text = sheet.href ? await (await fetch(sheet.href)).text() : "";
+                } catch (fetchError) {
+                    text = "";
+                }
+            }
+
+            const absolute = (piece) => piece.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g, (m, q, url) => {
+                if (/^(data|blob):/.test(url)) return m;
+                try {
+                    return `url("${new URL(url, base).href}")`;
+                } catch (error) {
+                    return m;
+                }
+            });
+            text = Array.isArray(text) ? text.map((piece) => keepIfSafe(piece, absolute(piece))) : keepIfSafe(text, absolute(text));
+
+            parts.push(...(Array.isArray(text) ? text : [text]));
+        }
+
+        return parts;
+    }
+
+    /* Which pictures and fonts the copy really uses (only those are
+       packed into the picture, to keep it small) */
+    function usedCardResources(doc) {
+        const urls = new Set();
+        const families = new Set();
+        const props = ["background-image", "mask-image", "-webkit-mask-image", "border-image-source", "list-style-image", "content"];
+
+        doc.querySelectorAll("*").forEach((el) => {
+            [null, "::before", "::after"].forEach((pseudo) => {
+                const cs = getComputedStyle(el, pseudo);
+                if (pseudo && (cs.content === "none" || cs.content === "normal")) {
+                    return;
+                }
+                props.forEach((prop) => {
+                    cssURLs(cs.getPropertyValue(prop) || "").forEach((url) => urls.add(url));
+                });
+                (cs.fontFamily || "").split(",").forEach((f) => families.add(f.trim().replace(/^["']|["']$/g, "").toLowerCase()));
+            });
+        });
+
+        return { urls, families };
+    }
+
+    /* v1.6.6: safety net for the card's CSS. Every piece we rewrite
+       (fonts and pictures packed in) is checked with the browser's own
+       CSS reader: it must still have the same number of rules, and must
+       not swallow a rule placed after it. If not, the original piece is
+       used, so one bad piece can never hide the rest of the theme. */
+    function cssRuleCount(text) {
+        try {
+            const sheet = new CSSStyleSheet();
+            sheet.replaceSync(text);
+            return sheet.cssRules.length;
+        } catch (error) {
+            return -1;
+        }
+    }
+
+    function keepIfSafe(original, rewritten) {
+        if (rewritten === original) {
+            return original;
+        }
+        const probe = "\n.fmCardProbe{color:red}";
+        const want = cssRuleCount(original + probe);
+        if (want < 1) {
+            return original;
+        }
+        return cssRuleCount(rewritten + probe) === want ? rewritten : original;
+    }
+
+    async function inlineCardResources(pieces, used) {
+        const cache = new Map();
+        const toData = async (url) => {
+            if (/^(data|blob):/.test(url) && !url.startsWith("blob:")) return url;
+            if (!cache.has(url)) {
+                cache.set(url, (async () => {
+                    try {
+                        const response = await fetch(url);
+                        return response.ok ? readBlobAsDataURL(await response.blob()) : null;
+                    } catch (error) {
+                        return null;
+                    }
+                })());
+            }
+            return cache.get(url);
+        };
+
+        const fixPiece = async (css) => {
+            /* Fonts: only the families the copy uses, one file per face
+               (woff2 when there's a choice) */
+            const faces = css.match(/@font-face\s*{[^}]*}/g) || [];
+            for (const face of faces) {
+                const family = ((face.match(/font-family:\s*([^;]+);/) || [])[1] || "").trim().replace(/^["']|["']$/g, "").toLowerCase();
+                const srcs = cssURLs(face);
+                if (!family || !used.families.has(family) || !srcs.length) {
+                    css = css.replace(face, () => "");
+                    continue;
+                }
+                const pick = srcs.find((u) => /woff2/i.test(u)) || srcs[0];
+                const data = pick.startsWith("data:") ? pick : await toData(pick);
+                /* Skip over quoted text when finding the end of src: a font
+                   that's already a data: address has a ";" inside it
+                   ("data:font/woff2;base64,..."). Cutting there broke the
+                   CSS after it, which hid the background pictures. */
+                const rebuilt = data
+                    ? face.replace(/src\s*:(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^;"'}])*;?/, () => `src: url("${data}");`)
+                    : "";
+                css = css.replace(face, () => rebuilt);
+            }
+
+            /* Pictures */
+            for (const url of used.urls) {
+                if (url.startsWith("data:") || !css.includes(`url("${url}")`)) continue;
+                const data = await toData(url);
+                if (data) {
+                    css = css.split(`url("${url}")`).join(`url("${data}")`);
+                }
+            }
+
+            /* The copy's own <html> isn't the top of the picture, so rules
+               written for :root go to html instead */
+            return css.replace(/:root\b/g, "html");
+        };
+
+        const out = [];
+        for (const piece of pieces) {
+            const fixed = await fixPiece(piece);
+            /* an unused font removed on purpose is fine */
+            out.push(fixed === "" ? "" : keepIfSafe(piece, fixed));
+        }
+        return out.join("\n");
+    }
+
+    function xmlEscapeAttr(value) {
+        return String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    }
+
+    async function renderCardStage(frame) {
+        const doc = frame.contentDocument;
+        const root = doc.documentElement;
+        const used = usedCardResources(doc);
+        let css = await collectCardCSS(doc);
+        css = await inlineCardResources(css, used);
+
+        /* Pictures inside the markup itself (rare) */
+        for (const img of [...doc.querySelectorAll("img[src]")]) {
+            if (!img.src.startsWith("data:")) {
+                try {
+                    img.setAttribute("src", await readBlobAsDataURL(await (await fetch(img.src)).blob()));
+                } catch (error) {
+                    img.removeAttribute("src");
+                }
+            }
+        }
+
+        const body = new XMLSerializer().serializeToString(doc.body);
+        const attrs = [...root.attributes]
+            .filter((a) => a.name !== "xmlns")
+            .map((a) => `${a.name}="${xmlEscapeAttr(a.value)}"`).join(" ");
+        const fontSize = getComputedStyle(root).fontSize || "16px";
+        const safeCSS = css.replace(/]]>/g, "]]]]><![CDATA[>");
+
+        const svg =
+            `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_STAGE_W}" height="${CARD_STAGE_H}" style="font-size: ${fontSize}">` +
+            `<foreignObject x="0" y="0" width="${CARD_STAGE_W}" height="${CARD_STAGE_H}">` +
+            `<html xmlns="http://www.w3.org/1999/xhtml" ${attrs}>` +
+            `<head><style><![CDATA[${safeCSS}]]></style></head>` +
+            body +
+            "</html></foreignObject></svg>";
+
+        const img = new Image();
+        img.decoding = "sync";
+        await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = () => reject(new Error("The preview couldn't be drawn."));
+            img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+        });
+
+        return img;
+    }
+
+    /* ---- the card around the preview ---- */
+
+    function cardColor(doc, list, fallback) {
+        const usable = (c) => c && c !== "transparent" && !/rgba\([^)]*,\s*0\)$/.test(c);
+        for (const [selector, prop] of list) {
+            const el = doc.querySelector(selector);
+            if (!el) continue;
+            const value = getComputedStyle(el)[prop];
+            if (usable(value)) return value;
+        }
+        return fallback;
+    }
+
+    function parseRGB(color) {
+        const m = String(color).match(/rgba?\(([^)]+)\)/);
+        if (!m) return [128, 128, 128];
+        return m[1].split(",").slice(0, 3).map((v) => Number(v.trim()) || 0);
+    }
+
+    function lightness([r, g, b]) {
+        return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    }
+
+    function mixRGB(a, b, t) {
+        return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(", ")})`;
+    }
+
+    /* Colors and font for the card, read from the styled copy */
+    function readCardInfo(doc, look) {
+        const info = {
+            icons: cardColor(doc, CARD_COLOR_SOURCES.icons, "rgb(200, 200, 200)"),
+            sidebar: cardColor(doc, CARD_COLOR_SOURCES.sidebar, "rgb(29, 30, 34)"),
+            surface: cardColor(doc, CARD_COLOR_SOURCES.surface, "rgb(46, 47, 53)"),
+            accent: cardColor(doc, CARD_COLOR_SOURCES.accent, "rgb(79, 81, 86)"),
+            text: cardColor(doc, CARD_COLOR_SOURCES.text, "rgb(255, 255, 255)"),
+            font: getComputedStyle(doc.body).fontFamily || "sans-serif"
+        };
+
+        const base = parseRGB(info.sidebar);
+        const dark = lightness(base) < 0.5;
+        info.cardBg = mixRGB(base, dark ? [0, 0, 0] : [255, 255, 255], dark ? 0.35 : 0.55);
+        info.cardText = lightness(parseRGB(info.text)) > 0.5 === dark ? info.text : (dark ? "rgb(245, 240, 242)" : "rgb(40, 32, 36)");
+        info.cardMuted = mixRGB(parseRGB(info.cardText), parseRGB(info.cardBg), 0.35);
+        info.chip = mixRGB(parseRGB(info.cardBg), parseRGB(info.cardText), 0.1);
+        return info;
+    }
+
+    function wrapText(ctx, text, maxWidth) {
+        const words = String(text).split(/\s+/);
+        const lines = [];
+        let line = "";
+        words.forEach((word) => {
+            const next = line ? `${line} ${word}` : word;
+            if (ctx.measureText(next).width > maxWidth && line) {
+                lines.push(line);
+                line = word;
+            } else {
+                line = next;
+            }
+        });
+        if (line) lines.push(line);
+        return lines;
+    }
+
+    function roundRectPath(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+    }
+
+    function drawSakura(ctx, cx, cy, size) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.fillStyle = "#f29cc0";
+        for (let i = 0; i < 5; i++) {
+            ctx.save();
+            ctx.rotate((i * 72 * Math.PI) / 180);
+            ctx.beginPath();
+            ctx.ellipse(0, -size * 0.27, size * 0.18, size * 0.24, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+        ctx.fillStyle = "#ffd866";
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.13, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    /* What the card lists under the colors */
+    function cardTags(look) {
+        const tags = [];
+        const deco = DECO_STYLES[look.decoSt.style];
+        if (look.decoSt.style !== "none" && deco) tags.push(`Popups: ${deco.label}`);
+        const bub = BUB_STYLES[look.bubSt.style];
+        if (look.bubSt.style !== "none" && bub) tags.push(`Bubbles: ${bub.label}`);
+        if (look.font && look.font !== "default") tags.push(`Font: ${isCustomFontValue(look.font) ? fontValueLabel(look.font) : look.font}`);
+        if (look.thumb.enabled && THUMB_SHAPES[look.thumb.shape]) tags.push(`${THUMB_SHAPES[look.thumb.shape].label} thumbs`);
+        if (look.classes.some((c) => /^flockmodGrad\w+Active$/.test(c))) tags.push("Gradients");
+        if (look.simple) tags.push("Simple coloring");
+        if (look.classes.includes("flockmodCanvasPaperActive") || look.classes.includes("flockmodCanvasAreaActive")) tags.push("Canvas colors");
+        if (look.classes.includes("flockmodCanvasDimActive")) tags.push("Canvas dimmer");
+        return tags;
+    }
+
+    function cardNotes(look, opts, shownImages) {
+        const notes = [];
+        const usesImages = BACKGROUND_PLACES.some((place) => look.bg[place.key] && look.bg[place.key].Enabled);
+        if (usesImages) {
+            notes.push(shownImages
+                ? "Shown with the creator's background pictures (not included)"
+                : "Uses background pictures (not included)");
+        }
+        const files = opts.sounds && Array.isArray(opts.sounds.files) ? opts.sounds.files : [];
+        if (files.length) notes.push("Uses custom sounds (not included)");
+        if (look.font && look.font.startsWith("upload:")) notes.push("Uses an uploaded font (not included)");
+        return notes;
+    }
+
+    function drawThemeCard(preview, info, look, opts, payload, shownImages) {
+        const canvas = document.createElement("canvas");
+        canvas.width = CARD_W;
+        canvas.height = CARD_H;
+        const ctx = canvas.getContext("2d");
+        const font = (size, weight = 400) => `${weight} ${size}px ${info.font}`;
+
+        ctx.fillStyle = info.cardBg;
+        ctx.fillRect(0, 0, CARD_W, CARD_H);
+
+        /* The preview, with a soft shadow and round corners */
+        const p = CARD_PREVIEW;
+        ctx.save();
+        ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
+        ctx.shadowBlur = 24;
+        ctx.shadowOffsetY = 8;
+        roundRectPath(ctx, p.x, p.y, p.w, p.h, 16);
+        ctx.fillStyle = info.sidebar;
+        ctx.fill();
+        ctx.restore();
+        ctx.save();
+        roundRectPath(ctx, p.x, p.y, p.w, p.h, 16);
+        ctx.clip();
+        ctx.drawImage(preview, p.x, p.y, p.w, p.h);
+        ctx.restore();
+
+        /* Text column */
+        const x = p.x + p.w + 36;
+        const w = CARD_W - x - 32;
+        let y = 62;
+        ctx.textBaseline = "alphabetic";
+
+        ctx.fillStyle = info.cardMuted;
+        ctx.font = font(13, 700);
+        ctx.fillText("FLOCKTHEME THEME", x, y);
+        y += 46;
+
+        ctx.fillStyle = info.cardText;
+        ctx.font = font(36, 700);
+        wrapText(ctx, opts.name || "My theme", w).slice(0, 2).forEach((line) => {
+            ctx.fillText(line, x, y);
+            y += 42;
+        });
+
+        if (opts.by) {
+            ctx.fillStyle = info.cardMuted;
+            ctx.font = font(17, 500);
+            ctx.fillText(`by ${opts.by}`, x, y - 8);
+            y += 22;
+        }
+
+        /* Swatches */
+        y += 10;
+        [info.sidebar, info.surface, info.accent, info.text, info.icons].forEach((color, i) => {
+            ctx.beginPath();
+            ctx.arc(x + 17 + i * 44, y + 17, 17, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = info.chip;
+            ctx.stroke();
+        });
+        y += 56;
+
+        /* Tags */
+        ctx.font = font(13, 700);
+        let tx = x;
+        cardTags(look).forEach((tag) => {
+            const tw = ctx.measureText(tag).width + 22;
+            if (tx + tw > x + w) {
+                tx = x;
+                y += 32;
+            }
+            roundRectPath(ctx, tx, y, tw, 26, 13);
+            ctx.fillStyle = info.chip;
+            ctx.fill();
+            ctx.fillStyle = info.cardText;
+            ctx.fillText(tag, tx + 11, y + 18);
+            tx += tw + 8;
+        });
+        if (tx !== x) y += 42;
+
+        /* Notes */
+        ctx.font = font(13, 500);
+        ctx.fillStyle = info.cardMuted;
+        cardNotes(look, opts, shownImages).forEach((note) => {
+            wrapText(ctx, note, w).forEach((line) => {
+                ctx.fillText(line, x, y + 4);
+                y += 19;
+            });
+            y += 6;
+        });
+
+        /* Sign-off under the preview */
+        const fy = p.y + p.h + 44;
+        drawSakura(ctx, p.x + 18, fy - 6, 34);
+        ctx.fillStyle = info.cardText;
+        ctx.font = font(16, 700);
+        ctx.fillText("FlockTheme", p.x + 44, fy - 10);
+        ctx.fillStyle = info.cardMuted;
+        ctx.font = font(13, 500);
+        ctx.fillText("Drop or paste this picture into Themes to load the theme.", p.x + 44, fy + 9);
+
+        /* The code strip */
+        drawCardStrip(ctx, payload.length <= CARD_CAPACITY ? payload : new Uint8Array(0), parseRGB(info.cardBg));
+        return canvas;
+    }
+
+    /* opts: { settings, name, by, images: "current" | {sidebar: "lib:..."} | null,
+               sounds, showBackgrounds }
+       -> { blob (PNG), stripOK } */
+    async function makeThemeCard(opts) {
+        const look = captureCardLook(opts.settings);
+        const [bgImages, fontCSS] = await Promise.all([
+            opts.showBackgrounds ? cardBackgroundImages(look, opts.images) : Promise.resolve({}),
+            cardFontFaceCSS(look.font)
+        ]);
+
+        if (isCustomFontValue(look.font)) {
+            await waitFor(ensureFontLoaded(look.font).catch(() => {}), 5000);
+        }
+
+        const frame = await buildCardStage(look, bgImages, fontCSS);
+
+        try {
+            const info = readCardInfo(frame.contentDocument, look);
+            const preview = await renderCardStage(frame);
+            const code = encodeThemeCode(opts.settings, opts.name || "");
+            const payload = await packCardPayload(code);
+            const shownImages = Object.keys(bgImages).length > 0;
+            const canvas = drawThemeCard(preview, info, look, opts, payload, shownImages);
+            const png = new Uint8Array(await (await canvasToBlob(canvas, "image/png")).arrayBuffer());
+
+            return {
+                blob: new Blob([addPngText(png, CARD_PNG_KEYWORD, code)], { type: "image/png" }),
+                stripOK: payload.length <= CARD_CAPACITY
+            };
+        } finally {
+            frame.remove();
+        }
+    }
+
+    /* ---- Themes tab: making and loading cards ---- */
+
+    const CARD_BY_LS = "flockmodCardMadeBy";
+
+    function settingsUseBackgrounds(settings) {
+        return Object.keys(settings).some((key) => /^Bg[A-Za-z]+Enabled$/.test(key) && String(settings[key]) === "true");
+    }
+
+    function cardFileName(name) {
+        const slug = String(name || "theme").trim().replace(/[^\w\- ]+/g, "").replace(/\s+/g, "-").slice(0, 40) || "theme";
+        return `${slug}-FlockTheme-card.png`;
+    }
+
+    /* v1.6.6: shows something inside the mod menu: unfolds the
+       section it's in (if folded) and scrolls ONLY the menu's own
+       scroll box to it. (scrollIntoView could also scroll FlockMod's
+       whole page and push the board up.) */
+    function revealInModMenu(el) {
+        if (!el) {
+            return;
+        }
+
+        let head = el.classList.contains("fmCardHead") ? el : el.previousElementSibling;
+
+        while (head && !head.classList.contains("fmCardHead")) {
+            head = head.previousElementSibling;
+        }
+
+        if (head && head.classList.contains("fmFolded")) {
+            head.querySelector(".fmFoldButton")?.click();
+        }
+
+        requestAnimationFrame(() => {
+            let box = el.parentElement;
+
+            while (box && box !== document.body) {
+                const oy = getComputedStyle(box).overflowY;
+
+                if ((oy === "auto" || oy === "scroll") && box.scrollHeight > box.clientHeight) {
+                    break;
+                }
+
+                box = box.parentElement;
+            }
+
+            if (!box || box === document.body) {
+                return;
+            }
+
+            const top = el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - 8;
+            box.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+        });
+    }
+
+    function setupThemeCards(panel, showStatus, packs) {
+        const cardPanel = panel.querySelector(".themeModCardPanel");
+        const importBox = panel.querySelector(".themeModImportCode");
+        const importButton = panel.querySelector(".themeModImportButton");
+        const fileInput = panel.querySelector(".themeModCardFile");
+
+        if (!cardPanel || !importBox || !importButton) {
+            return { open: () => {} };
+        }
+
+        const img = cardPanel.querySelector(".themeModCardImage");
+        const busy = cardPanel.querySelector(".themeModCardBusy");
+        const nameInput = cardPanel.querySelector(".themeModCardName");
+        const byInput = cardPanel.querySelector(".themeModCardBy");
+        const bgRow = cardPanel.querySelector(".themeModCardBgRow");
+        const bgInput = cardPanel.querySelector(".themeModCardBg");
+        const saveButton = cardPanel.querySelector(".themeModCardSave");
+        const copyButton = cardPanel.querySelector(".themeModCardCopy");
+        const note = cardPanel.querySelector(".themeModCardNote");
+
+        let source = null;
+        let made = null;
+        let token = 0;
+        let timer = 0;
+
+        const canCopy = Boolean(navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem === "function");
+        copyButton.style.display = canCopy ? "" : "none";
+
+        function setBusy(on, text) {
+            busy.textContent = text || "Making your card...";
+            busy.style.display = on ? "flex" : "none";
+            saveButton.disabled = on || !made;
+            copyButton.disabled = on || !made;
+        }
+
+        async function build() {
+            if (!source) return;
+            const mine = ++token;
+            setBusy(true);
+
+            try {
+                const result = await makeThemeCard({
+                    settings: source.settings,
+                    name: nameInput.value.trim(),
+                    by: byInput.value.trim(),
+                    images: source.images,
+                    sounds: source.sounds,
+                    showBackgrounds: bgInput.checked
+                });
+
+                if (mine !== token) return;
+
+                if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
+                made = result;
+                img.src = URL.createObjectURL(result.blob);
+                note.textContent = result.stripOK
+                    ? "Share the picture itself. Screenshots or shrunk copies can't be read."
+                    : "This theme has lots of settings, so only the saved picture carries it. If you copy and paste the card, share the theme code too.";
+                setBusy(false);
+            } catch (error) {
+                if (mine !== token) return;
+                made = null;
+                setBusy(true, "Couldn't make the card. Try again, or share the theme code.");
+            }
+        }
+
+        function rebuildSoon() {
+            clearTimeout(timer);
+            timer = setTimeout(build, 600);
+        }
+
+        function open(src) {
+            source = src;
+            made = null;
+            nameInput.value = src.name || "";
+            byInput.value = localStorage.getItem(CARD_BY_LS) || "";
+            bgInput.checked = false;
+            const hasPictures = src.images === "current" || Boolean(src.images && Object.values(src.images).some(Boolean));
+            bgRow.style.display = settingsUseBackgrounds(src.settings) && hasPictures ? "" : "none";
+            cardPanel.style.display = "block";
+            revealInModMenu(cardPanel);
+            build();
+        }
+
+        function close() {
+            token++;
+            source = null;
+            cardPanel.style.display = "none";
+            if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
+            img.removeAttribute("src");
+        }
+
+        cardPanel.querySelector(".themeModCardClose").addEventListener("click", close);
+        nameInput.addEventListener("input", rebuildSoon);
+        byInput.addEventListener("input", () => {
+            try { localStorage.setItem(CARD_BY_LS, byInput.value.trim().slice(0, 30)); } catch (error) { /* fine */ }
+            rebuildSoon();
+        });
+        bgInput.addEventListener("change", build);
+
+        saveButton.addEventListener("click", () => {
+            if (!made) return;
+            const url = URL.createObjectURL(made.blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = cardFileName(nameInput.value || source?.name);
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 30000);
+            showStatus("Card saved! Post the picture to share your theme.");
+        });
+
+        copyButton.addEventListener("click", async () => {
+            if (!made) return;
+            try {
+                await navigator.clipboard.write([new ClipboardItem({ "image/png": made.blob })]);
+                showStatus("Card copied! Paste it anywhere to share your theme.");
+            } catch (error) {
+                showStatus("Couldn't copy the picture here. Use Save image instead.", "error");
+            }
+        });
+
+        /* ---- loading a card ---- */
+
+        async function loadFromPicture(file) {
+            if (packs && await isThemePackFile(file)) {
+                showStatus("");
+                packs.load(file);
+                return;
+            }
+
+            showStatus("Reading the card...");
+            try {
+                importBox.value = await readThemeCard(file);
+                importButton.click();
+            } catch (error) {
+                showStatus(error.message, "error");
+            }
+        }
+
+        const pictureIn = (list) => [...(list || [])].find((file) => /^image\//.test(file.type) || /\.flocktheme$/i.test(file.name || ""));
+
+        panel.querySelector(".themeModCardPick").addEventListener("click", () => {
+            fileInput.value = "";
+            fileInput.click();
+        });
+
+        fileInput.addEventListener("change", () => {
+            const file = pictureIn(fileInput.files);
+            if (file) loadFromPicture(file);
+        });
+
+        /* Pasting a picture into the code box (never onto the board) */
+        importBox.addEventListener("paste", (event) => {
+            const file = pictureIn(event.clipboardData && event.clipboardData.files);
+            if (!file) return;
+            event.preventDefault();
+            event.stopPropagation();
+            loadFromPicture(file);
+        });
+
+        /* Dropping a picture anywhere on the Themes tab */
+        panel.addEventListener("dragover", (event) => {
+            if (event.dataTransfer && [...event.dataTransfer.types].includes("Files")) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.dataTransfer.dropEffect = "copy";
+                importBox.classList.add("themeModCardDrop");
+            }
+        });
+
+        panel.addEventListener("dragleave", (event) => {
+            if (!panel.contains(event.relatedTarget)) importBox.classList.remove("themeModCardDrop");
+        });
+
+        panel.addEventListener("drop", (event) => {
+            const file = pictureIn(event.dataTransfer && event.dataTransfer.files);
+            importBox.classList.remove("themeModCardDrop");
+            if (!file) return;
+            event.preventDefault();
+            event.stopPropagation();
+            loadFromPicture(file);
+        });
+
+        return { open, close };
+    }
+
+    /* Where the card reads its colors from (first match wins) */
+    const CARD_COLOR_SOURCES = {
+        icons: [["#sidebar .containerFooter i", "color"], ["#drawingTools a.btn:not(.selectedTool)", "color"], ["#sidebar .containerTitle i", "color"]],
+        sidebar: [["#sidebar", "backgroundColor"], ["#sidebar .sidebarAdvanced", "backgroundColor"]],
+        surface: [["#sidebar .boxBgContainer .containerContent", "backgroundColor"], ["#sidebar .containerSidebar", "backgroundColor"]],
+        accent: [["#sidebar .layerPreview.selectedLayer", "backgroundColor"], ["#sidebar .selectedTool", "backgroundColor"], ["#sidebar tr.myself.selected", "backgroundColor"]],
+        text: [["#sidebar .containerTitle", "color"], ["#sidebar", "color"]]
+    };
+
+    /* A copy of FlockMod's layout (from FlockMod 13.5) with made-up
+       sample content: no real names, chat, rooms or drawings. Built
+       once from a saved FlockMod page; only structure is kept. If
+       FlockMod changes its layout, rebuild it the same way. */
+    const CARD_STAGE_TEMPLATE = "<div class=\"contentScreen leftSidebar\"><div class=\"fullscreen\" id=\"dialogContainer\"><div class=\"dialogHolder fullscreen\" style=\"\"><div class=\"dialog dialogVisible\" name=\"chat\" style=\"position: absolute; left: 736px; top: 64px; width: 424px; height: 520px; display: flex; flex-direction: column;\"><div><div class=\"dialogTitlebar movable\"><div class=\"dialogTitle\"><div class=\"pull-left\"><i class=\"fas fa-city\" style=\"color: inherit\"></i></div><div class=\"dialogTitleButtons\"><div style=\"text-align: right;\"><a class=\"btn btn-md maximizeButton\" href=\"#\"><i class=\"fas fa-window-maximize titleButton\" style=\"color: inherit\"></i></a><a class=\"btn btn-md closeButton\" href=\"#\"><i class=\"fas fa-window-close titleButton\" style=\"color: inherit\"></i></a></div></div></div></div></div><div style=\"flex: 1 1 auto; min-height: 0;\"><div class=\"modal-body m-0 p-0 h-100\"><div class=\"container-fluid h-100\"><div class=\"row h-100\"><div class=\"sidebar h-100 col-3 p-0\" data-size=\"col-md-3 col-lg-2\"><div class=\"chatBar m-0 p-0 os-host os-theme-light os-host-resize-disabled os-host-scrollbar-horizontal-hidden os-host-scrollbar-vertical-hidden os-host-transition\" data-anchormargin=\"70\" data-anchorpoints=\"tb\" data-anchortarget=\".sidebar\"><div class=\"os-padding\"><div class=\"os-viewport os-viewport-native-scrollbars-invisible\"><div class=\"os-content\" style=\"padding: 0px; height: 100%; width: 100%;\"><div class=\"sidebarElements\"><div class=\"channelTitle channelTypeRoom selected\" data-name=\"public\" data-type=\"room\" name=\"#public\"><div class=\"channelCaption\">#<span data-i18n=\"chat.room.public\">public</span></div><div class=\"channelClose\" style=\"display: none;\"><a class=\"closePM\" href=\"#\" name=\"#public\"><i class=\"fas fa-times\"></i></a></div><div class=\"channelIcons\"></div></div><div class=\"channelTitle channelTypeRoom locked\" data-name=\"staff\" data-type=\"room\" name=\"#staff\"><div class=\"channelCaption\">#<span data-i18n=\"chat.room.staff\">staff</span></div><div class=\"channelClose\" style=\"display: none;\"><a class=\"closePM\" href=\"#\" name=\"#staff\"><i class=\"fas fa-times\"></i></a></div><div class=\"channelIcons\"><i class=\"fas fa-lock\" style=\"color: inherit\"></i></div></div></div></div></div></div></div><div class=\"chatText2 p-0 d-grid\" style=\"margin: 9px 15px 0px 15px;\"><a class=\"btn btn-customlink\" href=\"#\" name=\"newPM\" style=\"\"><i class=\"fas fa-user-plus\"></i><span data-display=\"d-xs-none d-sm-inline\" data-i18n=\"chat.btnNewPM\">Private Msg.</span></a></div></div><div class=\"dynamicDialogArea h-100 col-9 p-3\" data-size=\"col-md-9 col-lg-10\" style=\"display: flex; flex-direction: column;\"><div class=\"row\"><div class=\"col-12 m-0 pt-1\"><div id=\"chatTitle\"><span class=\"title\">#<span data-i18n=\"chat.room.public\">public</span></span><div class=\"chatTitleButton\"><i class=\"fas fa-font\" style=\"color: gray;\"></i><a class=\"fontIncrease\" href=\"#\"><i class=\"fas fa-arrow-up\"></i></a><a class=\"fontDecrease\" href=\"#\"><i class=\"fas fa-arrow-down\"></i></a></div></div></div><div class=\"chatWarning\" name=\"channelWarnings\"></div></div><div class=\"chatBox m-0 p-0 os-host os-theme-light os-host-resize-disabled os-host-scrollbar-horizontal-hidden os-host-scrollbar-vertical-hidden os-host-transition\" data-anchormargin=\"60\" data-anchorpoints=\"tb\" data-anchortarget=\".dynamicDialogArea\" style=\"flex: 1 1 auto; min-height: 0;\"><div class=\"os-padding\"><div class=\"os-viewport os-viewport-native-scrollbars-invisible\"><div class=\"os-content\" style=\"padding: 0px; height: 100%; width: 100%;\"><div class=\"row h-100\"><div class=\"col-12 m-0 pt-0 pb-0 pe-3 ps-3\"><div class=\"container-fluid\" id=\"chatArea\" style=\"overflow: hidden;\"><div id=\"chatMessages\" style=\"font-size: 13px;\"><div class=\"channelMessages\" name=\"#public\"><div class=\"chatBlock messageBlock\" data-type=\"MSG\" data-username=\"Momo\"><div class=\"msgTime\">16:19</div><div class=\"msgUsername rankRO\">Momo</div><div class=\"msgContent\"><div class=\"msgLine\"><div class=\"msgTime\"></div><div class=\"msgText\">hiii everyone!</div></div><div class=\"msgLine\"><div class=\"msgTime\"></div><div class=\"msgText\">love the colors today</div></div></div></div><div class=\"chatBlock messageBlock\" data-type=\"MYMSG\" data-username=\"You\"><div class=\"msgTime\">16:20</div><div class=\"msgUsername rankRU\">You</div><div class=\"msgContent\"><div class=\"msgLine\"><div class=\"msgTime\"></div><div class=\"msgText\">thank you!! made it myself</div></div><div class=\"msgLine\"><div class=\"msgTime\"></div><div class=\"msgText\">want the theme card?</div></div></div></div><div class=\"chatBlock messageBlock\" data-type=\"MSG\" data-username=\"Biscuit\"><div class=\"msgTime\">16:21</div><div class=\"msgUsername rankUU\">Biscuit</div><div class=\"msgContent\"><div class=\"msgLine\"><div class=\"msgTime\"></div><div class=\"msgText\">yes please :3</div></div></div></div></div></div></div></div></div></div></div></div></div><div class=\"chatText m-2 p-2\"><div class=\"row\"><div class=\"col-12 m-0 p-0\"><div class=\"input-group chatTextGroup\"><button class=\"newEmoji darkButton btn btn-success\" name=\"emoji\" type=\"button\"><i class=\"fas fa-smile\"></i></button><button class=\"attachImageButton darkButton btn btn-success\" name=\"attachImage\" style=\"display: none;\" type=\"button\"><i class=\"fas fa-image\"></i></button><input autocomplete=\"off\" class=\"form-control big-input\" maxlength=\"250\" name=\"text\" type=\"text\"/><input accept=\"image/*\" name=\"imageFile\" style=\"display: none;\" type=\"file\"/><button class=\"btn btn-success\" name=\"submit\" type=\"button\"><i class=\"fas fa-paper-plane\"></i></button></div></div></div></div></div></div></div></div></div><div class=\"dialogSize dsBar sbTop\"></div><div class=\"dialogSize dsBar sbBottom\"></div><div class=\"dialogSize dsBar sbLeft\"></div><div class=\"dialogSize dsBar sbRight\"></div><div class=\"dialogSize dsCorner sbTopLeft\"></div><div class=\"dialogSize dsCorner sbTopRight\"></div><div class=\"dialogSize dsCorner sbBottomLeft\"></div><div class=\"dialogSize dsCorner sbBottomRight\"></div></div></div></div><div class=\"appMain wrapper\"><nav class=\"\" id=\"sidebar\"><input class=\"boardMenu\" type=\"hidden\"/><div class=\"sidebarTools\"><div class=\"toolbar\"><div class=\"d-grid\"><a class=\"btn btn-secondary noborder\" href=\"#\" id=\"sidebarCollapse\"><i class=\"fas fa-caret-square-down\" style=\"color: inherit\"></i></a></div><div class=\"d-grid\" id=\"drawingTools\"><a class=\"btn\" href=\"#\" name=\"drag\" style=\"height: 50px; line-height: 50px;\"><i class=\"fas fa-hand-paper\" style=\"color: inherit\"></i></a><a class=\"btn\" href=\"#\" name=\"rotate\" style=\"height: 50px; line-height: 50px;\"><i class=\"fas fa-sync-alt\" style=\"color: inherit\"></i></a><a class=\"btn\" href=\"#\" name=\"picker\" style=\"height: 50px; line-height: 50px;\"><i class=\"fas fa-eye-dropper\" style=\"color: inherit\"></i></a><a class=\"btn\" href=\"#\" name=\"selection\" style=\"height: 50px; line-height: 50px;\"><i class=\"fas fa-mouse-pointer\" style=\"color: inherit\"></i></a><a class=\"btn selectedTool\" href=\"#\" name=\"pen\" style=\"height: 50px; line-height: 50px;\"><i class=\"fas fa-paint-brush\" style=\"color: inherit\"></i></a><a class=\"btn\" href=\"#\" name=\"eraser\" style=\"height: 50px; line-height: 50px;\"><i class=\"fas fa-eraser\" style=\"color: inherit\"></i></a><a class=\"btn\" href=\"#\" name=\"text\" style=\"height: 50px; line-height: 50px;\"><i class=\"fas fa-font\" style=\"color: inherit\"></i></a><a class=\"btn\" href=\"#\" name=\"line\" style=\"height: 50px; line-height: 50px;\"><i class=\"fas fa-arrows-alt-v\" style=\"color: inherit\"></i></a><a class=\"btn\" href=\"#\" name=\"rect\" style=\"height: 50px; line-height: 50px;\"><i class=\"far fa-square\" style=\"color: inherit\"></i></a><a class=\"btn\" href=\"#\" name=\"ellipse\" style=\"height: 50px; line-height: 50px;\"><i class=\"far fa-circle\" style=\"color: inherit\"></i></a><a class=\"btn\" href=\"#\" name=\"fill\" style=\"height: 50px; line-height: 50px;\"><i class=\"fas fa-fill-drip\" style=\"color: inherit\"></i></a><a class=\"btn\" href=\"#\" name=\"blend\" style=\"height: 50px; line-height: 50px;\"><i class=\"fas fa-spinner\" style=\"color: inherit\"></i></a><a class=\"btn\" href=\"#\" name=\"pixel\" style=\"height: 50px; line-height: 50px;\"><i class=\"fas fa-pencil-alt\" style=\"color: inherit\"></i></a><a class=\"btn\" href=\"#\" name=\"custom\" style=\"height: 50px; line-height: 50px; display: none;\"><i class=\"fas fa-paint-roller\" style=\"color: inherit\"></i></a></div></div></div><div class=\"sidebarAdvanced os-host os-theme-light os-host-overflow os-host-overflow-y os-host-resize-disabled os-host-scrollbar-horizontal-hidden os-host-transition\"><div class=\"os-padding\"><div class=\"os-viewport os-viewport-native-scrollbars-invisible\" style=\"overflow-y: scroll;\"><div class=\"os-content\" style=\"padding: 0px 3px 0px 0px; height: 100%; width: 100%;\"><div class=\"sidebarBlock\" style=\"display: none;\"></div><div class=\"container-fluid p-0 pe-2 m-0\"><div class=\"sidebarOptions\"><a href=\"#\" name=\"options\"><i class=\"fas fa-cog\" style=\"color: inherit\"></i><span data-i18n=\"sidebar.btnRearrange\">Rearrange</span></a></div><div class=\"fmSortableList\" name=\"sidebarSortable\" style=\"display: none;\"><div class=\"sortableArea\"></div></div><div name=\"sidebarComponents\"><div class=\"containerSidebar boxBgContainer\"><div class=\"containerTitle\"><span><i class=\"fas fa-user-friends\" style=\"color: inherit\"></i><span data-i18n=\"sidebar.lblUserList\">User list</span></span><a class=\"sidebarCollapseIcon pull-right\" href=\"#\"><i class=\"fas fa-chevron-up\" style=\"color: inherit\"></i></a></div><div class=\"containerContent os-host os-theme-light os-host-resize-disabled os-host-scrollbar-horizontal-hidden os-host-scrollbar-vertical-hidden os-host-transition\" style=\"height: 150px;\"><div class=\"os-padding\"><div class=\"os-viewport os-viewport-native-scrollbars-invisible\"><div class=\"os-content\" style=\"padding: 0px; height: 100%; width: 100%;\"><div id=\"userlistBox\"><table class=\"table darkTable m-0 p-0\"><tbody id=\"userlist\"><tr class=\"someoneelse\" name=\"Momo\"><td class=\"text-center\"><div class=\"colorbox userlistIcon\" style=\"background-color: rgb(244, 143, 177)\"></div><div class=\"brushIcon userlistIcon\"><i class=\"fas fa-paint-brush\" style=\"color: inherit\"></i></div></td><td class=\"rankRO\">Momo<span class=\"userlistStatus\"></span></td></tr><tr class=\"someoneelse\" name=\"Biscuit\"><td class=\"text-center\"><div class=\"colorbox userlistIcon\" style=\"background-color: rgb(120, 190, 255)\"></div><div class=\"brushIcon userlistIcon\"><i class=\"fas fa-eraser\" style=\"color: inherit\"></i></div></td><td class=\"rankUU\">Biscuit<span class=\"userlistStatus\"></span></td></tr><tr class=\"myself selected\" name=\"You\"><td class=\"text-center\"><span data-i18n=\"global.lblYou\">YOU</span></td><td class=\"rankRU\">You<span class=\"userlistStatus\"></span></td></tr><tr class=\"someoneelse\" name=\"Pip\"><td class=\"text-center\"><div class=\"colorbox userlistIcon\" style=\"background-color: rgb(130, 210, 140)\"></div><div class=\"brushIcon userlistIcon\"><i class=\"fas fa-paint-brush\" style=\"color: inherit\"></i></div></td><td class=\"rankRU\">Pip<span class=\"userlistStatus\"></span></td></tr><tr class=\"someoneelse\" name=\"Anonymous\"><td class=\"text-center\"><div class=\"colorbox userlistIcon\" style=\"background-color: rgb(60, 60, 60)\"></div><div class=\"brushIcon userlistIcon\"><i class=\"fas fa-hand-paper\" style=\"color: inherit\"></i></div></td><td class=\"rankUU\">Anonymous<span class=\"userlistStatus\"></span></td></tr></tbody></table></div></div></div></div></div><div class=\"containerFooter\"><i class=\"fas fa-grip-lines\" style=\"color: inherit\"></i></div></div><div class=\"containerSidebar boxBgContainer\"><div class=\"containerTitle\"><span><i class=\"fas fa-paint-brush\" style=\"color: inherit\"></i><span data-i18n=\"sidebar.lblToolOptions\">Tool options</span></span><a class=\"sidebarCollapseIcon pull-right\" href=\"#\"><i class=\"fas fa-chevron-up\" style=\"color: inherit\"></i></a></div><div class=\"containerContent os-host os-theme-light os-host-resize-disabled os-host-scrollbar-horizontal-hidden os-host-transition os-host-scrollbar-vertical-hidden scrollNoOverflow\" style=\"height: 118px;\"><div class=\"os-padding\"><div class=\"os-viewport os-viewport-native-scrollbars-invisible\" style=\"\"><div class=\"os-content\" style=\"padding: 0px; height: 100%; width: 100%;\"><div id=\"options\"><div class=\"optionBG\"><div class=\"optionTitle\"><span data-i18n=\"tooloption.size\">Size</span></div><div class=\"optionField fmSlider\" id=\"option_size\"><div class=\"fmThumb\" style=\"left: calc(24% - 4.8%); width: 20%;\">12</div><div class=\"fmSelectedArea\" style=\"width: 24%;\"></div></div></div><div class=\"optionBG\"><div class=\"optionTitle\"><span data-i18n=\"tooloption.opacity\">Opacity</span></div><div class=\"optionField fmSlider\" id=\"option_opacity\"><div class=\"fmThumb\" style=\"left: calc(100% - 20.0%); width: 20%;\">100</div><div class=\"fmSelectedArea\" style=\"width: 100%;\"></div></div></div><div class=\"optionBG\"><div class=\"optionTitle\"><span data-i18n=\"tooloption.blur\">Blur</span></div><div class=\"optionField fmSlider\" id=\"option_blur\"><div class=\"fmThumb\" style=\"left: calc(0% - 0.0%); width: 20%;\">0</div><div class=\"fmSelectedArea\" style=\"width: 0%;\"></div></div></div></div></div></div></div></div><div class=\"containerFooter\"><i class=\"fas fa-grip-lines\" style=\"color: inherit\"></i></div></div><div class=\"containerSidebar\"><div class=\"containerTitle\"><span><i class=\"fas fa-layer-group\" style=\"color: inherit\"></i><span data-i18n=\"sidebar.lblLayers\">Layers</span></span><a class=\"sidebarCollapseIcon pull-right\" href=\"#\"><i class=\"fas fa-chevron-up\" style=\"color: inherit\"></i></a></div><div class=\"containerContent os-host os-theme-light os-host-resize-disabled os-host-scrollbar-horizontal-hidden os-host-scrollbar-vertical-hidden os-host-transition\" style=\"height: 150px;\"><div class=\"os-padding\"><div class=\"os-viewport os-viewport-native-scrollbars-invisible\"><div class=\"os-content\" style=\"padding: 0px; height: 100%; width: 100%;\"><div class=\"p-0 m-0\" id=\"previewList\"><nav class=\"navbar navbar-expand navbar-light p-0 m-0 sticky-top sidebarNavbar\"><div class=\"container full-width\"><ul class=\"navbar-nav\"><li class=\"nav-item\"><a class=\"layerOption layerButton nav-link disabled\" href=\"#\" name=\"clear\"><i class=\"fas fa-eraser\"></i></a></li><li class=\"nav-item dropdown mergLayer\"><a aria-expanded=\"false\" class=\"nav-link dropdown-toggle layerButton disabled\" data-bs-toggle=\"dropdown\" href=\"#\" id=\"mergLayer\" name=\"mergeLayer\" role=\"button\"><i class=\"fas fa-object-group\"></i></a><ul aria-labelledby=\"mergLayer\" class=\"dropdown-menu\"><a class=\"layerOption mergeLayer dropdown-item\" href=\"#\" name=\"2\">Merge with layer 3</a><a class=\"layerOption mergeLayer dropdown-item\" href=\"#\" name=\"1\">Merge with layer 2</a><a class=\"layerOption mergeLayer dropdown-item\" href=\"#\" name=\"0\">Merge with layer 1</a></ul></li><li class=\"nav-item\"><a class=\"layerOption layerButton nav-link disabled\" href=\"#\" name=\"fliph\"><i class=\"fas fa-arrows-alt-h\"></i></a></li><li class=\"nav-item\"><a class=\"layerOption layerButton nav-link disabled\" href=\"#\" name=\"flipv\"><i class=\"fas fa-arrows-alt-v\"></i></a></li><li class=\"nav-item\"><a class=\"layerOption layerButton nav-link\" href=\"#\" name=\"save\"><i class=\"fas fa-save\"></i></a></li></ul></div></nav><div class=\"layerPreviews\"><div class=\"row layerPreview p-0 m-0\" name=\"2\"><div class=\"col-12 m-0 p-1\"><div class=\"layerPreviewImg\"><a href=\"#\" name=\"2\"><div class=\"layerPreviewOverlay\"></div><img alt=\"2\" class=\"selectedLayerOption preview\" name=\"select\" src=\"data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20240%20135%22%3E%3Cpath%20d=%22M30%2095%20C%2070%2020,%20120%2020,%20130%2070%20S%20190%20120,%20215%2040%22%20fill=%22none%22%20stroke=%22%23e0709a%22%20stroke-width=%227%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E\"/></a></div><div class=\"layerPreviewContent\"><span class=\"btn layerNumber btn-square\" name=\"2\">3</span><a class=\"selectedLayerOption layerButton btn btn-square\" name=\"toggle\"><i class=\"fas fa-eye\" style=\"color: inherit\"></i></a><a class=\"selectedLayerOption layerButton btn btn-square disabled\" name=\"locktoggle\"><i class=\"fas fa-unlock\" style=\"color: inherit\"></i></a></div></div></div><div class=\"row layerPreview p-0 m-0 selectedLayer\" name=\"1\"><div class=\"col-12 m-0 p-1\"><div class=\"layerPreviewImg\"><a href=\"#\" name=\"1\"><div class=\"layerPreviewOverlay\"></div><img alt=\"1\" class=\"selectedLayerOption preview\" name=\"select\" src=\"data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20240%20135%22%3E%3Cpath%20d=%22M40%2060%20Q%20120%20130%20200%2060%22%20fill=%22none%22%20stroke=%22%23e0709a%22%20stroke-width=%227%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E\"/></a></div><div class=\"layerPreviewContent\"><span class=\"btn layerNumber btn-square\" name=\"1\">2</span><a class=\"selectedLayerOption layerButton btn btn-square\" name=\"toggle\"><i class=\"fas fa-eye\" style=\"color: inherit\"></i></a><a class=\"selectedLayerOption layerButton btn btn-square disabled\" name=\"locktoggle\"><i class=\"fas fa-unlock\" style=\"color: inherit\"></i></a></div></div></div><div class=\"row layerPreview p-0 m-0\" name=\"0\"><div class=\"col-12 m-0 p-1\"><div class=\"layerPreviewImg\"><a href=\"#\" name=\"0\"><div class=\"layerPreviewOverlay\"></div><img alt=\"0\" class=\"selectedLayerOption preview\" name=\"select\" src=\"data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20240%20135%22%3E%3Cpath%20d=%22M60%20100%20L%20120%2030%20L%20180%20100%20Z%22%20fill=%22none%22%20stroke=%22%23e0709a%22%20stroke-width=%227%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E\"/></a></div><div class=\"layerPreviewContent\"><span class=\"btn layerNumber btn-square\" name=\"0\">1</span><a class=\"selectedLayerOption layerButton btn btn-square\" name=\"toggle\"><i class=\"fas fa-eye\" style=\"color: inherit\"></i></a><a class=\"selectedLayerOption layerButton btn btn-square disabled\" name=\"locktoggle\"><i class=\"fas fa-unlock\" style=\"color: inherit\"></i></a></div></div></div></div></div></div></div></div></div><div class=\"containerFooter\"><i class=\"fas fa-grip-lines\" style=\"color: inherit\"></i></div></div><div class=\"containerSidebar\"><div class=\"containerTitle\"><span><i class=\"fas fa-cloud\" style=\"color: inherit\"></i><span data-i18n=\"sidebar.lblPresets\">Presets</span></span><a class=\"sidebarCollapseIcon pull-right\" href=\"#\"><i class=\"fas fa-chevron-up\" style=\"color: inherit\"></i></a></div><div class=\"containerContent\" style=\"height: 100px;\"><div id=\"presetsBox\"><div id=\"presets\"><span class=\"fmBubble presetBubble\" name=\"0\" style=\"background-color: #2b2b2b;\">1</span><span class=\"fmBubble presetBubble\" name=\"1\" style=\"background-color: #f48fb1;\">2</span><span class=\"fmBubble presetBubble\" name=\"2\" style=\"background-color: #fff5de;\">3</span><span class=\"fmBubble presetBubble\" name=\"3\" style=\"background-color: #29cdff;\">4</span><span class=\"fmBubble presetBubble\" name=\"4\" style=\"background-color: #ff6d29;\">5</span><span class=\"fmBubble presetBubble\" name=\"5\" style=\"background-color: #b7d428;\">6</span><span class=\"fmBubble presetBubble\" name=\"6\" style=\"background-color: #00ab0b;\">7</span><span class=\"fmBubble presetBubble\" name=\"7\" style=\"background-color: #7b61ff;\">8</span><span class=\"fmBubble presetBubble\" name=\"8\" style=\"background-color: #ffd866;\">9</span><span class=\"fmBubble presetBubble\" name=\"9\" style=\"background-color: #c95151;\">10</span><span class=\"fmBubble presetBubble\" name=\"10\" style=\"background-color: #8a5a44;\">11</span><span class=\"fmBubble presetBubble\" name=\"11\" style=\"background-color: #ffffff;\">12</span></div><p data-i18n=\"global.lblHoldTap\">Hold to set. Tap to load.</p></div></div><div class=\"containerFooter\" style=\"display: none;\"><i class=\"fas fa-grip-lines\" style=\"color: inherit\"></i></div></div><div class=\"containerSidebar\"><div class=\"containerTitle\"><span><i class=\"fas fa-palette\" style=\"color: inherit\"></i><span data-i18n=\"sidebar.lblColorWheel\">Color wheel</span></span><a class=\"sidebarCollapseIcon pull-right\" href=\"#\"><i class=\"fas fa-chevron-up\" style=\"color: inherit\"></i></a></div><div class=\"containerContent\" style=\"height: 210px;\"><div id=\"colorWheelBox\"><div id=\"colorBox\"><a class=\"exchange\" href=\"#\"><i class=\"fas fa-share fa-rotate-90\" style=\"color: inherit\"></i></a><a class=\"primary color\" href=\"#\" style=\"background-color: rgb(244, 143, 177);\"></a><a class=\"secondary color\" href=\"#\" style=\"background-color: rgb(255, 255, 255);\"></a></div><div class=\"colorWheelComponent\" id=\"colorWheel\"><div style=\"display: none;\"><div class=\"optionBG\"><div class=\"optionTitle\"><span data-i18n=\"color.lblR\">R:</span></div><div class=\"optionField fmSlider\" name=\"red\"><div class=\"fmThumb\" style=\"left: 0%;\">0</div><div class=\"fmSelectedArea\" style=\"width: 0%;\"></div></div></div><div class=\"optionBG\"><div class=\"optionTitle\"><span data-i18n=\"color.lblG\">G:</span></div><div class=\"optionField fmSlider\" name=\"green\"><div class=\"fmThumb\" style=\"left: 0%;\">0</div><div class=\"fmSelectedArea\" style=\"width: 0%;\"></div></div></div><div class=\"optionBG\"><div class=\"optionTitle\"><span data-i18n=\"color.lblB\">B:</span></div><div class=\"optionField fmSlider\" name=\"blue\"><div class=\"fmThumb\" style=\"left: 0%;\">0</div><div class=\"fmSelectedArea\" style=\"width: 0%;\"></div></div></div><div class=\"optionBG\"><div class=\"optionTitle\"><span data-i18n=\"color.lblH\">H:</span></div><div class=\"optionField fmSlider\" name=\"hue\"><div class=\"fmThumb\" style=\"left: 0%;\">0</div><div class=\"fmSelectedArea\" style=\"width: 0%;\"></div></div></div><div class=\"optionBG\"><div class=\"optionTitle\"><span data-i18n=\"color.lblS\">S:</span></div><div class=\"optionField fmSlider\" name=\"saturation\"><div class=\"fmThumb\" style=\"left: 0%;\">0</div><div class=\"fmSelectedArea\" style=\"width: 0%;\"></div></div></div><div class=\"optionBG\"><div class=\"optionTitle\"><span data-i18n=\"color.lblV\">V:</span></div><div class=\"optionField fmSlider\" name=\"value\"><div class=\"fmThumb\" style=\"left: 0%;\">0</div><div class=\"fmSelectedArea\" style=\"width: 0%;\"></div></div></div></div><div class=\"colorSwitch\"><i class=\"fas fa-sliders-h\" style=\"color: inherit\"></i></div><div class=\"fmWheel\"><div class=\"colorWheel\"><div class=\"fmCardWheel\" style=\"width: 195px; height: 195px; border-radius: 50%; background: conic-gradient(from 90deg, red, yellow, lime, cyan, blue, magenta, red); -webkit-mask: radial-gradient(circle, transparent 66%, #000 67%); mask: radial-gradient(circle, transparent 66%, #000 67%);\"></div></div><div class=\"colorSquares\"><div class=\"colorSquare color noMouseInteraction\" style=\"background-color: rgb(255, 0, 0);\"></div><div class=\"colorSquare saturation noMouseInteraction\"></div><div class=\"marker smallMarker\" style=\"left: 0px; top: 100px;\"></div></div><div class=\"marker bigMarker\" style=\"left: 181px; top: 97px;\"></div></div></div></div></div><div class=\"containerFooter\" style=\"display: none;\"><i class=\"fas fa-grip-lines\" style=\"color: inherit\"></i></div></div></div></div></div></div></div></div></nav><div class=\"\" id=\"content\"><div id=\"topbar\"><nav class=\"navbar navbar-expand-lg navbar-light p-0 m-0 sticky-top topNavbar\"><div class=\"container full-width\"><div class=\"fmProgressBar\" id=\"topbarProgress\" name=\"\" style=\"display: none;\"><div class=\"bar\" style=\"width: 100%;\"></div></div><span class=\"navbar-brand\"><svg aria-label=\"FlockMod\" class=\"brandWordmark\" role=\"img\" viewbox=\"0 -2 583 104\"><path d=\"M12.33 99V46.61H3.24V32.99H12.33V28.77Q12.33 20.14 15.19 13.8Q18.05 7.47 23.29 4.02Q28.53 0.58 35.59 0.58Q39.89 0.58 44.24 1.65Q48.59 2.72 52.74 4.72L49.22 18.1Q47.23 17.01 44.54 16.33Q41.84 15.65 39.48 15.65Q34.96 15.65 32.55 18.85Q30.15 22.05 30.15 28.13V32.99H47.2V46.61H30.15V99ZM53.18 1.91H71V76.61Q71 81.49 72.63 83.15Q74.25 84.81 76.93 84.81Q79.19 84.81 81.41 84.24Q83.64 83.67 85.31 82.88L87.77 96.54Q84.13 98.16 79.39 99.13Q74.65 100.11 70.69 100.11Q62.41 100.11 57.79 95.62Q53.18 91.14 53.18 82.96ZM123.62 100.33Q115.11 100.33 108.37 97.44Q101.62 94.55 96.88 89.5Q92.13 84.46 89.64 77.95Q87.14 71.45 87.14 64.24Q87.14 56.96 89.64 50.42Q92.13 43.89 96.88 38.87Q101.62 33.86 108.4 30.97Q115.18 28.08 123.65 28.08Q132.18 28.08 138.9 30.97Q145.61 33.86 150.39 38.87Q155.18 43.89 157.67 50.42Q160.17 56.96 160.17 64.24Q160.17 71.45 157.67 77.95Q155.18 84.46 150.43 89.5Q145.69 94.55 138.93 97.44Q132.18 100.33 123.62 100.33ZM105.41 64.31Q105.41 70.36 107.84 75.1Q110.28 79.84 114.39 82.51Q118.49 85.18 123.62 85.18Q128.74 85.18 132.89 82.48Q137.03 79.77 139.47 74.99Q141.9 70.21 141.9 64.17Q141.9 58.12 139.47 53.38Q137.03 48.64 132.88 45.93Q128.72 43.22 123.62 43.22Q118.49 43.22 114.37 45.97Q110.26 48.72 107.83 53.46Q105.41 58.2 105.41 64.31ZM200.49 100.33Q191.99 100.33 185.24 97.44Q178.49 94.55 173.68 89.47Q168.86 84.38 166.3 77.87Q163.74 71.35 163.74 64.09Q163.74 54.37 168.16 46.17Q172.58 37.97 180.83 33.02Q189.08 28.08 200.42 28.08Q211.74 28.08 219.84 33Q227.94 37.91 231.9 45.93L214.53 51.26Q212.29 47.42 208.55 45.32Q204.81 43.22 200.22 43.22Q195.15 43.22 191.01 45.86Q186.86 48.49 184.43 53.17Q182.01 57.85 182.01 64.09Q182.01 70.21 184.47 74.99Q186.94 79.77 191.08 82.48Q195.22 85.18 200.29 85.18Q203.51 85.18 206.37 84.11Q209.23 83.04 211.49 81.15Q213.75 79.26 214.82 76.93L232.19 82.19Q229.77 87.48 225.2 91.55Q220.64 95.63 214.42 97.98Q208.2 100.33 200.49 100.33ZM286.73 99 266.37 68.94 256.87 78.25V99H239.04V1.91H256.87V60.67L284.98 29.41H303.91L277.87 58.97L305.72 99Z\" fill=\"currentColor\"></path><path class=\"brandWordmarkMod\" d=\"M417.59 99H399.77V59.92Q399.77 51.6 396.9 47.7Q394.04 43.8 388.92 43.8Q383.73 43.8 379.03 47.87Q374.33 51.94 372.3 58.38V99H354.48V59.92Q354.48 51.52 351.65 47.66Q348.82 43.8 343.7 43.8Q338.59 43.8 333.85 47.8Q329.11 51.8 327.08 58.3V99H309.26V29.33H325.36V42.19Q329.37 35.38 336.04 31.73Q342.7 28.08 351.39 28.08Q360.04 28.08 364.86 32.35Q369.69 36.62 371.01 42.81Q375.24 35.7 381.83 31.89Q388.42 28.08 396.75 28.08Q403.16 28.08 407.25 30.42Q411.33 32.77 413.58 36.72Q415.82 40.67 416.7 45.54Q417.59 50.41 417.59 55.46ZM461.26 100.33Q452.76 100.33 446.01 97.44Q439.27 94.55 434.53 89.5Q429.78 84.46 427.28 77.95Q424.79 71.45 424.79 64.24Q424.79 56.96 427.28 50.42Q429.78 43.89 434.53 38.87Q439.27 33.86 446.05 30.97Q452.83 28.08 461.3 28.08Q469.83 28.08 476.55 30.97Q483.26 33.86 488.04 38.87Q492.82 43.89 495.32 50.42Q497.82 56.96 497.82 64.24Q497.82 71.45 495.32 77.95Q492.82 84.46 488.08 89.5Q483.33 94.55 476.58 97.44Q469.83 100.33 461.26 100.33ZM443.05 64.31Q443.05 70.36 445.49 75.1Q447.93 79.84 452.03 82.51Q456.14 85.18 461.26 85.18Q466.39 85.18 470.53 82.48Q474.68 79.77 477.11 74.99Q479.55 70.21 479.55 64.17Q479.55 58.12 477.11 53.38Q474.68 48.64 470.52 45.93Q466.37 43.22 461.26 43.22Q456.14 43.22 452.02 45.97Q447.9 48.72 445.48 53.46Q443.05 58.2 443.05 64.31ZM501.52 64.18Q501.52 54.1 505.51 45.92Q509.51 37.74 516.54 32.91Q523.56 28.08 532.62 28.08Q540.28 28.08 546.51 31.9Q552.74 35.72 556.1 41.61V1.91H573.92V79.1Q573.92 81.89 574.88 83.07Q575.83 84.24 578.13 84.44V99Q573.36 99.89 570.48 99.89Q565.7 99.89 562.6 97.5Q559.5 95.1 559.02 91.28L558.78 86.93Q554.89 93.46 548.34 96.89Q541.78 100.33 534.57 100.33Q527.39 100.33 521.34 97.56Q515.29 94.79 510.83 89.83Q506.38 84.86 503.95 78.29Q501.52 71.72 501.52 64.18ZM556.16 73.4V56.81Q554.75 52.95 551.84 49.89Q548.94 46.83 545.36 45.03Q541.77 43.22 538.16 43.22Q534.06 43.22 530.71 44.97Q527.36 46.71 524.93 49.68Q522.51 52.65 521.21 56.46Q519.92 60.28 519.92 64.49Q519.92 68.84 521.35 72.6Q522.79 76.35 525.42 79.19Q528.05 82.03 531.56 83.61Q535.07 85.18 539.23 85.18Q541.82 85.18 544.4 84.32Q546.98 83.45 549.32 81.89Q551.66 80.33 553.46 78.13Q555.26 75.93 556.16 73.4Z\"></path></svg><sup class=\"navbar-version\">v13</sup></span><button aria-expanded=\"false\" aria-label=\"Toggle navigation\" class=\"navbar-toggler\" data-bs-target=\"#navbar-topmost\" data-bs-toggle=\"collapse\" type=\"button\"><i class=\"fas fa-bars\"></i></button><div class=\"collapse navbar-collapse justify-content-end\" id=\"navbar-topmost\"><div class=\"headerBox m-0 p-0\"><div id=\"headerTitle\"><div class=\"msgCategory\"></div>Cozy drawing room</div></div><ul class=\"navbar-nav topbarButtons\"><li class=\"nav-item\"><a class=\"nav-link\" href=\"#\" name=\"configButton\"><i class=\"fas fa-cog\" style=\"color: inherit\"></i><span class=\"d-lg-none\"><span data-i18n=\"tooltip.lblConfiguration\">Configuration</span></span></a></li><li class=\"nav-item\"><a class=\"nav-link\" href=\"#\" name=\"chatButton\"><i class=\"fas fa-comment\" style=\"color: inherit\"></i><span class=\"d-lg-none\"><span data-i18n=\"tooltip.lblChat\">Chat</span></span><span class=\"badge badge-pill badge-danger\" name=\"counter\">2</span></a></li><li class=\"nav-item\"><a class=\"nav-link\" href=\"#\" name=\"fullscreenButton\"><i class=\"fas fa-expand\" style=\"color: inherit\"></i><span class=\"d-lg-none\"><span data-i18n=\"tooltip.lblFullScreen\">Fullscreen</span></span></a></li><li class=\"nav-item\"><a class=\"nav-link\" href=\"#\" name=\"leaveButton\"><i class=\"fas fa-sign-out-alt\" style=\"color: inherit\"></i><span class=\"d-lg-none\"><span data-i18n=\"tooltip.lblLeaveRoom\">Leave the room</span></span></a></li></ul></div></div></nav></div><div class=\"mainContentArea\" id=\"DrawingArea\" style=\"touch-action: none; user-select: none;\"><div class=\"boardContainer\" style=\"display: block; background-color: #ffffff; width: 520px; height: 360px; transform: none; position: absolute; left: 50%; top: 50%; margin: -180px 0 0 -260px;\"><div class=\"CanvasContainer\" style=\"position: absolute; inset: 0;\"><div class=\"board fmCardDoodle\" style=\"position: absolute; inset: 0; z-index: 10;\"><svg fill=\"none\" height=\"360\" stroke-linecap=\"round\" stroke-linejoin=\"round\" viewbox=\"0 0 520 360\" width=\"520\"><path d=\"M70 290 C 140 120, 230 110, 250 200 S 380 330, 450 120\" stroke=\"#e0709a\" stroke-width=\"14\"></path><path d=\"M110 120 q 40 -50 80 0\" stroke=\"#7b61ff\" stroke-width=\"9\"></path><circle cx=\"380\" cy=\"100\" r=\"34\" stroke=\"#ffb84d\" stroke-width=\"10\"></circle><path d=\"M300 270 l 30 -40 l 30 40 z\" stroke=\"#29b6a8\" stroke-width=\"9\"></path></svg></div></div></div></div><div id=\"bottombar\"><nav class=\"navbar navbar-expand navbar-light p-0 m-0 bottomNavbar\"><div class=\"container full-width\"><ul class=\"navbar-nav bottombarButtons\" name=\"left\"><li class=\"nav-item\"><a class=\"txtScale nav-text\" href=\"#\" name=\"scaleLink\">100%</a></li><li class=\"nav-item\"><a class=\"txtRotation nav-text\" href=\"#\" name=\"rotationLink\" style=\"display: none;\">0\u00ba</a></li><li class=\"nav-item\"><a class=\"nav-link\" href=\"#\" name=\"zoominButton\"><i class=\"fas fa-search-plus\" style=\"color: inherit\"></i></a></li><li class=\"nav-item\"><a class=\"nav-link\" href=\"#\" name=\"zoomoutButton\"><i class=\"fas fa-search-minus\" style=\"color: inherit\"></i></a></li><li class=\"nav-item\"><a class=\"nav-link\" href=\"#\" name=\"centerButton\"><i class=\"fas fa-bullseye\" style=\"color: inherit\"></i></a></li><li class=\"nav-item\"><a class=\"nav-link\" href=\"#\" name=\"fitButton\"><i class=\"fas fa-expand-arrows-alt\" style=\"color: inherit\"></i></a></li><li class=\"nav-item\"><a class=\"nav-link\" href=\"#\" name=\"flipXButton\"><i class=\"fas fa-exchange-alt\" style=\"color: inherit\"></i></a></li><li class=\"nav-item\"><a class=\"nav-link\" href=\"#\" name=\"toggleSmoothingButton\"><i class=\"fas fa-adjust\" style=\"color: inherit\"></i></a></li><li class=\"nav-item nav-separator beforeButtons\"></li><li class=\"p-2 d-none d-lg-block\"><div id=\"colorbubbles\"><span class=\"fmBubble colorBubble\" name=\"0\" style=\"background-color: #2b2b2b;\"></span><span class=\"fmBubble colorBubble\" name=\"1\" style=\"background-color: #f48fb1;\"></span><span class=\"fmBubble colorBubble\" name=\"2\" style=\"background-color: #fff5de;\"></span><span class=\"fmBubble colorBubble\" name=\"3\" style=\"background-color: #29cdff;\"></span><span class=\"fmBubble colorBubble\" name=\"4\" style=\"background-color: #ff6d29;\"></span><span class=\"fmBubble colorBubble\" name=\"5\" style=\"background-color: #b7d428;\"></span><span class=\"fmBubble colorBubble\" name=\"6\" style=\"background-color: #00ab0b;\"></span><span class=\"fmBubble colorBubble\" name=\"7\" style=\"background-color: #7b61ff;\"></span><span class=\"fmBubble colorBubble\" name=\"8\" style=\"background-color: #ffd866;\"></span><span class=\"fmBubble colorBubble\" name=\"9\" style=\"background-color: #c95151;\"></span></div></li><li class=\"nav-item nav-separator d-none d-xl-block\"></li></ul><div class=\"m-0 p-0\"><div class=\"footerTitle d-none d-xl-block\"></div></div><ul class=\"navbar-nav bottombarButtons\" name=\"right\"><li class=\"nav-item nav-separator d-none d-lg-block\"></li><li class=\"nav-item\"><a class=\"nav-link themeModMenuButton fmFlowerButton\" href=\"#\"><svg aria-hidden=\"true\" height=\"16\" style=\"fill: currentColor;\" viewbox=\"0 0 24 24\" width=\"16\"><g transform=\"translate(12 12)\"><ellipse cx=\"0\" cy=\"-5.2\" rx=\"4.1\" ry=\"4.8\"></ellipse><ellipse cx=\"0\" cy=\"-5.2\" rx=\"4.1\" ry=\"4.8\" transform=\"rotate(72)\"></ellipse><ellipse cx=\"0\" cy=\"-5.2\" rx=\"4.1\" ry=\"4.8\" transform=\"rotate(144)\"></ellipse><ellipse cx=\"0\" cy=\"-5.2\" rx=\"4.1\" ry=\"4.8\" transform=\"rotate(216)\"></ellipse><ellipse cx=\"0\" cy=\"-5.2\" rx=\"4.1\" ry=\"4.8\" transform=\"rotate(288)\"></ellipse><circle cx=\"0\" cy=\"0\" r=\"2.5\"></circle></g></svg></a></li><li class=\"nav-item\"><a class=\"nav-link themeModRefButton\" href=\"#\"><svg aria-hidden=\"true\" class=\"themeModRefIcon\" style=\"fill: currentColor;\" viewbox=\"0 0 24 24\"><path d=\"M8 8 L12 3.2 L16 8\" fill=\"none\" stroke=\"currentColor\" stroke-linejoin=\"round\" stroke-width=\"1.6\"></path><circle cx=\"12\" cy=\"3\" r=\"1.3\"></circle><rect fill=\"none\" height=\"13.5\" rx=\"2.5\" stroke=\"currentColor\" stroke-width=\"2\" width=\"18\" x=\"3\" y=\"8\"></rect><g transform=\"translate(12 14.9)\"><ellipse cx=\"0\" cy=\"-2.3\" rx=\"1.7\" ry=\"2.1\"></ellipse><ellipse cx=\"0\" cy=\"-2.3\" rx=\"1.7\" ry=\"2.1\" transform=\"rotate(72)\"></ellipse><ellipse cx=\"0\" cy=\"-2.3\" rx=\"1.7\" ry=\"2.1\" transform=\"rotate(144)\"></ellipse><ellipse cx=\"0\" cy=\"-2.3\" rx=\"1.7\" ry=\"2.1\" transform=\"rotate(216)\"></ellipse><ellipse cx=\"0\" cy=\"-2.3\" rx=\"1.7\" ry=\"2.1\" transform=\"rotate(288)\"></ellipse></g></svg></a></li><li class=\"nav-item dropdown dropup d-md-none\"><a aria-expanded=\"false\" class=\"nav-link dropdown-toggle\" data-bs-toggle=\"dropdown\" href=\"#\" id=\"rightButtonsDropdown\" role=\"button\"><i class=\"fas fa-ellipsis-v\" style=\"color: inherit\"></i></a><ul aria-labelledby=\"rightButtonsDropdown\" class=\"dropdown-menu dropdown-menu-end\" name=\"rightDropdownMenu\"><a class=\"dropdown-item\" data-original-button=\"adminConsoleButton\" href=\"#\" name=\"adminConsoleButton_dropdown\" style=\"display: none;\"><i class=\"fas fa-toolbox\" style=\"color: inherit\"></i><span><span data-i18n=\"tooltip.lblAdminConsole\">Admin Console</span></span></a><a class=\"dropdown-item\" data-original-button=\"registerButton\" href=\"#\" name=\"registerButton_dropdown\" style=\"display: none;\"><i class=\"fas fa-flag\" style=\"color: inherit\"></i><span><span data-i18n=\"tooltip.lblRegisterRoom\">Register room</span></span></a><a class=\"dropdown-item\" data-original-button=\"roomManagerButton\" href=\"#\" name=\"roomManagerButton_dropdown\" style=\"display: none;\"><i class=\"fas fa-wrench\" style=\"color: inherit\"></i><span><span data-i18n=\"tooltip.lblRoomManager\">Room Manager</span></span></a><a class=\"dropdown-item\" data-original-button=\"undoButton\" href=\"#\" name=\"undoButton_dropdown\" style=\"display: none;\"><i class=\"fas fa-undo\" style=\"color: inherit\"></i><span><span data-i18n=\"tooltip.lblUndo\">Undo</span></span></a><a class=\"dropdown-item\" data-original-button=\"messengerButton\" href=\"#\" name=\"messengerButton_dropdown\"><i class=\"fas fa-envelope\" style=\"color: inherit\"></i><span><span data-i18n=\"tooltip.lblMessenger\">Messenger</span></span></a><a class=\"dropdown-item hasStatusPip\" data-original-button=\"friendsButton\" href=\"#\" name=\"friendsButton_dropdown\"><i class=\"fas fa-user-group\" style=\"color: inherit\"></i><span><span data-i18n=\"tooltip.lblFriends\">Friends</span></span><span class=\"statusPip presenceOnline\"></span></a><a class=\"dropdown-item\" data-original-button=\"uploadButton\" href=\"#\" name=\"uploadButton_dropdown\" style=\"display: none;\"><i class=\"fas fa-upload\" style=\"color: inherit\"></i><span><span data-i18n=\"tooltip.lblUpload\">Upload</span></span></a><a class=\"dropdown-item\" data-original-button=\"galleryButton\" href=\"#\" name=\"galleryButton_dropdown\"><i class=\"fas fa-images\" style=\"color: inherit\"></i><span><span data-i18n=\"tooltip.lblGallery\">Gallery</span></span></a><a class=\"dropdown-item\" data-original-button=\"saveButton\" href=\"#\" name=\"saveButton_dropdown\"><i class=\"fas fa-save\" style=\"color: inherit\"></i><span><span data-i18n=\"tooltip.lblSave\">Save</span></span></a></ul></li><li class=\"nav-item d-none d-md-block\"><a class=\"nav-link\" href=\"#\" name=\"adminConsoleButton\" style=\"display: none;\"><i class=\"fas fa-toolbox\" style=\"color: inherit\"></i></a></li><li class=\"nav-item d-none d-md-block\"><a class=\"nav-link\" href=\"#\" name=\"registerButton\" style=\"display: none;\"><i class=\"fas fa-flag\" style=\"color: inherit\"></i><span class=\"d-none d-lg-inline-block\"><span data-i18n=\"tooltip.lblRegisterRoom\">Register room</span></span></a></li><li class=\"nav-item d-none d-md-block\"><a class=\"nav-link\" href=\"#\" name=\"roomManagerButton\" style=\"display: none;\"><i class=\"fas fa-wrench\" style=\"color: inherit\"></i></a></li><li class=\"nav-item d-none d-md-block\"><a class=\"nav-link\" href=\"#\" name=\"undoButton\" style=\"display: none;\"><i class=\"fas fa-undo\" style=\"color: inherit\"></i></a></li><li class=\"nav-item d-none d-md-block\"><a class=\"nav-link\" href=\"#\" name=\"messengerButton\"><i class=\"fas fa-envelope\" style=\"color: inherit\"></i></a></li><li class=\"nav-item d-none d-md-block\"><a class=\"nav-link hasStatusPip\" href=\"#\" name=\"friendsButton\"><i class=\"fas fa-user-group\" style=\"color: inherit\"></i><span class=\"statusPip presenceOnline\"></span></a></li><li class=\"nav-item d-none d-md-block\"><a class=\"nav-link\" href=\"#\" name=\"uploadButton\" style=\"display: none;\"><i class=\"fas fa-upload\" style=\"color: inherit\"></i></a></li><li class=\"nav-item d-none d-md-block\"><a class=\"nav-link\" href=\"#\" name=\"galleryButton\"><i class=\"fas fa-images\" style=\"color: inherit\"></i></a></li><li class=\"nav-item d-none d-md-block\"><a class=\"nav-link\" href=\"#\" name=\"saveButton\"><i class=\"fas fa-save\" style=\"color: inherit\"></i></a></li></ul></div></nav></div></div></div></div>";
+
+    function cardStageHTML() {
+        return CARD_STAGE_TEMPLATE;
+    }
+
+    /* =========================================================
+       THEME PACKS (v1.6.6, Themes tab)
+       One file (.flocktheme) with a saved theme AND its background
+       pictures and custom sounds, to send to someone (Discord etc).
+
+       - Pack: a saved theme's Pack button. Every part has a checkbox.
+         The size bar shows if it fits Discord without Nitro; pictures
+         are made smaller only if needed (never with Keep full quality).
+         GIFs are never changed.
+       - Load: drop / choose the file on the Themes tab. Every part has
+         a checkbox; anything unchecked stays as yours.
+       - Never in a pack: Safety settings (and the griefer sound),
+         animations, chat overlay, clock, keywords, reference pictures,
+         uploaded fonts.
+       - Loading checks the WHOLE file first (each picture and sound
+         has a checksum and must really open). Only then is anything
+         written, and only added: nothing of yours is replaced. If
+         something fails halfway, what was added is taken back out.
+
+       FILE LAYOUT (keep readable forever; a new layout = new format
+       number, and the reader keeps reading the old ones):
+         "FTPACK" | format (1 byte) | header length (4 bytes, big end)
+         | header (UTF-8 JSON) | the files, back to back
+       The header lists each file's kind, type, size and CRC-32, in order.
+       ========================================================= */
+
+    const PACK_FORMAT = 1;
+    const PACK_MAGIC = "FTPACK";
+    const PACK_EXT = ".flocktheme";
+    const PACK_TARGET_BYTES = 9 * 1024 * 1024;         /* fits Discord (free) with room to spare */
+    const PACK_DISCORD_FREE_BYTES = 20 * 1024 * 1024;  /* Discord's free upload limit (2026) */
+    const PACK_MAX_BYTES = 200 * 1024 * 1024;
+    const PACK_MAX_HEADER = 2 * 1024 * 1024;
+    const PACK_MAX_FILES = 64;
+    const PACK_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+    const PACK_SKIP_SOUNDS = ["Troll"];                /* safety: never shared */
+
+    const PACK_GROUPS = [
+        { key: "colors", name: "Colors", always: true },
+        { key: "font", name: "Font & sizes" },
+        { key: "popups", name: "Popup decorations" },
+        { key: "bubbles", name: "Chat bubbles" },
+        { key: "thumbs", name: "Slider thumbs" },
+        { key: "canvas", name: "Canvas colors" }
+    ];
+
+    /* Which part of a theme a setting belongs to */
+    function packGroupOf(id) {
+        const bg = String(id).match(/^Bg(Sidebar|Chat|Messenger|Canvas)/);
+        if (bg) return `bg:${bg[1].toLowerCase()}`;
+        if (/^UI(Font|Spacing|Radius)/.test(id)) return "font";
+        if (/^Deco/.test(id)) return "popups";
+        if (/^Bubble/.test(id)) return "bubbles";
+        if (/^ThumbShape/.test(id)) return "thumbs";
+        if (/^Canvas/.test(id)) return "canvas";
+        return "colors";
+    }
+
+    function packPlaceLabel(key) {
+        return (BACKGROUND_PLACES.find((p) => p.key === key) || {}).label || key;
+    }
+
+    function packPlaceOn(settings, place) {
+        return String(settings[`Bg${place.idPart}Enabled`]) === "true";
+    }
+
+    /* Short detail for each part, from a theme's settings */
+    function packGroupDetail(key, settings) {
+        const get = (id, def) => (Object.prototype.hasOwnProperty.call(settings, id) ? settings[id] : def);
+        if (key === "colors") {
+            const grad = Object.keys(settings).some((id) => /^Grad\w+Enabled$/.test(id) && String(settings[id]) === "true");
+            return grad ? "with gradients" : "";
+        }
+        if (key === "font") {
+            const font = get("UIFont", "default");
+            return font === "default" ? "sizes" : (isCustomFontValue(font) ? fontValueLabel(font) : font);
+        }
+        if (key === "popups") return (DECO_STYLES[get("DecoStyle", "none")] || {}).label || "";
+        if (key === "bubbles") return (BUB_STYLES[get("BubbleStyle", "none")] || {}).label || "";
+        if (key === "thumbs") return (THUMB_SHAPES[get("ThumbShapeEnabled", false) ? get("ThumbShape", "heart") : ""] || {}).label || "";
+        if (key === "canvas") {
+            const on = (part) => String(get(`Canvas${part}Enabled`, false)) === "true";
+            return [on("Paper") && "paper", on("Area") && "area", on("Dim") && "dimmer"].filter(Boolean).join(" + ");
+        }
+        return "";
+    }
+
+    /* Parts a theme really uses (Colors always) */
+    function packGroupsUsed(settings) {
+        const used = new Set(["colors"]);
+        Object.keys(settings).forEach((id) => used.add(packGroupOf(id)));
+        if (String(settings.DecoStyle || "none") === "none") used.delete("popups");
+        if (String(settings.BubbleStyle || "none") === "none") used.delete("bubbles");
+        if (String(settings.ThumbShapeEnabled) !== "true") used.delete("thumbs");
+        return PACK_GROUPS.filter((g) => used.has(g.key));
+    }
+
+    function packSize(bytes) {
+        if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function packSafeName(name) {
+        return String(name || "theme").trim().replace(/[^\w\- &]+/g, "").replace(/\s+/g, " ").slice(0, 40) || "theme";
+    }
+
+    /* ---- making a pack ---- */
+
+    /* Everything a saved theme can put in a pack */
+    /* Sound picks (and uploaded sound files) for a pack */
+    async function packSoundsFrom(snap) {
+        const sounds = [];
+        if (snap && snap.events && typeof snap.events === "object") {
+            const names = new Map((snap.files || []).map((f) => [f.id, f.name]));
+            for (const ev of SOUND_EVENTS) {
+                const e = snap.events[ev.key];
+                if (!e || PACK_SKIP_SOUNDS.includes(ev.key)) continue;
+                const value = String(e.sound || "");
+                if (value.startsWith("upload:")) {
+                    const id = value.slice(7);
+                    const blob = await soundDB("readonly", (st) => st.get(id)).catch(() => null);
+                    if (blob) sounds.push({ event: ev.key, label: ev.name, setting: e, fileId: id, fileName: names.get(id) || "My sound", blob });
+                } else {
+                    sounds.push({ event: ev.key, label: ev.name, setting: e, builtin: true });
+                }
+            }
+        }
+
+        return sounds;
+    }
+
+    async function packSourceFromSaved(theme) {
+        const decoded = decodeThemeCode(theme.code);
+        const settings = decoded.settings;
+        const pictures = [];
+
+        for (const place of BACKGROUND_PLACES) {
+            const libId = theme.images && theme.images[place.key];
+            if (!libId || !packPlaceOn(settings, place)) continue;
+            const blob = await bgDB("readonly", (s) => s.get(libId)).catch(() => null);
+            if (blob) pictures.push({ place: place.key, libId, blob });
+        }
+
+        const sounds = await packSoundsFrom(theme.sounds);
+        return { name: theme.name, settings, pictures, sounds };
+    }
+
+    /* Makes a picture smaller (only used when a pack is too big) */
+    async function shrinkPackPicture(blob, maxSide) {
+        const bitmap = await createImageBitmap(blob);
+        const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        bitmap.close();
+        return (await canvasToBlob(canvas, "image/webp", 0.82)) || (await canvasToBlob(canvas, "image/jpeg", 0.82));
+    }
+
+    /* choice: { groups: {font: true, ...}, pictures: {sidebar: true, ...},
+                 sounds: {Mention: true, builtin: true, ...}, fullQuality, by }
+       -> { blob, size, shrunk: [place labels], fits } */
+    async function buildThemePack(src, choice) {
+        const groupsIn = ["colors"];
+        packGroupsUsed(src.settings).forEach((g) => {
+            if (!g.always && choice.groups[g.key]) groupsIn.push(g.key);
+        });
+
+        const pictureIn = src.pictures.filter((p) => choice.pictures[p.place]);
+        const placesWithPicture = new Set(src.pictures.map((p) => p.place));
+        pictureIn.forEach((p) => groupsIn.push(`bg:${p.place}`));
+
+        /* Pictures left out: the receiver keeps their own for that spot */
+        const withheld = src.pictures.filter((p) => !choice.pictures[p.place]).map((p) => `bg:${p.place}`);
+
+        /* The theme's settings, only the chosen parts */
+        const settings = {};
+        Object.entries(src.settings).forEach(([id, value]) => {
+            const g = packGroupOf(id);
+            const place = g.startsWith("bg:") ? g.slice(3) : null;
+            const keep = place
+                ? (!placesWithPicture.has(place) || choice.pictures[place])
+                : groupsIn.includes(g);
+            if (keep) settings[id] = value;
+        });
+
+        /* Files: each picture once (Chat + Messenger often share one) */
+        const files = [];
+        const fileOf = new Map();
+        const pictures = {};
+
+        for (const p of pictureIn) {
+            if (!fileOf.has(p.libId)) {
+                fileOf.set(p.libId, files.length);
+                files.push({ kind: "image", blob: p.blob, places: [] });
+            }
+            const index = fileOf.get(p.libId);
+            files[index].places.push(p.place);
+            pictures[p.place] = index;
+        }
+
+        let sounds = null;
+        const soundsIn = src.sounds.filter((s) => (s.builtin ? choice.sounds.builtin : choice.sounds[s.event]));
+        if (soundsIn.length) {
+            const events = {};
+            const soundFiles = [];
+            const soundIndex = new Map();
+            soundsIn.forEach((s) => {
+                events[s.event] = { enabled: Boolean(s.setting.enabled), sound: String(s.setting.sound), volume: Number(s.setting.volume) };
+                if (!s.builtin && !soundIndex.has(s.fileId)) {
+                    soundIndex.set(s.fileId, files.length);
+                    soundFiles.push({ id: s.fileId, name: String(s.fileName).slice(0, 40), file: files.length });
+                    files.push({ kind: "sound", blob: s.blob });
+                }
+            });
+            sounds = { events, files: soundFiles };
+        }
+
+        /* Too big? Make pictures smaller, biggest first (never GIFs,
+           never with Keep full quality) */
+        const shrunk = new Set();
+        const total = () => files.reduce((n, f) => n + f.blob.size, 0) + 4096;
+        if (!choice.fullQuality) {
+            for (const side of [1600, 1280, 1024, 800]) {
+                if (total() <= PACK_TARGET_BYTES) break;
+                const big = files
+                    .filter((f) => f.kind === "image" && f.blob.type !== "image/gif" && f.blob.size > 150 * 1024)
+                    .sort((a, b) => b.blob.size - a.blob.size);
+                for (const f of big) {
+                    if (total() <= PACK_TARGET_BYTES) break;
+                    const smaller = await shrinkPackPicture(f.blob, side).catch(() => null);
+                    if (smaller && smaller.size < f.blob.size) {
+                        f.blob = smaller;
+                        f.places.forEach((pl) => shrunk.add(packPlaceLabel(pl)));
+                    }
+                }
+            }
+        }
+
+        /* Checksums + header */
+        const listed = [];
+        for (const f of files) {
+            const bytes = new Uint8Array(await f.blob.arrayBuffer());
+            listed.push({ kind: f.kind, type: f.blob.type || (f.kind === "image" ? "image/png" : "audio/mpeg"), size: bytes.length, crc: crc32(bytes) });
+        }
+
+        const header = {
+            app: "FlockTheme",
+            kind: "pack",
+            format: PACK_FORMAT,
+            modVersion: getModVersion(),
+            created: new Date().toISOString(),
+            name: String(src.name || "").slice(0, 40),
+            by: String(choice.by || "").slice(0, 30),
+            code: encodeThemeCode(settings, src.name || ""),
+            groups: groupsIn,
+            withheld,
+            pictures,
+            sounds,
+            files: listed
+        };
+
+        const headerBytes = new TextEncoder().encode(JSON.stringify(header));
+        const lead = new Uint8Array(PACK_MAGIC.length + 5);
+        lead.set(new TextEncoder().encode(PACK_MAGIC), 0);
+        lead[PACK_MAGIC.length] = PACK_FORMAT;
+        new DataView(lead.buffer).setUint32(PACK_MAGIC.length + 1, headerBytes.length);
+
+        const blob = new Blob([lead, headerBytes, ...files.map((f) => f.blob)], { type: "application/octet-stream" });
+        return { blob, size: blob.size, shrunk: [...shrunk], fits: blob.size <= PACK_DISCORD_FREE_BYTES };
+    }
+
+    /* Saves a file: Chrome asks where, other browsers download it */
+    async function saveFileAs(blob, fileName, description, ext) {
+        if (typeof window.showSaveFilePicker === "function") {
+            let handle = null;
+            try {
+                handle = await window.showSaveFilePicker({
+                    suggestedName: fileName,
+                    types: [{ description, accept: { "application/octet-stream": [ext] } }]
+                });
+            } catch (error) {
+                if (error && error.name === "AbortError") return false;
+                handle = null;
+            }
+
+            if (handle) {
+                const writable = await handle.createWritable();
+                try {
+                    await writable.write(blob);
+                    await writable.close();
+                } catch (error) {
+                    try { await writable.abort(); } catch (e) { /* already closed */ }
+                    throw error;
+                }
+                return true;
+            }
+        }
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        return true;
+    }
+
+    /* ---- reading a pack ---- */
+
+    async function isThemePackFile(file) {
+        if (!file) return false;
+        if (/\.flocktheme$/i.test(file.name || "")) return true;
+        try {
+            const head = new Uint8Array(await file.slice(0, PACK_MAGIC.length).arrayBuffer());
+            return new TextDecoder().decode(head) === PACK_MAGIC;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    let packAudioCtx = null;
+
+    async function packSoundOpens(blob) {
+        try {
+            const Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+            if (!Ctx) return /^audio\//.test(blob.type);
+            packAudioCtx = packAudioCtx || new Ctx(1, 1, 44100);
+            await packAudioCtx.decodeAudioData(await blob.arrayBuffer());
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    /* Reads AND checks the whole pack. Nothing is written here.
+       Throws a friendly error if anything is wrong. */
+    async function readThemePack(file) {
+        const notPack = new Error("That file isn't a FlockTheme pack.");
+        const damaged = new Error("This pack is damaged or incomplete. Ask for it again.");
+
+        if (!file || file.size < PACK_MAGIC.length + 5) throw notPack;
+        if (file.size > PACK_MAX_BYTES) throw new Error("That pack is too big to load.");
+
+        const lead = new Uint8Array(await file.slice(0, PACK_MAGIC.length + 5).arrayBuffer());
+        if (new TextDecoder().decode(lead.subarray(0, PACK_MAGIC.length)) !== PACK_MAGIC) throw notPack;
+
+        const format = lead[PACK_MAGIC.length];
+        if (format > PACK_FORMAT) throw new Error("This pack was made with a newer version of FlockTheme. Update the mod to load it.");
+        if (format < 1) throw damaged;
+
+        const headerLength = new DataView(lead.buffer).getUint32(PACK_MAGIC.length + 1);
+        const start = PACK_MAGIC.length + 5;
+        if (headerLength < 2 || headerLength > PACK_MAX_HEADER || start + headerLength > file.size) throw damaged;
+
+        let header;
+        try {
+            header = JSON.parse(new TextDecoder().decode(await file.slice(start, start + headerLength).arrayBuffer()));
+        } catch (error) {
+            throw damaged;
+        }
+
+        if (!header || header.app !== "FlockTheme" || header.kind !== "pack" || !Array.isArray(header.files) || header.files.length > PACK_MAX_FILES) {
+            throw damaged;
+        }
+
+        let decoded;
+        try {
+            decoded = decodeThemeCode(header.code);
+        } catch (error) {
+            throw damaged;
+        }
+
+        /* Every file: right size, right checksum, really opens */
+        let offset = start + headerLength;
+        const blobs = [];
+
+        for (const f of header.files) {
+            const size = Number(f && f.size);
+            if (!f || !["image", "sound"].includes(f.kind) || !Number.isInteger(size) || size < 1 || offset + size > file.size) throw damaged;
+
+            const type = String(f.type || "");
+            const blob = file.slice(offset, offset + size, type);
+            const bytes = new Uint8Array(await blob.arrayBuffer());
+            if (crc32(bytes) !== (Number(f.crc) >>> 0)) throw damaged;
+
+            if (f.kind === "image") {
+                if (!PACK_IMAGE_TYPES.includes(type) || size > MAX_BG_UPLOAD_BYTES) throw new Error("This pack has a picture FlockTheme can't use.");
+                try {
+                    (await createImageBitmap(blob)).close();
+                } catch (error) {
+                    throw new Error("This pack has a picture that won't open.");
+                }
+            } else {
+                if (size > MAX_SOUND_FILE_BYTES || !(await packSoundOpens(blob))) throw new Error("This pack has a sound that won't play.");
+            }
+
+            blobs.push(blob);
+            offset += size;
+        }
+
+        if (offset !== file.size) throw damaged;
+
+        /* Pictures per place */
+        const pictures = {};
+        Object.entries(header.pictures || {}).forEach(([place, index]) => {
+            if (BACKGROUND_PLACES.some((p) => p.key === place) && header.files[index] && header.files[index].kind === "image") {
+                pictures[place] = index;
+            }
+        });
+
+        /* Sounds (never the safety sound) */
+        let sounds = null;
+        if (header.sounds && typeof header.sounds.events === "object") {
+            const files = (Array.isArray(header.sounds.files) ? header.sounds.files : [])
+                .filter((s) => s && typeof s.id === "string" && header.files[s.file] && header.files[s.file].kind === "sound")
+                .map((s) => ({ id: s.id, name: String(s.name || "My sound").slice(0, 40), blob: blobs[s.file] }));
+            const known = new Set(files.map((s) => s.id));
+            const events = {};
+            SOUND_EVENTS.forEach((ev) => {
+                const e = header.sounds.events[ev.key];
+                if (!e || PACK_SKIP_SOUNDS.includes(ev.key)) return;
+                const value = String(e.sound || "");
+                const ok = value.startsWith("builtin:") ? Boolean(BUILTIN_SOUNDS[value.slice(8)]) : value.startsWith("upload:") && known.has(value.slice(7));
+                if (ok) events[ev.key] = { enabled: Boolean(e.enabled), sound: value, volume: clampVolume(Number(e.volume), ev.def.volume) };
+            });
+            if (Object.keys(events).length) sounds = { events, files };
+        }
+
+        const groups = Array.isArray(header.groups) ? header.groups.filter((g) => typeof g === "string") : ["colors"];
+        const withheld = Array.isArray(header.withheld) ? header.withheld.filter((g) => typeof g === "string") : [];
+
+        return {
+            name: String(header.name || decoded.name || "").slice(0, 40) || "Shared theme",
+            by: String(header.by || "").slice(0, 30),
+            modVersion: String(header.modVersion || "?").slice(0, 12),
+            size: file.size,
+            settings: decoded.settings,
+            groups,
+            withheld,
+            pictures,
+            pictureBlobs: blobs,
+            sounds,
+            newer: decoded.newer
+        };
+    }
+
+    /* The theme as it will be saved: chosen parts from the pack, the
+       rest kept as yours. choice: { groups: {...}, pictures: {place: bool}, sounds: bool } */
+    function mergePackSettings(pack, choice) {
+        const mine = getCurrentThemeSettings();
+        const merged = {};
+
+        getThemeFields().forEach((field) => {
+            const g = packGroupOf(field.id);
+            let fromPack;
+
+            if (g === "colors") {
+                fromPack = true;
+            } else if (g.startsWith("bg:")) {
+                const place = g.slice(3);
+                fromPack = pack.groups.includes(g)
+                    ? Boolean(choice.pictures[place])
+                    : !pack.withheld.includes(g);
+            } else {
+                fromPack = pack.groups.includes(g) && Boolean(choice.groups[g]);
+            }
+
+            const from = fromPack ? pack.settings : mine;
+            if (Object.prototype.hasOwnProperty.call(from, field.id)) {
+                merged[field.id] = from[field.id];
+            }
+        });
+
+        return merged;
+    }
+
+    function uniqueThemeName(name) {
+        const taken = new Set(getSavedThemes().map((t) => t.name.toLowerCase()));
+        const base = String(name || "Shared theme").slice(0, 34);
+        if (!taken.has(base.toLowerCase())) return base;
+        for (let n = 2; n < 100; n++) {
+            const candidate = `${base} (${n})`;
+            if (!taken.has(candidate.toLowerCase())) return candidate;
+        }
+        return `${base} (${Date.now().toString(36)})`;
+    }
+
+    /* Adds the pack as a new saved theme. Returns what loadTheme needs. */
+    async function addThemePack(pack, choice) {
+        const settings = mergePackSettings(pack, choice);
+        const name = uniqueThemeName(pack.name);
+        const addedSounds = [];
+
+        try {
+            /* Pictures (each stored once, by its fingerprint) */
+            let images = null;
+            for (const [place, index] of Object.entries(pack.pictures)) {
+                if (!choice.pictures[place]) continue;
+                images = images || {};
+                images[place] = await bgLibStore(pack.pictureBlobs[index]);
+            }
+
+            /* Sounds: one you already have (same file) is reused; new
+               ones get new ids, so they never clash with yours */
+            let sounds = null;
+            if (pack.sounds && choice.sounds) {
+                const idMap = new Map();
+                const files = [];
+                const fingerprint = async (blob) => {
+                    const hash = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer());
+                    return [...new Uint8Array(hash)].slice(0, 16).map((b) => b.toString(16).padStart(2, "0")).join("");
+                };
+                const have = new Map();
+                for (const own of getSoundLibrary()) {
+                    const blob = await soundDB("readonly", (store) => store.get(own.id)).catch(() => null);
+                    if (blob) have.set(await fingerprint(blob), own);
+                }
+                for (const s of pack.sounds.files) {
+                    const same = have.get(await fingerprint(s.blob));
+                    if (same) {
+                        idMap.set(s.id, same.id);
+                        files.push({ id: same.id, name: same.name });
+                        continue;
+                    }
+                    const id = `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+                    await soundDB("readwrite", (store) => store.put(s.blob, id));
+                    addedSounds.push(id);
+                    idMap.set(s.id, id);
+                    files.push({ id, name: s.name });
+                }
+                const events = {};
+                Object.entries(pack.sounds.events).forEach(([key, e]) => {
+                    const sound = e.sound.startsWith("upload:") ? `upload:${idMap.get(e.sound.slice(7))}` : e.sound;
+                    events[key] = { ...e, sound };
+                });
+                sounds = { events, files };
+            }
+
+            const entry = { name, code: encodeThemeCode(settings, name) };
+            if (images) entry.images = images;
+            if (sounds) entry.sounds = sounds;
+
+            const themes = getSavedThemes();
+            themes.push(entry);
+            setSavedThemes(themes);
+
+            /* A Google font comes along by name, like with codes */
+            const font = settings.UIFont;
+            if (font && String(font).startsWith("google:")) {
+                setFontLibrary([...getFontLibrary(), font]);
+            }
+
+            return { name, settings, images, sounds };
+        } catch (error) {
+            /* Take back what was added (pictures nobody uses are cleaned up) */
+            for (const id of addedSounds) {
+                await soundDB("readwrite", (store) => store.delete(id)).catch(() => {});
+            }
+            cleanBgLibrary();
+            throw error;
+        }
+    }
+
+    /* ---- the Themes tab panel (making and loading) ---- */
+
+    function setupThemePacks(panel, { showStatus, loadTheme, refreshList }) {
+        const box = panel.querySelector(".themeModPackPanel");
+        if (!box) {
+            return { make: () => {}, load: () => {} };
+        }
+
+        const title = box.querySelector(".themeModPackTitle");
+        const body = box.querySelector(".themeModPackBody");
+        const objectURLs = [];
+        let token = 0;
+
+        const urlFor = (blob) => {
+            const url = URL.createObjectURL(blob);
+            objectURLs.push(url);
+            return url;
+        };
+
+        function close() {
+            token++;
+            box.style.display = "none";
+            body.innerHTML = "";
+            objectURLs.splice(0).forEach((u) => URL.revokeObjectURL(u));
+        }
+
+        function show(text) {
+            title.textContent = text;
+            box.style.display = "block";
+            revealInModMenu(box);
+        }
+
+        box.querySelector(".themeModPackClose").addEventListener("click", close);
+
+        const row = (key, name, detail, opts = {}) => `
+            <label class="themeModPackRow${opts.locked ? " isLocked" : ""}">
+                <input type="checkbox" data-pack="${escapeHTML(key)}"${opts.off ? "" : " checked"}${opts.locked ? " disabled" : ""}>
+                ${opts.thumb ? `<span class="themeModPackThumb" style="background-image: url('${opts.thumb}')"></span>` : ""}
+                ${opts.sound ? '<i class="fas fa-volume-up themeModPackIcon"></i>' : ""}
+                <span class="themeModPackName">${escapeHTML(name)}${detail ? ` <span class="themeModPackDetail">· ${escapeHTML(detail)}</span>` : ""}</span>
+                <span class="themeModPackNote" data-note="${escapeHTML(key)}">${escapeHTML(opts.note || "")}</span>
+            </label>`;
+
+        const safetyNote = (text) => `
+            <div class="themeModPackSafe"><i class="fas fa-shield-alt"></i><span>${escapeHTML(text)}</span></div>`;
+
+        const checked = (key) => {
+            const input = body.querySelector(`input[data-pack="${CSS.escape(key)}"]`);
+            return Boolean(input && input.checked);
+        };
+
+        /* ---------- making ---------- */
+
+        async function make(theme) {
+            close();
+            const mine = ++token;
+            show(`Share pack · ${theme.name}`);
+            const view = document.createElement("div");
+            view.innerHTML = '<div class="themeModPackBusy">Getting the pack ready...</div>';
+            body.replaceChildren(view);
+
+            let src;
+            try {
+                src = await packSourceFromSaved(theme);
+            } catch (error) {
+                view.innerHTML = '<div class="themeModPackBusy">This saved theme is damaged, so it can\'t be packed.</div>';
+                return;
+            }
+            if (mine !== token) return;
+
+            const groups = packGroupsUsed(src.settings);
+            const seenPicture = new Map();
+            const pictureRows = src.pictures.map((p) => {
+                const same = seenPicture.get(p.libId);
+                if (!same) seenPicture.set(p.libId, packPlaceLabel(p.place));
+                return row(`pic:${p.place}`, packPlaceLabel(p.place), same ? `same picture as ${same}` : (p.blob.type === "image/gif" ? "animated GIF" : ""), {
+                    thumb: urlFor(p.blob),
+                    note: same ? "stored once" : packSize(p.blob.size)
+                });
+            }).join("");
+
+            const builtin = src.sounds.filter((s) => s.builtin);
+            const soundRows = src.sounds.filter((s) => !s.builtin).map((s) =>
+                row(`snd:${s.event}`, s.label, s.fileName, { sound: true, note: packSize(s.blob.size) })).join("") +
+                (builtin.length ? row("snd:builtin", "Built-in sound picks", `${builtin.length} sound${builtin.length > 1 ? "s" : ""}`, { sound: true }) : "");
+
+            view.innerHTML = `
+                <div class="themeModPackText">One file with this theme, its pictures and sounds. Uncheck anything you'd rather keep to yourself.</div>
+                <div class="themeModPackLabel">Theme</div>
+                ${groups.map((g) => row(`grp:${g.key}`, g.name, packGroupDetail(g.key, src.settings), { locked: g.always, note: g.always ? "always" : "" })).join("")}
+                ${pictureRows ? `<div class="themeModPackLabel">Background pictures</div>${pictureRows}` : ""}
+                ${soundRows ? `<div class="themeModPackLabel">Sounds</div>${soundRows}` : ""}
+                <label class="themeModPackRow themeModPackQuality">
+                    <input type="checkbox" data-pack="quality">
+                    <span class="themeModPackName">Keep full quality<span class="themeModPackSub">Pictures are never made smaller to fit. Bigger file.</span></span>
+                </label>
+                <label class="themeModPackBy">Made by (optional)
+                    <input type="text" class="themeModTextInput" data-pack-by maxlength="30" placeholder="Your name" spellcheck="false">
+                </label>
+                <div class="themeModPackSize">
+                    <div class="themeModPackSizeLine"><span class="themeModPackSizeText">Pack size: ...</span><span class="themeModPackFit"></span></div>
+                    <div class="themeModPackBar"><div class="themeModPackBarFill"></div></div>
+                    <div class="themeModPackHint"></div>
+                </div>
+                ${safetyNote("Never included: your safety settings, animations, chat overlay, clock, keywords and reference pictures.")}
+                <div class="themeModCardButtons">
+                    <button type="button" class="themeModButton themeModPackSave themeModPackPrimary" disabled><i class="fas fa-download"></i> Save pack</button>
+                    <button type="button" class="themeModButton themeModPackCancel">Cancel</button>
+                </div>`;
+
+            const byInput = view.querySelector("[data-pack-by]");
+            byInput.value = localStorage.getItem(CARD_BY_LS) || "";
+
+            let built = null;
+            let buildToken = 0;
+            let timer = 0;
+
+            const readChoice = () => ({
+                groups: Object.fromEntries(groups.map((g) => [g.key, checked(`grp:${g.key}`)])),
+                pictures: Object.fromEntries(src.pictures.map((p) => [p.place, checked(`pic:${p.place}`)])),
+                sounds: Object.fromEntries([...src.sounds.filter((s) => !s.builtin).map((s) => [s.event, checked(`snd:${s.event}`)]), ["builtin", checked("snd:builtin")]]),
+                fullQuality: checked("quality"),
+                by: byInput.value.trim()
+            });
+
+            const sizeText = view.querySelector(".themeModPackSizeText");
+            const fitText = view.querySelector(".themeModPackFit");
+            const fill = view.querySelector(".themeModPackBarFill");
+            const hint = view.querySelector(".themeModPackHint");
+            const saveButton = view.querySelector(".themeModPackSave");
+
+            async function rebuild() {
+                const me = ++buildToken;
+                saveButton.disabled = true;
+                sizeText.textContent = "Pack size: working it out...";
+                try {
+                    const result = await buildThemePack(src, readChoice());
+                    if (me !== buildToken || mine !== token) return;
+                    built = result;
+                    const level = result.size <= PACK_TARGET_BYTES ? "ok" : (result.size <= PACK_DISCORD_FREE_BYTES ? "big" : "over");
+                    sizeText.textContent = `Pack size: ${packSize(result.size)}`;
+                    fitText.textContent = { ok: "Fits on Discord (free)", big: "Fits, but it's big", over: "Too big for Discord (free)" }[level];
+                    fitText.dataset.level = level;
+                    fill.dataset.level = level;
+                    fill.style.width = `${Math.min(100, (result.size / PACK_DISCORD_FREE_BYTES) * 100).toFixed(1)}%`;
+
+                    const biggest = src.pictures.filter((p) => checked(`pic:${p.place}`)).sort((a, b) => b.blob.size - a.blob.size)[0];
+                    hint.textContent = result.shrunk.length
+                        ? `Made smaller to fit: ${result.shrunk.join(", ")}.`
+                        : (level !== "ok" && biggest ? `Biggest: ${packPlaceLabel(biggest.place)}. Uncheck it to make the pack much smaller.` : "");
+                    saveButton.disabled = false;
+                } catch (error) {
+                    if (me !== buildToken) return;
+                    built = null;
+                    sizeText.textContent = "Couldn't make the pack. Try again.";
+                }
+            }
+
+            view.addEventListener("change", (event) => {
+                if (event.target.matches("input[type=checkbox]")) {
+                    clearTimeout(timer);
+                    timer = setTimeout(rebuild, 150);
+                }
+            });
+
+            byInput.addEventListener("input", () => {
+                try { localStorage.setItem(CARD_BY_LS, byInput.value.trim().slice(0, 30)); } catch (error) { /* fine */ }
+                clearTimeout(timer);
+                timer = setTimeout(rebuild, 500);
+            });
+
+            view.querySelector(".themeModPackCancel").addEventListener("click", close);
+
+            saveButton.addEventListener("click", async () => {
+                if (!built) return;
+                saveButton.disabled = true;
+                try {
+                    const saved = await saveFileAs(built.blob, `${packSafeName(theme.name)}${PACK_EXT}`, "FlockTheme pack", PACK_EXT);
+                    if (saved) showStatus(`Pack saved (${packSize(built.size)}). Send the file to share "${theme.name}" with its pictures and sounds.`);
+                } catch (error) {
+                    showStatus("Couldn't save the pack. Try again, or free up some space.", "error");
+                } finally {
+                    saveButton.disabled = false;
+                }
+            });
+
+            rebuild();
+        }
+
+        /* ---------- loading ---------- */
+
+        async function load(file) {
+            close();
+            const mine = ++token;
+            show("Add theme from pack");
+            const view = document.createElement("div");
+            view.innerHTML = '<div class="themeModPackBusy">Checking the pack...</div>';
+            body.replaceChildren(view);
+
+            let pack;
+            try {
+                pack = await readThemePack(file);
+            } catch (error) {
+                if (mine !== token) return;
+                close();
+                showStatus(error.message || "That pack couldn't be read.", "error");
+                return;
+            }
+            if (mine !== token) return;
+
+            const groupRows = PACK_GROUPS.filter((g) => pack.groups.includes(g.key)).map((g) =>
+                row(`grp:${g.key}`, g.name, packGroupDetail(g.key, pack.settings), { locked: g.always, note: g.always ? "always" : "from the pack" })).join("");
+
+            /* One row per picture file (Chat + Messenger can share one) */
+            const byFile = new Map();
+            Object.entries(pack.pictures).forEach(([place, index]) => {
+                if (!byFile.has(index)) byFile.set(index, []);
+                byFile.get(index).push(place);
+            });
+            const pictureRows = [...byFile.entries()].map(([index, places]) =>
+                row(`pic:${places.join("+")}`, `${places.map(packPlaceLabel).join(" + ")} picture`, "", { thumb: urlFor(pack.pictureBlobs[index]), note: "from the pack" })).join("");
+
+            const soundNames = pack.sounds ? SOUND_EVENTS.filter((ev) => pack.sounds.events[ev.key]).map((ev) => ev.name) : [];
+            const soundRow = pack.sounds ? row("snd", "Sounds", soundNames.join(", "), { sound: true, note: "from the pack" }) : "";
+
+            const firstPicture = pack.pictureBlobs.length && Object.keys(pack.pictures).length ? urlFor(pack.pictureBlobs[Object.values(pack.pictures)[0]]) : "";
+            const swatch = pack.settings.SimpleBackgroundColor || pack.settings.SidebarPrimaryColor || "#4f5156";
+            const clash = getSavedThemes().some((t) => t.name.toLowerCase() === pack.name.toLowerCase());
+            const newName = uniqueThemeName(pack.name);
+
+            view.innerHTML = `
+                <div class="themeModPackSummary">
+                    <span class="themeModPackSummaryArt" style="background-color: ${/^#[0-9a-f]{6}$/i.test(swatch) ? swatch : "#4f5156"};${firstPicture ? ` background-image: url('${firstPicture}');` : ""}"></span>
+                    <span class="themeModPackSummaryText">
+                        <span class="themeModPackSummaryName">${escapeHTML(pack.name)}</span>
+                        <span class="themeModPackDetail">${pack.by ? `by ${escapeHTML(pack.by)} · ` : ""}made with FlockTheme v${escapeHTML(pack.modVersion)} · ${packSize(pack.size)}</span>
+                        <span class="themeModPackChecked"><i class="fas fa-check"></i> Checked: every picture and sound opens fine</span>
+                    </span>
+                </div>
+                ${pack.newer ? '<div class="themeModPackWarn"><i class="fas fa-info-circle"></i><span>Made with a newer FlockTheme. Update the mod to see all of it.</span></div>' : ""}
+                <div class="themeModPackText">Pick what you want. Anything you uncheck stays exactly as yours.</div>
+                <div class="themeModPackLabel">In this pack</div>
+                ${groupRows}${pictureRows}${soundRow}
+                ${clash ? `<div class="themeModPackWarn"><i class="fas fa-info-circle"></i><span>You already have a theme called "${escapeHTML(pack.name)}". This one will be saved as "${escapeHTML(newName)}", so nothing of yours is replaced.</span></div>` : ""}
+                ${safetyNote("Packs never carry safety settings or other personal settings, and can't run anything. Your other themes and settings aren't touched.")}
+                <div class="themeModCardButtons">
+                    <button type="button" class="themeModButton themeModPackUse themeModPackPrimary">Add and use now</button>
+                    <button type="button" class="themeModButton themeModPackAdd">Only add to My Themes</button>
+                </div>
+                <div class="themeModPackHint themeModPackCenter">You can always Undo after using it.</div>`;
+
+            view.addEventListener("change", (event) => {
+                const input = event.target;
+                if (!input.matches("input[type=checkbox]") || input.disabled) return;
+                const note = view.querySelector(`[data-note="${CSS.escape(input.dataset.pack)}"]`);
+                if (note) {
+                    note.textContent = input.checked ? "from the pack" : "keeps yours";
+                    note.classList.toggle("isKeep", !input.checked);
+                }
+            });
+
+            const readChoice = () => {
+                const pictures = {};
+                [...byFile.values()].forEach((places) => {
+                    const on = checked(`pic:${places.join("+")}`);
+                    places.forEach((p) => { pictures[p] = on; });
+                });
+                return {
+                    groups: Object.fromEntries(PACK_GROUPS.map((g) => [g.key, checked(`grp:${g.key}`)])),
+                    pictures,
+                    sounds: checked("snd")
+                };
+            };
+
+            const buttons = [view.querySelector(".themeModPackUse"), view.querySelector(".themeModPackAdd")];
+
+            const add = async (useNow) => {
+                buttons.forEach((b) => { b.disabled = true; });
+                try {
+                    const added = await addThemePack(pack, readChoice());
+                    close();
+                    if (useNow) {
+                        await loadTheme(added.settings, true, `Added and loaded "${added.name}".`, added.images, added.sounds);
+                    } else {
+                        refreshList();
+                        showStatus(`Added "${added.name}" to My Themes.`);
+                    }
+                } catch (error) {
+                    buttons.forEach((b) => { b.disabled = false; });
+                    showStatus(error && error.name === "QuotaExceededError"
+                        ? "Not enough space to add this pack. Nothing was changed."
+                        : "Couldn't add the pack. Nothing was changed.", "error");
+                }
+            };
+
+            buttons[0].addEventListener("click", () => add(true));
+            buttons[1].addEventListener("click", () => add(false));
+        }
+
+        return { make, load, close };
+    }
+
     function setupThemesPanel(dialog) {
         const panel = dialog.querySelector('[data-theme-panel="themes"]');
 
@@ -13279,6 +16083,33 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         }
 
         undoRow.style.display = localStorage.getItem(THEME_UNDO_LS) ? "" : "none";
+
+        /* v1.6.6: theme packs + theme cards */
+        const packs = setupThemePacks(panel, { showStatus, loadTheme, refreshList: () => renderSavedList() });
+        const cards = setupThemeCards(panel, showStatus, packs);
+
+        panel.querySelector(".themeModMakeCardButton")?.addEventListener("click", () => {
+            cards.open({
+                settings: getCurrentThemeSettings(),
+                name: "",
+                images: "current",
+                sounds: snapshotThemeSounds()
+            });
+        });
+
+        /* Theme pack row: packs are made from a saved theme, so this
+           jumps down to My Themes (unfolding it if it was folded) */
+        panel.querySelector(".themeModGoMyThemes")?.addEventListener("click", () => {
+            const title = [...panel.querySelectorAll(".themeModSubsectionTitle")]
+                .find((t) => t.textContent.replace(/\s+/g, " ").trim() === "My Themes");
+
+            revealInModMenu(title);
+            const nameBox = panel.querySelector(".themeModSaveName");
+
+            if (nameBox && !panel.querySelector(".themeModSavedItem")) {
+                setTimeout(() => nameBox.focus({ preventScroll: true }), 350);
+            }
+        });
 
         /* ---- Export ---- */
         panel.querySelector(".themeModExportButton").addEventListener("click", async () => {
@@ -13384,9 +16215,22 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                     <div class="themeModSavedName">${escapeHTML(theme.name)}${theme.images && Object.values(theme.images).some(Boolean) ? ' <i class="fas fa-image themeModSavedHasImages" title="Includes background images"></i>' : ""}${theme.sounds && Object.keys(theme.sounds.events || {}).length ? ' <i class="fas fa-volume-up themeModSavedHasImages" title="Includes your sounds"></i>' : ""}</div>
                     <div class="themeModSavedButtons">
                         <button type="button" class="themeModButton" data-action="load">Load</button>
-                        <button type="button" class="themeModButton" data-action="copy">Copy code</button>
-                        <button type="button" class="themeModButton" data-action="rename">Rename</button>
-                        <button type="button" class="themeModButton themeModDangerButton" data-action="delete">Delete</button>
+                        <div class="themeModSavedMenuWrap">
+                            <button type="button" class="themeModButton themeModSavedMenuButton" data-menu="share" aria-haspopup="true" aria-expanded="false">Share <i class="fas fa-chevron-down"></i></button>
+                            <div class="themeModSavedMenu isShare" hidden>
+                                <button type="button" class="themeModSavedMenuItem" data-action="copy"><i class="fas fa-copy"></i><span><b>Copy code</b><small>Colors and styles. No pictures or sounds.</small></span></button>
+                                <button type="button" class="themeModSavedMenuItem" data-action="card"><i class="fas fa-image"></i><span><b>Theme card</b><small>Same as a code, in a picture that previews it.</small></span></button>
+                                <button type="button" class="themeModSavedMenuItem" data-action="pack"><i class="fas fa-box-open"></i><span><b>Theme pack</b><small>Everything, with pictures and sounds.</small></span></button>
+                            </div>
+                        </div>
+                        <div class="themeModSavedMenuWrap">
+                            <button type="button" class="themeModButton themeModSavedMenuButton isMore" data-menu="more" aria-haspopup="true" aria-expanded="false" aria-label="More options" title="More options"><i class="fas fa-ellipsis-h"></i></button>
+                            <div class="themeModSavedMenu isMore" hidden>
+                                <button type="button" class="themeModSavedMenuItem" data-action="rename"><i class="fas fa-edit"></i><span><b>Rename</b></span></button>
+                                <div class="themeModSavedMenuLine"></div>
+                                <button type="button" class="themeModSavedMenuItem isDanger" data-action="delete"><i class="fas fa-trash-alt"></i><span><b class="themeModDeleteLabel">Delete…</b></span></button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `).join("");
@@ -13443,12 +16287,94 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         panel.querySelector(".themeModSaveButton").addEventListener("click", saveCurrent);
         saveName.addEventListener("themeModEnter", saveCurrent);
 
+        /* v1.6.6: Share and ⋯ menus on each saved theme. One open at a time. */
+        function closeSavedMenus(except) {
+            savedList.querySelectorAll(".themeModSavedMenu:not([hidden])").forEach((menu) => {
+                if (menu === except) {
+                    return;
+                }
+                menu.hidden = true;
+                menu.classList.remove("isUp");
+                const opener = menu.parentElement && menu.parentElement.querySelector(".themeModSavedMenuButton");
+                if (opener) {
+                    opener.setAttribute("aria-expanded", "false");
+                }
+                const label = menu.querySelector(".themeModDeleteLabel");
+                if (label) {
+                    label.textContent = "Delete…";
+                    const del = label.closest("button");
+                    if (del) {
+                        del.dataset.confirm = "";
+                    }
+                }
+            });
+        }
+
+        function openSavedMenu(opener) {
+            const menu = opener.parentElement.querySelector(".themeModSavedMenu");
+
+            if (!menu) {
+                return;
+            }
+
+            if (!menu.hidden) {
+                closeSavedMenus();
+                return;
+            }
+
+            closeSavedMenus(menu);
+            menu.hidden = false;
+            opener.setAttribute("aria-expanded", "true");
+
+            /* Open upward if there's no room below (last rows of the list) */
+            let box = savedList.parentElement;
+            while (box && box !== document.body) {
+                const overflow = getComputedStyle(box).overflowY;
+                if (overflow === "auto" || overflow === "scroll" || overflow === "hidden") {
+                    break;
+                }
+                box = box.parentElement;
+            }
+            const limit = box && box !== document.body ? box.getBoundingClientRect().bottom : window.innerHeight;
+            const menuRect = menu.getBoundingClientRect();
+            if (menuRect.bottom > limit && opener.getBoundingClientRect().top - menuRect.height > 0) {
+                menu.classList.add("isUp");
+            }
+        }
+
+        document.addEventListener("pointerdown", (event) => {
+            if (!savedList.isConnected || event.target.closest && event.target.closest(".themeModSavedMenuWrap")) {
+                return;
+            }
+            closeSavedMenus();
+        }, true);
+
+        /* Escape reaches us as themeModEscape (the keyboard shield keeps
+           keys in the mod's windows away from FlockMod) */
+        savedList.addEventListener("themeModEscape", (event) => {
+            if (savedList.querySelector(".themeModSavedMenu:not([hidden])")) {
+                event.stopImmediatePropagation();
+                closeSavedMenus();
+            }
+        }, true);
+
         savedList.addEventListener("click", async (event) => {
+            const opener = event.target.closest(".themeModSavedMenuButton");
+
+            if (opener && savedList.contains(opener)) {
+                openSavedMenu(opener);
+                return;
+            }
+
             const button = event.target.closest("button[data-action]");
             const item = event.target.closest(".themeModSavedItem");
 
             if (!button || !item) {
                 return;
+            }
+
+            if (button.dataset.action !== "delete") {
+                closeSavedMenus();
             }
 
             const themes = getSavedThemes();
@@ -13469,6 +16395,23 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                 }
             }
 
+            if (action === "pack") {
+                packs.make(theme);
+            }
+
+            if (action === "card") {
+                try {
+                    cards.open({
+                        settings: decodeThemeCode(theme.code).settings,
+                        name: theme.name,
+                        images: theme.images || null,
+                        sounds: theme.sounds || null
+                    });
+                } catch (error) {
+                    showStatus("This saved theme is damaged, so it can't be made into a card.", "error");
+                }
+            }
+
             if (action === "copy") {
                 const copied = await copyText(theme.code, exportBox);
                 if (!copied) {
@@ -13480,17 +16423,20 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
             if (action === "delete") {
                 /* Two clicks to delete, so it can't happen by accident */
+                const label = button.querySelector(".themeModDeleteLabel") || button;
                 if (button.dataset.confirm !== "yes") {
                     button.dataset.confirm = "yes";
-                    button.textContent = "Sure?";
+                    label.textContent = "Sure? Click again";
                     setTimeout(() => {
-                        if (button.isConnected) {
+                        if (button.isConnected && button.dataset.confirm === "yes") {
                             button.dataset.confirm = "";
-                            button.textContent = "Delete";
+                            label.textContent = "Delete…";
                         }
                     }, 3000);
                     return;
                 }
+
+                closeSavedMenus();
 
                 themes.splice(index, 1);
                 setSavedThemes(themes);
@@ -13781,6 +16727,26 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                         <span class="themeModToggleThumb"></span>
                                     </span>
                                 </label>
+
+                            </div>
+
+                            <div class="themeModSetting">
+
+                                <div class="themeModSettingText">
+                                    <div class="themeModSettingName">
+                                        Menu text size
+                                    </div>
+
+                                    <div class="themeModSettingDescription">
+                                        Bigger or smaller words in the mod's windows. FlockMod itself doesn't change. Saves right away.
+                                    </div>
+                                </div>
+
+                                <div class="themeModRangeControl themeModMenuTextControl">
+                                    <input type="range" id="themeModMenuTextSize" class="themeModRange" min="${MENU_TEXT_MIN}" max="${MENU_TEXT_MAX}" step="5" value="${MENU_TEXT_DEFAULT}" data-default="${MENU_TEXT_DEFAULT}" aria-label="Menu text size">
+                                    <span id="themeModMenuTextSizeValue" class="themeModRangeValue">${MENU_TEXT_DEFAULT}%</span>
+                                    <button type="button" class="themeModMenuTextReset" title="Back to 100%" aria-label="Menu text size back to 100%" hidden><i class="fas fa-undo-alt"></i></button>
+                                </div>
 
                             </div>
 
@@ -14344,7 +17310,7 @@ ${buildClockRowsHTML()}
     ${buildSidebarColorRowsHTML(CHAT_COLOR_SETTINGS)}
 
     <div class="themeModSubsectionTitle themeModSpacingSubsection">
-        Chat Notifications
+        Chat Overlay
     </div>
 
     ${buildSidebarColorRowsHTML(CHATNOTIF_COLOR_SETTINGS)}
@@ -14373,11 +17339,13 @@ ${buildClockRowsHTML()}
                                 Share
                             </div>
 
+                            <div class="fmGroupLabel">Share your theme</div>
+
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
-                                    <div class="themeModSettingName">Export theme</div>
+                                    <div class="themeModSettingName">Theme code</div>
                                     <div class="themeModSettingDescription">
-                                        Copy a code of your look to share with friends.
+                                        Your colors and styles as text. No pictures or sounds.
                                     </div>
                                 </div>
                                 <button type="button" class="themeModButton themeModExportButton">Copy code</button>
@@ -14387,15 +17355,77 @@ ${buildClockRowsHTML()}
 
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
-                                    <div class="themeModSettingName">Import theme</div>
+                                    <div class="themeModSettingName">Theme card</div>
                                     <div class="themeModSettingDescription">
-                                        Paste a code below to use it. You can undo.
+                                        Same as a code, inside a picture that previews your theme.
                                     </div>
                                 </div>
-                                <button type="button" class="themeModButton themeModImportButton">Import</button>
+                                <button type="button" class="themeModButton themeModMakeCardButton" id="themeModMakeCard">Make card</button>
                             </div>
 
-                            <textarea class="themeModCodeBox themeModImportCode" placeholder="FMTHEME1:..." spellcheck="false"></textarea>
+                            <div class="themeModCardPanel" style="display: none;">
+                                <div class="themeModCardHead">
+                                    <span class="themeModCardTitle"><i class="fas fa-image"></i> Theme card</span>
+                                    <button type="button" class="themeModCardClose" aria-label="Close theme card"><i class="fas fa-times"></i></button>
+                                </div>
+                                <div class="themeModCardPreview">
+                                    <img class="themeModCardImage" alt="Theme card preview">
+                                    <div class="themeModCardBusy">Making your card...</div>
+                                </div>
+                                <div class="themeModCardFields">
+                                    <label>Card name
+                                        <input type="text" class="themeModTextInput themeModCardName" maxlength="40" placeholder="My theme" spellcheck="false">
+                                    </label>
+                                    <label>Made by (optional)
+                                        <input type="text" class="themeModTextInput themeModCardBy" maxlength="30" placeholder="Your name" spellcheck="false">
+                                    </label>
+                                </div>
+                                <label class="themeModSaveImagesRow themeModCardBgRow">
+                                    <input type="checkbox" class="themeModCardBg">
+                                    Show my background pictures in the preview (the pictures aren't shared)
+                                </label>
+                                <div class="themeModCardButtons">
+                                    <button type="button" class="themeModButton themeModCardSave"><i class="fas fa-download"></i> Save image</button>
+                                    <button type="button" class="themeModButton themeModCardCopy"><i class="fas fa-copy"></i> Copy image</button>
+                                </div>
+                                <div class="themeModCardNote"></div>
+                            </div>
+
+                            <div class="themeModSetting themeModNoDivider">
+                                <div class="themeModSettingText">
+                                    <div class="themeModSettingName">Theme pack</div>
+                                    <div class="themeModSettingDescription">
+                                        Everything, with your pictures and sounds. Save your theme, then use its Share button.
+                                    </div>
+                                </div>
+                                <button type="button" class="themeModButton themeModGoMyThemes"><i class="fas fa-bookmark"></i> My Themes</button>
+                            </div>
+
+                            <div class="fmGroupLabel">Get a theme</div>
+
+                            <div class="themeModSetting themeModNoDivider">
+                                <div class="themeModSettingText">
+                                    <div class="themeModSettingName">Load a theme</div>
+                                    <div class="themeModSettingDescription">
+                                        Paste a code or card below, or drop a card or pack here. You can undo.
+                                    </div>
+                                </div>
+                                <div class="themeModSaveRow">
+                                    <button type="button" class="themeModButton themeModCardPick" title="Load a theme card picture or a theme pack"><i class="fas fa-folder-open"></i> Card / Pack</button>
+                                    <button type="button" class="themeModButton themeModImportButton">Import</button>
+                                </div>
+                            </div>
+
+                            <textarea class="themeModCodeBox themeModImportCode" placeholder="FMTHEME1:... or paste a theme card" spellcheck="false"></textarea>
+                            <input type="file" class="themeModCardFile" accept="image/png,image/*,.flocktheme" style="display: none;">
+
+                            <div class="themeModPackPanel" style="display: none;">
+                                <div class="themeModCardHead">
+                                    <span class="themeModCardTitle"><i class="fas fa-box-open"></i> <span class="themeModPackTitle">Theme pack</span></span>
+                                    <button type="button" class="themeModCardClose themeModPackClose" aria-label="Close theme pack"><i class="fas fa-times"></i></button>
+                                </div>
+                                <div class="themeModPackBody"></div>
+                            </div>
 
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
                                 My Themes
@@ -15361,6 +18391,7 @@ const safetyControls = setupSafetyPanel(dialog);
         setupResetAllGuard(dialog);
         setupRememberPlace(dialog);
         setupLiteMode(dialog);
+        setupMenuTextSize(dialog);
 
         setupTour(dialog);
 
@@ -16476,21 +19507,23 @@ const safetyControls = setupSafetyPanel(dialog);
         });
     }
 
-    function replaceAllEntries(db, storeName, entries) {
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(storeName, "readwrite");
-            const store = tx.objectStore(storeName);
+    /* v1.6.6: backups are written one stored file per line, so big
+       collections never have to fit in one giant piece of text (the
+       browser has a size limit for that). It's still the same JSON as
+       before, so older versions can load small ones too:
+         {"app":...,"localStorage":{...},"databases":{    <- line 1
+         "flockmodThemeModImages":[                        <- a database starts
+         ["sidebar",{...}]                                 <- one stored file
+         ,["lib:ab12...",{...}]                            <- later ones start with a comma
+         ]                                                 <- that database ends
+         ,"flockmodThemeModSounds":[                       <- the next one
+         ]
+         }}                                                <- the end
+       Backups from before v1.6.6 are one single line, and still load. */
+    const BACKUP_DB_OPEN = ',"databases":{';
+    const BACKUP_CHUNK_CHARS = 32 * 1024 * 1024;
 
-            store.clear();
-            entries.forEach(([key, value]) => store.put(value, key));
-
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error);
-            tx.onabort = () => reject(tx.error);
-        });
-    }
-
-    async function buildBackup() {
+    function backupHeader() {
         const storage = {};
 
         for (let i = 0; i < localStorage.length; i++) {
@@ -16501,64 +19534,396 @@ const safetyControls = setupSafetyPanel(dialog);
             }
         }
 
-        const databases = {};
-
-        for (const d of getBackupDatabases()) {
-            const db = await d.open();
-
-            try {
-                const entries = await readAllEntries(db, d.store);
-                databases[d.name] = await Promise.all(
-                    entries.map(async ([key, value]) => [key, await packValue(value)])
-                );
-            } finally {
-                db.close();
-            }
-        }
-
         return {
             app: "FlockMod Themer",
             kind: "backup",
             format: BACKUP_FORMAT,
             modVersion: getModVersion(),
             created: new Date().toISOString(),
-            localStorage: storage,
-            databases
+            localStorage: storage
         };
     }
 
-    async function restoreBackup(backup) {
-        /* Settings: drop the mod's current keys, then write the backup's */
-        const oldKeys = [];
+    /* Writes the whole backup through write(text), one stored file at a time */
+    async function writeBackup(write) {
+        await write(JSON.stringify(backupHeader()).slice(0, -1) + BACKUP_DB_OPEN + "\n");
 
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
+        const list = getBackupDatabases();
 
-            if (key && key.startsWith("flockmod")) {
-                oldKeys.push(key);
-            }
-        }
-
-        oldKeys.forEach((key) => localStorage.removeItem(key));
-
-        Object.entries(backup.localStorage || {}).forEach(([key, value]) => {
-            if (key.startsWith("flockmod") && typeof value === "string") {
-                localStorage.setItem(key, value);
-            }
-        });
-
-        /* Files */
-        for (const d of getBackupDatabases()) {
-            const entries = Array.isArray(backup.databases?.[d.name]) ? backup.databases[d.name] : [];
-            const db = await d.open();
+        for (let d = 0; d < list.length; d++) {
+            const db = await list[d].open();
+            let entries;
 
             try {
-                await replaceAllEntries(db, d.store, entries.map(([key, value]) => [key, unpackValue(value)]));
+                entries = await readAllEntries(db, list[d].store);
             } finally {
                 db.close();
             }
+
+            await write((d ? "," : "") + JSON.stringify(list[d].name) + ":[\n");
+
+            for (let i = 0; i < entries.length; i++) {
+                const [key, value] = entries[i];
+                await write((i ? "," : "") + JSON.stringify([key, await packValue(value)]) + "\n");
+                entries[i] = null;   /* done with it */
+            }
+
+            await write("]\n");
+        }
+
+        await write("}}\n");
+    }
+
+    /* Normal download: the text is handed to the browser in 32 MB
+       pieces, which it can keep on disk instead of in memory */
+    async function buildBackupBlob() {
+        const chunks = [];
+        let parts = [];
+        let size = 0;
+
+        await writeBackup(async (text) => {
+            parts.push(text);
+            size += text.length;
+
+            if (size >= BACKUP_CHUNK_CHARS) {
+                chunks.push(new Blob(parts));
+                parts = [];
+                size = 0;
+            }
+        });
+
+        chunks.push(new Blob(parts));
+
+        return new Blob(chunks, { type: "application/json" });
+    }
+
+    /* Chrome: written straight into the file the person picked, so there's
+       no size limit at all. The file only appears when it's complete;
+       if anything fails, nothing half-written is left behind. */
+    async function saveBackupToFile(handle) {
+        const writable = await handle.createWritable();
+        let parts = [];
+        let size = 0;
+
+        const flush = async () => {
+            if (parts.length) {
+                const text = parts.join("");
+                parts = [];
+                size = 0;
+                await writable.write(text);
+            }
+        };
+
+        try {
+            await writeBackup(async (text) => {
+                parts.push(text);
+                size += text.length;
+
+                if (size >= 4 * 1024 * 1024) {
+                    await flush();
+                }
+            });
+
+            await flush();
+            await writable.close();
+        } catch (error) {
+            try { await writable.abort(); } catch (e) { /* already closed */ }
+            throw error;
+        }
+
+        return (await handle.getFile()).size;
+    }
+
+    /* Line backups (v1.6.6+) end with "}}" on its own line; older ones
+       are a single line with no line breaks at all */
+    async function isLineBackup(file) {
+        const tail = await file.slice(Math.max(0, file.size - 16)).text();
+        return /\n\s*\}\}\s*$/.test(tail);
+    }
+
+    /* Reads a text file one line at a time, never the whole file at once */
+    async function forEachFileLine(file, onLine) {
+        const reader = file.stream().getReader();
+        const decoder = new TextDecoder();
+        let pieces = [];
+
+        for (;;) {
+            const { value, done } = await reader.read();
+            let text = decoder.decode(value || new Uint8Array(0), { stream: !done });
+            let nl;
+
+            while ((nl = text.indexOf("\n")) >= 0) {
+                pieces.push(text.slice(0, nl));
+                text = text.slice(nl + 1);
+                const line = pieces.join("");
+                pieces = [];
+                await onLine(line);
+            }
+
+            if (text) {
+                pieces.push(text);
+            }
+
+            if (done) {
+                break;
+            }
+        }
+
+        if (pieces.length) {
+            await onLine(pieces.join(""));
         }
     }
+
+    /* Goes through a line backup. Calls onEntry(databaseName, key, packedValue)
+       for every stored file and returns the header (settings, date, version).
+       Throws if the file is damaged or was cut short. */
+    async function walkLineBackup(file, onEntry) {
+        let header = null;
+        let dbName = null;
+        let ended = false;
+
+        await forEachFileLine(file, async (raw) => {
+            const line = raw.trim();
+
+            if (!line) {
+                return;
+            }
+
+            if (ended) {
+                throw new Error("Extra data after the end of the backup");
+            }
+
+            if (!header) {
+                if (!line.endsWith(BACKUP_DB_OPEN)) {
+                    throw new Error("Not a FlockMod Themer backup");
+                }
+
+                header = JSON.parse(line.slice(0, -BACKUP_DB_OPEN.length) + "}");
+                return;
+            }
+
+            const body = line.startsWith(",") ? line.slice(1) : line;
+
+            if (dbName === null) {
+                if (body === "}}") {
+                    ended = true;
+                    return;
+                }
+
+                if (!body.endsWith(":[")) {
+                    throw new Error("Damaged backup");
+                }
+
+                dbName = JSON.parse(body.slice(0, -2));
+
+                if (typeof dbName !== "string") {
+                    throw new Error("Damaged backup");
+                }
+
+                return;
+            }
+
+            if (body === "]") {
+                dbName = null;
+                return;
+            }
+
+            const entry = JSON.parse(body);
+
+            if (!Array.isArray(entry) || entry.length !== 2) {
+                throw new Error("Damaged backup");
+            }
+
+            await onEntry(dbName, entry[0], entry[1]);
+        });
+
+        if (!header || !ended) {
+            throw new Error("The backup file is incomplete");
+        }
+
+        return header;
+    }
+
+    /* Rough size of a packed file, to keep each database write small */
+    function packedBytes(value) {
+        if (Array.isArray(value)) {
+            return value.reduce((n, v) => n + packedBytes(v), 0);
+        }
+
+        if (value && typeof value === "object") {
+            if (typeof value.__fmBackup === "string") {
+                return (value.data || "").length * 0.75;
+            }
+
+            return Object.values(value).reduce((n, v) => n + packedBytes(v), 0);
+        }
+
+        return 64;
+    }
+
+    function idbRequest(db, storeName, mode, action) {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(storeName, mode);
+            const request = action(tx.objectStore(storeName));
+
+            tx.oncomplete = () => resolve(request && request.result);
+            tx.onerror = () => reject(tx.error);
+            tx.onabort = () => reject(tx.error);
+        });
+    }
+
+    /* Loads a backup without ever leaving your stuff half-replaced:
+       1. every file from the backup is written (your current files stay)
+       2. then your settings are swapped (all at once, put back if that fails)
+       3. only then are files the backup doesn't have removed
+       If anything fails in 1 or 2 (like a full disk), your settings and
+       all your files are still there. */
+    async function restoreBackupSafely(storage, walkEntries) {
+        const list = getBackupDatabases();
+        const byName = new Map(list.map((d) => [d.name, d]));
+        const inBackup = new Map(list.map((d) => [d.name, new Set()]));
+        const opened = new Map();
+
+        const getDB = async (name) => {
+            if (!opened.has(name)) {
+                opened.set(name, await byName.get(name).open());
+            }
+
+            return opened.get(name);
+        };
+
+        let batch = [];
+        let batchDB = null;
+        let batchBytes = 0;
+
+        const flush = async () => {
+            if (!batch.length) {
+                return;
+            }
+
+            const items = batch;
+            batch = [];
+            batchBytes = 0;
+
+            const db = await getDB(batchDB);
+            await idbRequest(db, byName.get(batchDB).store, "readwrite", (store) => {
+                items.forEach(([key, value]) => store.put(value, key));
+                return null;
+            });
+        };
+
+        try {
+            /* 1. Files from the backup */
+            await walkEntries(async (name, key, packed) => {
+                if (!byName.has(name) || key === null || key === undefined) {
+                    return;
+                }
+
+                if (name !== batchDB) {
+                    await flush();
+                    batchDB = name;
+                }
+
+                batch.push([key, unpackValue(packed)]);
+                inBackup.get(name).add(JSON.stringify(key));
+                batchBytes += packedBytes(packed);
+
+                if (batch.length >= 25 || batchBytes >= 16 * 1024 * 1024) {
+                    await flush();
+                }
+            });
+
+            await flush();
+
+            /* 2. Settings */
+            const before = {};
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+
+                if (key && key.startsWith("flockmod")) {
+                    before[key] = localStorage.getItem(key);
+                }
+            }
+
+            const swap = (from) => {
+                Object.keys(before).forEach((key) => localStorage.removeItem(key));
+                Object.entries(from).forEach(([key, value]) => {
+                    if (key.startsWith("flockmod") && typeof value === "string") {
+                        localStorage.setItem(key, value);
+                    }
+                });
+            };
+
+            try {
+                swap(storage || {});
+            } catch (error) {
+                for (let i = localStorage.length - 1; i >= 0; i--) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith("flockmod")) {
+                        localStorage.removeItem(key);
+                    }
+                }
+                Object.entries(before).forEach(([key, value]) => {
+                    try { localStorage.setItem(key, value); } catch (e) { /* keep going */ }
+                });
+                throw error;
+            }
+
+            /* 3. Files the backup doesn't have. If this step fails, the
+               only harm is a few leftover files the mod cleans up later. */
+            for (const d of list) {
+                try {
+                    const db = await getDB(d.name);
+                    const keys = await idbRequest(db, d.store, "readonly", (store) => store.getAllKeys());
+                    const stale = (keys || []).filter((key) => !inBackup.get(d.name).has(JSON.stringify(key)));
+
+                    if (stale.length) {
+                        await idbRequest(db, d.store, "readwrite", (store) => {
+                            stale.forEach((key) => store.delete(key));
+                            return null;
+                        });
+                    }
+                } catch (error) { /* leftovers are harmless */ }
+            }
+        } finally {
+            opened.forEach((db) => db.close());
+        }
+    }
+
+    /* A backup from before v1.6.6 (one line, already read into memory) */
+    function restoreBackup(backup) {
+        return restoreBackupSafely(backup.localStorage, async (onEntry) => {
+            for (const d of getBackupDatabases()) {
+                const entries = Array.isArray(backup.databases?.[d.name]) ? backup.databases[d.name] : [];
+
+                for (const entry of entries) {
+                    if (Array.isArray(entry) && entry.length === 2) {
+                        await onEntry(d.name, entry[0], entry[1]);
+                    }
+                }
+            }
+        });
+    }
+
+    /* Ask the browser to keep the mod's files (themes, images, sounds,
+       fonts) even when the computer is low on disk space. Chrome decides
+       quietly, with no popup. Skipped on Firefox, where this would show
+       a permission popup out of nowhere. Clearing FlockMod's site data
+       still removes everything, so backups are still worth making. */
+    function keepModStorage() {
+        try {
+            if (/Firefox\//.test(navigator.userAgent) || !navigator.storage || !navigator.storage.persist) {
+                return;
+            }
+
+            navigator.storage.persisted()
+                .then((kept) => kept || navigator.storage.persist())
+                .catch(() => {});
+        } catch (error) { /* not important enough to break anything */ }
+    }
+
+    keepModStorage();
 
     function setupBackup(dialog) {
         const saveButton = dialog.querySelector(".themeModBackupSave");
@@ -16582,24 +19947,49 @@ const safetyControls = setupSafetyPanel(dialog);
         };
 
         saveButton.addEventListener("click", async () => {
+            const date = new Date().toISOString().slice(0, 10);
+            const fileName = `FlockMod-Themer-backup-${date}.json`;
+            let handle = null;
+
+            /* Chrome: ask where to save first (it has to be right after the click) */
+            if (typeof window.showSaveFilePicker === "function") {
+                try {
+                    handle = await window.showSaveFilePicker({
+                        suggestedName: fileName,
+                        types: [{ description: "FlockMod Themer backup", accept: { "application/json": [".json"] } }]
+                    });
+                } catch (error) {
+                    if (error && error.name === "AbortError") {
+                        return;   /* they closed the save window */
+                    }
+
+                    handle = null;   /* not allowed here, so use a normal download */
+                }
+            }
+
             busy(true);
             show("Checking", '<i class="fas fa-spinner fa-spin"></i><span>Packing up your backup...</span>');
 
             try {
-                const backup = await buildBackup();
-                const blob = new Blob([JSON.stringify(backup)], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                const date = new Date().toISOString().slice(0, 10);
+                let bytes;
 
-                a.href = url;
-                a.download = `FlockMod-Themer-backup-${date}.json`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                setTimeout(() => URL.revokeObjectURL(url), 10000);
+                if (handle) {
+                    bytes = await saveBackupToFile(handle);
+                } else {
+                    const blob = await buildBackupBlob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
 
-                const mb = (blob.size / (1024 * 1024)).toFixed(blob.size > 1024 * 1024 ? 1 : 2);
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 60000);
+                    bytes = blob.size;
+                }
+
+                const mb = (bytes / (1024 * 1024)).toFixed(bytes > 1024 * 1024 ? 1 : 2);
                 show("Current", `<i class="fas fa-check-circle"></i><span>Backup saved (${mb} MB). Keep the file somewhere safe.</span>`);
             } catch (error) {
                 show("Error", '<i class="fas fa-exclamation-circle"></i><span>Couldn\'t make the backup. Try again, or free up some space if your disk is full.</span>');
@@ -16621,9 +20011,19 @@ const safetyControls = setupSafetyPanel(dialog);
             }
 
             let backup;
+            let lineBackup = false;
+
+            show("Checking", '<i class="fas fa-spinner fa-spin"></i><span>Checking your backup...</span>');
 
             try {
-                backup = JSON.parse(await file.text());
+                lineBackup = await isLineBackup(file);
+
+                if (lineBackup) {
+                    /* Read through it once (nothing is changed yet) to be sure it's whole */
+                    backup = await walkLineBackup(file, async () => {});
+                } else {
+                    backup = JSON.parse(await file.text());
+                }
             } catch (error) {
                 backup = null;
             }
@@ -16653,7 +20053,11 @@ const safetyControls = setupSafetyPanel(dialog);
                 show("Checking", '<i class="fas fa-spinner fa-spin"></i><span>Loading your backup...</span>');
 
                 try {
-                    await restoreBackup(backup);
+                    if (lineBackup) {
+                        await restoreBackupSafely(backup.localStorage, (onEntry) => walkLineBackup(file, onEntry));
+                    } else {
+                        await restoreBackup(backup);
+                    }
 
                     /* The open menu still holds the old values, so don't
                        let Apply write them back over the backup */
@@ -16675,7 +20079,10 @@ const safetyControls = setupSafetyPanel(dialog);
                         location.reload();
                     });
                 } catch (error) {
-                    show("Error", '<i class="fas fa-exclamation-circle"></i><span>Something went wrong while loading the backup. Refresh FlockMod and try again.</span>');
+                    const full = error && (error.name === "QuotaExceededError" || /quota/i.test(String(error.message)));
+                    show("Error", full
+                        ? '<i class="fas fa-exclamation-circle"></i><span>Not enough free space to load this backup. Your current settings and files were kept.</span>'
+                        : '<i class="fas fa-exclamation-circle"></i><span>Couldn\'t finish loading the backup. Your current settings were kept. Refresh FlockMod and try again.</span>');
                     busy(false);
                 }
             });
@@ -16888,7 +20295,7 @@ const safetyControls = setupSafetyPanel(dialog);
                 step("fa-check", "Apply", "Press Apply Changes to keep your colors. A pink note reminds you when something isn't applied yet.", () => dialog.querySelector(".themeModApplyButton"))
             ],
             themes: [
-                step("fa-share-alt", "Share a theme", "Copy code gives you a theme code for friends. Paste someone's code below and press Import.", row("Export theme")),
+                step("fa-share-alt", "Share a theme", "Share your look as a code, a card picture, or a pack. To use someone else's, paste or drop it under Get a theme.", row("Theme code")),
                 step("fa-bookmark", "My Themes", "Save your current look with a name, then load it again anytime. Your background images are saved with it.", row("Save current theme")),
                 step("fa-swatchbook", "Presets", "Ready-made looks to start from. Calm Night is extra gentle on sensitive eyes.", title("Presets")),
                 step("fa-undo", "Undo", "Loaded a theme by mistake? An Undo button shows up at the top right after.",
@@ -18364,6 +21771,47 @@ const safetyControls = setupSafetyPanel(dialog);
         });
     }
 
+    function setupMenuTextSize(dialog) {
+        const range = dialog.querySelector("#themeModMenuTextSize");
+        const label = dialog.querySelector("#themeModMenuTextSizeValue");
+
+        if (!range) {
+            return;
+        }
+
+        const reset = dialog.querySelector(".themeModMenuTextReset");
+        const show = (value) => {
+            range.value = String(value);
+            if (label) label.textContent = `${value}%`;
+            if (reset) reset.hidden = value === MENU_TEXT_DEFAULT;
+        };
+
+        show(readMenuTextSize());
+
+        let saveTimer = 0;
+        const update = () => {
+            const value = Math.min(MENU_TEXT_MAX, Math.max(MENU_TEXT_MIN, Math.round(Number(range.value) / 5) * 5 || MENU_TEXT_DEFAULT));
+            show(value);
+            applyMenuTextSize(value);
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+                if (value === MENU_TEXT_DEFAULT) {
+                    localStorage.removeItem(MENU_TEXT_LS);
+                } else {
+                    localStorage.setItem(MENU_TEXT_LS, String(value));
+                }
+            }, 150);
+        };
+
+        range.addEventListener("input", update);
+        range.addEventListener("change", update);
+        reset?.addEventListener("click", () => {
+            range.value = String(MENU_TEXT_DEFAULT);
+            update();
+            range.focus({ preventScroll: true });
+        });
+    }
+
     /* v1.6.2: the menu reopens on the page (and scroll spot) you left */
     const LAST_PLACE_LS = "flockmodMenuLastPlace";
 
@@ -18445,7 +21893,7 @@ const safetyControls = setupSafetyPanel(dialog);
         /* Typing a theme name or searching isn't a change to apply */
         const ignored = (target) => !target || !target.closest ||
             target.closest(".themeModSearch") ||
-            target.closest("#themeModAskClose, #themeModLiteMode") ||
+            target.closest("#themeModAskClose, #themeModLiteMode, #themeModMenuTextSize, .themeModMenuTextReset") ||
             target.closest('[data-theme-panel="themes"]');
 
         const mark = (event) => {

@@ -20,7 +20,7 @@
 
 .dialog[name="themeModMenu"] {
     font-family: Rubik, sans-serif !important;
-    font-size: .8rem !important;
+    font-size: calc(.8rem * var(--fm-menu-text, 1)) !important;
     letter-spacing: .03rem !important;
     color: #fff !important;
     background-color: #1d1e22 !important;
@@ -32,7 +32,7 @@
 
 .dialog[name="themeModMenu"] .dialogTitlebar {
     font-family: Rubik, sans-serif !important;
-    font-size: .8rem !important;
+    font-size: calc(.8rem * var(--fm-menu-text, 1)) !important;
     letter-spacing: .03rem !important;
     height: 37px !important;
     line-height: 37px !important;
@@ -54,7 +54,7 @@
 
 .dialog[name="themeModMenu"] .dialogTitle {
     line-height: 37px !important;
-    font-size: .9rem !important;
+    font-size: calc(.9rem * var(--fm-menu-text, 1)) !important;
     color: #fff !important;
     border: 0 !important;
     padding-bottom: .25rem !important;
@@ -145,7 +145,7 @@
     color: #b4b6ba;
     text-align: left;
     font-family: Rubik, sans-serif;
-    font-size: .8rem;
+    font-size: calc(.8rem * var(--fm-menu-text, 1));
     letter-spacing: .03rem;
     cursor: pointer;
 }
@@ -180,7 +180,7 @@
 }
 
 .themeModSectionTitle {
-    font-size: 1rem;
+    font-size: calc(1rem * var(--fm-menu-text, 1));
     font-weight: 500;
     color: #fff;
 }
@@ -192,7 +192,7 @@
     gap: 10px;
     margin-top: 14px;
     margin-bottom: 4px;
-    font-size: .98rem;
+    font-size: calc(.98rem * var(--fm-menu-text, 1));
     font-weight: 600;
     color: #c8cace;
     letter-spacing: .03rem;
@@ -223,7 +223,7 @@
     border-radius: 2px;
     background-color: #303136;
     color: #9b9da2;
-    font-size: .7rem;
+    font-size: calc(.7rem * var(--fm-menu-text, 1));
     cursor: pointer;
     outline: none;
     transition: background-color .15s ease, border-color .15s ease, color .15s ease;
@@ -325,13 +325,13 @@
 }
 
 .themeModSettingName {
-    font-size: .8rem;
+    font-size: calc(.8rem * var(--fm-menu-text, 1));
     color: #fff;
     margin-bottom: 4px;
 }
 
 .themeModSettingDescription {
-    font-size: .7rem;
+    font-size: calc(.7rem * var(--fm-menu-text, 1));
     color: #9b9da2;
 }
 
@@ -345,7 +345,7 @@
     background-color: #242529;
     color: #b4b6ba;
     font-family: Rubik, sans-serif;
-    font-size: .75rem;
+    font-size: calc(.75rem * var(--fm-menu-text, 1));
     letter-spacing: .03rem;
     cursor: pointer;
     outline: none;
@@ -396,7 +396,7 @@ html.flockmodFontActive:not(.flockmodCustomizationsDisabled) .optiontitle {
 .themeModRangeValue {
     width: 40px;
     flex-shrink: 0;
-    font-size: .7rem;
+    font-size: calc(.7rem * var(--fm-menu-text, 1));
     color: #b4b6ba;
     text-align: right;
     font-variant-numeric: tabular-nums;
@@ -535,7 +535,7 @@ html.flockmodFontActive:not(.flockmodCustomizationsDisabled) .optiontitle {
     color: #b4b6ba;
 
     font-family: var(--flockmod-custom-ui-font, Rubik, sans-serif);
-    font-size: .75rem;
+    font-size: calc(.75rem * var(--fm-menu-text, 1));
     letter-spacing: .03rem;
 
     cursor: pointer;
@@ -1205,7 +1205,7 @@ html.flockmodTopBarActivityActive:not(.flockmodCustomizationsDisabled) #headerTi
     background-color: #242529;
     color: #b4b6ba;
     font-family: inherit;
-    font-size: .7rem;
+    font-size: calc(.7rem * var(--fm-menu-text, 1));
     letter-spacing: .03rem;
     line-height: 20px;
     white-space: nowrap;
@@ -1254,7 +1254,7 @@ html.flockmodTopBarActivityActive:not(.flockmodCustomizationsDisabled) #headerTi
     border: 0;
     background: transparent;
     color: #b4b6ba;
-    font-size: .65rem;
+    font-size: calc(.65rem * var(--fm-menu-text, 1));
     cursor: pointer;
     outline: none;
 }
@@ -1272,7 +1272,7 @@ html.flockmodTopBarActivityActive:not(.flockmodCustomizationsDisabled) #headerTi
     background: transparent;
     color: #fff;
     font-family: inherit;
-    font-size: .7rem;
+    font-size: calc(.7rem * var(--fm-menu-text, 1));
     letter-spacing: .03rem;
     outline: none;
 }
@@ -1298,7 +1298,7 @@ html.flockmodTopBarActivityActive:not(.flockmodCustomizationsDisabled) #headerTi
     margin-top: 14px;
     padding-bottom: 4px;
     border-bottom: 1px solid #36383d;
-    font-size: .7rem;
+    font-size: calc(.7rem * var(--fm-menu-text, 1));
     text-transform: uppercase;
     letter-spacing: .08rem;
     color: #8f9298;
@@ -1308,7 +1308,7 @@ html.flockmodTopBarActivityActive:not(.flockmodCustomizationsDisabled) #headerTi
     display: none;
     padding: 24px 0;
     text-align: center;
-    font-size: .75rem;
+    font-size: calc(.75rem * var(--fm-menu-text, 1));
     color: #9b9da2;
 }
 
@@ -1325,7 +1325,7 @@ html.flockmodTopBarActivityActive:not(.flockmodCustomizationsDisabled) #headerTi
     background-color: #303136;
     color: #d4d6da;
     font-family: inherit;
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
     letter-spacing: .03rem;
     white-space: nowrap;
     cursor: pointer;
@@ -1356,7 +1356,7 @@ html.flockmodTopBarActivityActive:not(.flockmodCustomizationsDisabled) #headerTi
     background-color: #242529;
     color: #fff;
     font-family: inherit;
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
     letter-spacing: .02rem;
     outline: none;
 }
@@ -1374,7 +1374,7 @@ html.flockmodTopBarActivityActive:not(.flockmodCustomizationsDisabled) #headerTi
     margin: -4px 0 6px;
     resize: vertical;
     font-family: Consolas, "Courier New", monospace;
-    font-size: .68rem;
+    font-size: calc(.68rem * var(--fm-menu-text, 1));
     word-break: break-all;
 }
 
@@ -1402,7 +1402,7 @@ html.flockmodTopBarActivityActive:not(.flockmodCustomizationsDisabled) #headerTi
     border-left: 3px solid #6dd56d;
     border-radius: 2px;
     background-color: #242529;
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
     color: #d4d6da;
 }
 
@@ -1420,7 +1420,7 @@ html.flockmodTopBarActivityActive:not(.flockmodCustomizationsDisabled) #headerTi
     border: 1px solid rgba(244, 143, 177, .55);
     border-radius: 8px;
     background: rgba(244, 143, 177, .12);
-    font-size: .76rem;
+    font-size: calc(.76rem * var(--fm-menu-text, 1));
     color: #ffd1e0;
 }
 .dialog[name="themeModMenu"] .themeModUndoRow i { margin-right: 4px; color: #f48fb1; }
@@ -1445,7 +1445,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModUndoRow.fmUndoFresh {
     border-radius: 6px;
     background: linear-gradient(135deg, #f48fb1, #e0668f);
     color: #fff;
-    font-size: .7rem;
+    font-size: calc(.7rem * var(--fm-menu-text, 1));
     font-weight: 600;
     cursor: pointer;
 }
@@ -1476,7 +1476,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModUndoRow.fmUndoFresh {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: .78rem;
+    font-size: calc(.78rem * var(--fm-menu-text, 1));
     color: #fff;
 }
 
@@ -1494,12 +1494,63 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModUndoRow.fmUndoFresh {
 .dialog[name="themeModMenu"] .themeModSavedButtons .themeModButton {
     height: 24px;
     padding: 0 8px;
-    font-size: .66rem;
+    font-size: calc(.66rem * var(--fm-menu-text, 1));
 }
+
+/* v1.6.6: Share ▾ and ⋯ menus */
+.dialog[name="themeModMenu"] .themeModSavedMenuWrap { position: relative; }
+.dialog[name="themeModMenu"] .themeModSavedButtons .themeModSavedMenuButton i { margin-left: 3px; font-size: .8em; }
+.dialog[name="themeModMenu"] .themeModSavedButtons .themeModSavedMenuButton.isMore { width: 28px; padding: 0; }
+.dialog[name="themeModMenu"] .themeModSavedButtons .themeModSavedMenuButton.isMore i { margin: 0; font-size: .95em; }
+.dialog[name="themeModMenu"] .themeModSavedMenuButton[aria-expanded="true"] { border-color: #f48fb1; background-color: #3a3b40; color: #fff; }
+.dialog[name="themeModMenu"] .themeModSavedMenu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 250px;
+    padding: 5px;
+    border: 1px solid #45474d;
+    border-radius: 6px;
+    background-color: #26282c;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .45);
+}
+.dialog[name="themeModMenu"] .themeModSavedMenu[hidden] { display: none; }
+.dialog[name="themeModMenu"] .themeModSavedMenu.isUp { top: auto; bottom: calc(100% + 4px); }
+.dialog[name="themeModMenu"] .themeModSavedMenu.isMore { width: 160px; }
+.dialog[name="themeModMenu"] .themeModSavedMenuItem {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    width: 100%;
+    padding: 7px 8px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #e8e3e6;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.dialog[name="themeModMenu"] .themeModSavedMenuItem:hover,
+.dialog[name="themeModMenu"] .themeModSavedMenuItem:focus-visible { background-color: #34363b; outline: none; }
+.dialog[name="themeModMenu"] .themeModSavedMenuItem > i { width: 14px; margin-top: 2px; flex-shrink: 0; text-align: center; color: #f48fb1; font-size: calc(.75rem * var(--fm-menu-text, 1)); }
+.dialog[name="themeModMenu"] .themeModSavedMenuItem > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dialog[name="themeModMenu"] .themeModSavedMenuItem b { font-weight: 600; font-size: calc(.72rem * var(--fm-menu-text, 1)); }
+.dialog[name="themeModMenu"] .themeModSavedMenuItem small { font-size: calc(.64rem * var(--fm-menu-text, 1)); line-height: 1.35; color: #a7a9ae; white-space: normal; }
+.dialog[name="themeModMenu"] .themeModSavedMenu.isMore .themeModSavedMenuItem { align-items: center; }
+.dialog[name="themeModMenu"] .themeModSavedMenu.isMore .themeModSavedMenuItem > i { margin-top: 0; color: #b9bbbe; }
+.dialog[name="themeModMenu"] .themeModSavedMenuItem.isDanger,
+.dialog[name="themeModMenu"] .themeModSavedMenuItem.isDanger > i { color: #ff9aa8 !important; }
+.dialog[name="themeModMenu"] .themeModSavedMenuItem.isDanger[data-confirm="yes"] { background-color: rgba(255, 120, 140, .14); }
+.dialog[name="themeModMenu"] .themeModSavedMenuLine { height: 1px; margin: 2px 4px; background-color: #3a3c41; }
 
 .dialog[name="themeModMenu"] .themeModSavedEmpty {
     padding: 8px 0;
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
     color: #8f9298;
 }
 
@@ -1539,13 +1590,13 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModUndoRow.fmUndoFresh {
 }
 
 .dialog[name="themeModMenu"] .themeModPresetName {
-    font-size: .74rem;
+    font-size: calc(.74rem * var(--fm-menu-text, 1));
     color: #fff;
 }
 
 .dialog[name="themeModMenu"] .themeModPresetCard .themeModButton {
     height: 24px;
-    font-size: .68rem;
+    font-size: calc(.68rem * var(--fm-menu-text, 1));
 }
 
 /* =========================================================
@@ -1563,7 +1614,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModUndoRow.fmUndoFresh {
     background-color: transparent;
     color: #b4b6ba;
     font-family: inherit;
-    font-size: .75rem;
+    font-size: calc(.75rem * var(--fm-menu-text, 1));
     letter-spacing: .03rem;
     white-space: nowrap;
     cursor: pointer;
@@ -1584,7 +1635,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModUndoRow.fmUndoFresh {
 /* Pushes Reset / Apply to the right */
 .dialog[name="themeModMenu"] .themeModActionsNote {
     margin-right: auto;
-    font-size: .7rem;
+    font-size: calc(.7rem * var(--fm-menu-text, 1));
     color: #6dd56d;
     opacity: 0;
     transition: opacity .3s ease;
@@ -1638,7 +1689,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModUndoRow.fmUndoFresh {
     border-left: 3px solid #6dd56d;
     border-radius: 2px;
     background-color: #242529;
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
     color: #d4d6da;
 }
 
@@ -1669,13 +1720,13 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModUndoRow.fmUndoFresh {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: .9rem !important;
+    font-size: calc(.9rem * var(--fm-menu-text, 1)) !important;
     color: #fff;
 }
 
 .dialog[name="themeModMenu"] .themeModFontKind {
     flex-shrink: 0;
-    font-size: .66rem;
+    font-size: calc(.66rem * var(--fm-menu-text, 1));
     color: #8f9298;
     text-transform: uppercase;
     letter-spacing: .06rem;
@@ -1684,7 +1735,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModUndoRow.fmUndoFresh {
 .dialog[name="themeModMenu"] .themeModFontItem .themeModButton {
     height: 24px;
     padding: 0 8px;
-    font-size: .66rem;
+    font-size: calc(.66rem * var(--fm-menu-text, 1));
 }
 
 
@@ -1777,7 +1828,7 @@ html.flockmodBgChatSeeThroughActive:not(.flockmodCustomizationsDisabled) .dialog
     border: 1px solid #36383d;
     border-radius: 3px;
     background-color: #242529;
-    font-size: .68rem;
+    font-size: calc(.68rem * var(--fm-menu-text, 1));
     line-height: 1.45;
     color: #9b9da2;
 }
@@ -1816,7 +1867,7 @@ html.flockmodBgChatSeeThroughActive:not(.flockmodCustomizationsDisabled) .dialog
     border-left: 3px solid #6dd56d;
     border-radius: 2px;
     background-color: #242529;
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
     color: #d4d6da;
 }
 
@@ -2342,7 +2393,7 @@ html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .roomDescription 
 }
 
 .dialog[name="themeModMenu"] .themeModGradientRow .themeModSettingName i {
-    font-size: .65rem;
+    font-size: calc(.65rem * var(--fm-menu-text, 1));
     opacity: .6;
     margin-right: 4px;
 }
@@ -2817,7 +2868,7 @@ html.fmAnimSelect:not(.flockmodCustomizationsDisabled) .toolbar > ul.sidemenu .s
 }
 
 .dialog[name="themeModMenu"] .themeModSoundRow .themeModSettingName i {
-    font-size: .65rem;
+    font-size: calc(.65rem * var(--fm-menu-text, 1));
     opacity: .6;
     margin-right: 4px;
 }
@@ -2931,7 +2982,7 @@ html.fmAnimSelect:not(.flockmodCustomizationsDisabled) .toolbar > ul.sidemenu .s
     height: 26px;
     min-width: 28px;
     padding: 0 7px;
-    font-size: 12px;
+    font-size: calc(12px * var(--fm-menu-text, 1));
     line-height: 24px;
     flex-shrink: 0;
 }
@@ -3028,14 +3079,14 @@ html.flockmodPopupContentActive.flockmodGradPopupContentActive:not(.flockmodCust
     gap: 8px;
     padding: 16px;
     text-align: center;
-    font-size: 12px;
+    font-size: calc(12px * var(--fm-menu-text, 1));
     line-height: 1.5;
     opacity: .75;
     pointer-events: none;
 }
 
 .dialog[name="themeModReference"] .themeModRefEmptyNote {
-    font-size: 10px;
+    font-size: calc(10px * var(--fm-menu-text, 1));
     opacity: .7;
 }
 
@@ -3087,7 +3138,7 @@ html.flockmodPopupContentActive.flockmodGradPopupContentActive:not(.flockmodCust
     border-radius: 6px;
     background: rgba(0, 0, 0, .7);
     color: #fff;
-    font-size: 11px;
+    font-size: calc(11px * var(--fm-menu-text, 1));
     text-align: center;
     opacity: 0;
     pointer-events: none;
@@ -3418,7 +3469,7 @@ html.fmAnimPopups:not(.flockmodCustomizationsDisabled) .dialog > .fmDeco .fmdTai
     height: 24px;
     line-height: 24px;
     padding-left: 8px;
-    font-size: .7rem;
+    font-size: calc(.7rem * var(--fm-menu-text, 1));
     background: var(--fmdeco-main);
     border-radius: 4px 4px 0 0;
     color: #fff;
@@ -3710,7 +3761,7 @@ html.fmAnimPopups.fmBubOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmBub
     background: rgba(0, 0, 0, .18);
     border-radius: 8px;
     padding: 8px 6px;
-    font-size: .85rem;
+    font-size: calc(.85rem * var(--fm-menu-text, 1));
     color: #e8e8ea;
 }
 .dialog[name="themeModMenu"] .themeModBubblePreview .msgTime { opacity: .55; font-size: .75em; }
@@ -3798,7 +3849,7 @@ html.fmAnimSelect:not(.flockmodCustomizationsDisabled) #sidebar tr.fmTrollPulse 
     border-radius: 6px;
     background-color: #1d1e22;
     color: #fff;
-    font-size: 12px;
+    font-size: calc(12px * var(--fm-menu-text, 1));
     box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
 }
 
@@ -3821,7 +3872,7 @@ html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .fmTrollToast {
 
 .fmTrollToastWhy {
     margin-top: 3px;
-    font-size: 11px;
+    font-size: calc(11px * var(--fm-menu-text, 1));
     opacity: .75;
 }
 
@@ -3838,7 +3889,7 @@ html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .fmTrollToast {
     border-radius: 4px;
     background: transparent;
     color: inherit;
-    font-size: 11px;
+    font-size: calc(11px * var(--fm-menu-text, 1));
     opacity: .85;
     cursor: pointer;
 }
@@ -3931,8 +3982,8 @@ html.fmAnimMenu .fmTour {
     to   { opacity: 1; translate: 0 0; scale: 1; }
 }
 
-.fmTourTitle { font-weight: 700; font-size: .95rem; color: #b83d6c; }
-.fmTourText  { font-size: .8rem; line-height: 1.45; color: #5c3444; }
+.fmTourTitle { font-weight: 700; font-size: calc(.95rem * var(--fm-menu-text, 1)); color: #b83d6c; }
+.fmTourText  { font-size: calc(.8rem * var(--fm-menu-text, 1)); line-height: 1.45; color: #5c3444; }
 
 /* ---- Welcome prompt (docked on top of the menu) ---- */
 .fmTourPrompt {
@@ -3978,7 +4029,7 @@ html.fmAnimMenu .fmTourFlower {
     padding: 0 14px;
     border-radius: 15px;
     font: inherit;
-    font-size: .76rem;
+    font-size: calc(.76rem * var(--fm-menu-text, 1));
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
@@ -4017,13 +4068,13 @@ html.fmAnimMenu .fmTourFlower {
 .fmTourIcon {
     display: inline-flex; align-items: center; justify-content: center;
     width: 24px; height: 24px; border-radius: 50%;
-    color: #fff; font-size: .7rem;
+    color: #fff; font-size: calc(.7rem * var(--fm-menu-text, 1));
     background: linear-gradient(135deg, #f48fb1, #e0668f);
 }
 
 .fmTourSkip {
     border: none; background: none; padding: 0;
-    color: #c1668a; font: inherit; font-size: .7rem;
+    color: #c1668a; font: inherit; font-size: calc(.7rem * var(--fm-menu-text, 1));
     text-decoration: underline; cursor: pointer;
 }
 
@@ -4101,7 +4152,7 @@ html.fmAnimMenu .fmTourRing.fmTourPulse { animation: fmTourPulse calc(1.1s * var
     margin-left: 6px;
     padding: 1px 6px;
     border-radius: 8px;
-    font-size: .65rem;
+    font-size: calc(.65rem * var(--fm-menu-text, 1));
     vertical-align: middle;
     color: #ffd1e0;
     background-color: rgba(244, 143, 177, .18);
@@ -4119,7 +4170,7 @@ html.fmAnimMenu .fmTourRing.fmTourPulse { animation: fmTourPulse calc(1.1s * var
     margin: 0 0 12px;
     padding: 8px 12px;
     border-radius: 4px;
-    font-size: .75rem;
+    font-size: calc(.75rem * var(--fm-menu-text, 1));
     line-height: 1.4;
     border: 1px solid #4f5156;
     background-color: #26272b;
@@ -4253,7 +4304,7 @@ html.fmAnimMenu .fmTourRing.fmTourPulse { animation: fmTourPulse calc(1.1s * var
 .dialog[name="themeModMenu"] .themeModThanks p {
     position: relative;
     margin: 0;
-    font-size: .78rem;
+    font-size: calc(.78rem * var(--fm-menu-text, 1));
     line-height: 1.55;
     color: #e6d3da;
 }
@@ -4361,7 +4412,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .fmWhatsNew {
 
 .dialog[name="themeModMenu"] .fmWhatsNewTitle {
     flex: 1;
-    font-size: 1rem;
+    font-size: calc(1rem * var(--fm-menu-text, 1));
     font-weight: 700;
     color: #b83d6c;
 }
@@ -4370,7 +4421,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .fmWhatsNew {
     border: none;
     background: none;
     padding: 0 4px;
-    font-size: 1.2rem;
+    font-size: calc(1.2rem * var(--fm-menu-text, 1));
     line-height: 1;
     color: #c1668a;
     cursor: pointer;
@@ -4391,7 +4442,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .fmWhatsNew {
     margin: 4px 0 4px;
     padding: 1px 8px;
     border-radius: 8px;
-    font-size: .68rem;
+    font-size: calc(.68rem * var(--fm-menu-text, 1));
     font-weight: 700;
     color: #fff;
     background: linear-gradient(135deg, #f48fb1, #e0668f);
@@ -4404,7 +4455,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .fmWhatsNew {
 
 .dialog[name="themeModMenu"] .fmWhatsNewBody li {
     margin: 3px 0;
-    font-size: .78rem;
+    font-size: calc(.78rem * var(--fm-menu-text, 1));
     line-height: 1.45;
     color: #5c3444;
 }
@@ -4452,7 +4503,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .fmWhatsNew {
     border-radius: 50%;
     background: transparent;
     color: #b4b6ba;
-    font-size: .8rem;
+    font-size: calc(.8rem * var(--fm-menu-text, 1));
     cursor: pointer;
     outline: none;
     transition: color .15s ease, text-shadow .15s ease;
@@ -4521,7 +4572,7 @@ html.fmDecoFrameBorderOn .dialog[name="themeModMenu"] .themeModDecoPreview {
     background: #1e1f22;
     color: #b4b6ba;
     font-family: var(--flockmod-custom-ui-font, Rubik, sans-serif);
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
     cursor: pointer;
     transition: background-color .15s ease, color .15s ease;
 }
@@ -4544,7 +4595,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
 
 .dialog[name="themeModMenu"] .themeModSubsectionTitle {
     justify-content: flex-start;
-    font-size: 1.08rem;
+    font-size: calc(1.08rem * var(--fm-menu-text, 1));
     font-weight: 600;
     color: #fff;
     letter-spacing: .02rem;
@@ -4598,7 +4649,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
 .dialog[name="themeModMenu"] .fmCardsPanel .themeModSubsectionLabel[data-fm-count]::after {
     content: attr(data-fm-count);
     margin-left: 10px;
-    font-size: .68rem;
+    font-size: calc(.68rem * var(--fm-menu-text, 1));
     font-weight: 400;
     color: #9a9ca1;
     letter-spacing: 0;
@@ -4613,7 +4664,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
     border: 0;
     background: transparent;
     color: #9b9da2;
-    font-size: .7rem;
+    font-size: calc(.7rem * var(--fm-menu-text, 1));
     cursor: pointer;
     transition: color .15s ease, transform .2s ease;
 }
@@ -4625,7 +4676,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
 .dialog[name="themeModMenu"] .fmCardsPanel .fmGroupLabel {
     padding-top: 12px;
     padding-bottom: 0;
-    font-size: .62rem;
+    font-size: calc(.62rem * var(--fm-menu-text, 1));
     letter-spacing: .09rem;
     text-transform: uppercase;
     color: #f7a1c0;
@@ -4667,7 +4718,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
     background: transparent;
     color: #9a9ca1;
     font-family: inherit;
-    font-size: .65rem;
+    font-size: calc(.65rem * var(--fm-menu-text, 1));
     cursor: pointer;
     transition: background-color .15s ease, border-color .15s ease, color .15s ease, opacity .15s ease;
 }
@@ -4682,7 +4733,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
 }
 .dialog[name="themeModMenu"] .fmCardsPanel .themeModGradientRow .themeModSettingName {
     margin: 0;
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
     color: #c9cacd;
 }
 .dialog[name="themeModMenu"] .fmCardsPanel .themeModGradientRow .themeModSettingDescription,
@@ -4697,7 +4748,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
     align-items: center;
     gap: 6px;
     margin-right: 4px;
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
     color: #ffd1e0;
     white-space: nowrap;
 }
@@ -4743,7 +4794,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
     border-radius: 50%;
     background: transparent;
     color: #b4b6ba;
-    font-size: .75rem;
+    font-size: calc(.75rem * var(--fm-menu-text, 1));
     cursor: pointer;
     outline: none;
     transition: color .15s ease, text-shadow .15s ease;
@@ -4781,7 +4832,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
     background: #2f3136;
     color: #c9cdd1;
     font: inherit;
-    font-size: .68rem;
+    font-size: calc(.68rem * var(--fm-menu-text, 1));
     cursor: pointer;
 }
 .dialog[name="themeModMenu"] .fmStyleChip span { opacity: .6; }
@@ -4829,7 +4880,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: .64rem;
+    font-size: calc(.64rem * var(--fm-menu-text, 1));
     color: #c9cdd1;
 }
 .dialog[name="themeModMenu"] .fmStyleOn .fmStyleName { color: #fff; }
@@ -4840,7 +4891,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
     position: absolute;
     top: 3px;
     right: 4px;
-    font-size: .5rem;
+    font-size: calc(.5rem * var(--fm-menu-text, 1));
     color: #f48fb1;
     opacity: .8;
 }
@@ -4886,7 +4937,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
     justify-content: center;
     padding: 0;
     background: transparent;
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
 }
 .dialog[name="themeModMenu"] .fmThumbChat .chatBlock.messageBlock { padding: 0 !important; }
 .dialog[name="themeModMenu"] .fmThumbChat .chatBlock.messageBlock .msgLine { margin: 0; padding: 0; }
@@ -4924,7 +4975,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
     border-radius: 999px;
     background: rgba(244, 143, 177, .16);
     color: #f6b6cf;
-    font-size: .62rem;
+    font-size: calc(.62rem * var(--fm-menu-text, 1));
     font-weight: 500;
     letter-spacing: 0;
     text-transform: none;
@@ -5025,7 +5076,7 @@ html.flockmodCanvasDimActive:not(.flockmodCustomizationsDisabled) .boardContaine
     border-radius: 8px;
     background: rgba(244, 143, 177, .12);
     color: #f6c6d8;
-    font-size: .68rem;
+    font-size: calc(.68rem * var(--fm-menu-text, 1));
     line-height: 1.45;
 }
 .dialog[name="themeModMenu"] .fmCanvasNote i { color: #f48fb1; margin-top: 2px; }
@@ -5611,7 +5662,7 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="maid"] .fmCnStack
     z-index: 70;
 }
 .dialog[name="themeModMenu"] .fmCloseAskText {
-    font-size: .8rem;
+    font-size: calc(.8rem * var(--fm-menu-text, 1));
     line-height: 1.45;
     color: #5c3444;
 }
@@ -5620,7 +5671,7 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="maid"] .fmCnStack
     align-items: center;
     gap: 6px;
     margin: 8px 0 0;
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
     font-weight: 400;
     color: #8a5468;
     cursor: pointer;
@@ -5634,7 +5685,7 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="maid"] .fmCnStack
     margin-top: 10px;
 }
 
-.dialog[name="themeModMenu"] .fmCloseAskTip { margin-top: 6px; font-size: .72rem; color: #8a5468; }
+.dialog[name="themeModMenu"] .fmCloseAskTip { margin-top: 6px; font-size: calc(.72rem * var(--fm-menu-text, 1)); color: #8a5468; }
 .dialog[name="themeModMenu"] .themeModResetButton i { margin-right: 4px; font-size: .85em; }
 .dialog[name="themeModMenu"] .themeModActionsNote:not(.visible) { pointer-events: none; }
 
@@ -5769,7 +5820,7 @@ html.flockmodBgCanvasActive:not(.flockmodCustomizationsDisabled) #DrawingArea {
     padding: 3px 7px;
     background: transparent;
     color: #eee;
-    font-size: 12px;
+    font-size: calc(12px * var(--fm-menu-text, 1));
     line-height: 1;
     cursor: pointer;
 }
@@ -5814,7 +5865,7 @@ html.fmHlOn:not(.flockmodCustomizationsDisabled) .offlineMessage.fmHl {
     align-items: center;
     gap: 6px;
     margin: -2px 0 8px;
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
     color: #b9bbbe !important;   /* grey, never your themed label color */
     cursor: pointer;
 }
@@ -5847,13 +5898,13 @@ html.fmClockOn:not(.flockmodCustomizationsDisabled) .fmClockItem { display: list
     background: linear-gradient(160deg, #fff4f8 0%, #ffe1ec 55%, #fcd0e0 100%);
     box-shadow: 0 8px 24px rgba(0, 0, 0, .4), 0 0 14px rgba(244, 143, 177, .4);
     font-family: Rubik, sans-serif;
-    font-size: 13px;
+    font-size: calc(13px * var(--fm-menu-text, 1));
 }
 .fmTimeCard .fmTimeTitle { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 700; color: #b83d6c; }
 .fmTimeCard .fmTourFlower, .fmBreakToast .fmTourFlower { width: 20px; height: 20px; flex: none; }
 .fmTimeCard .fmTimeRow { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed rgba(184, 61, 108, .2); }
 .fmTimeCard .fmTimeRow b { font-variant-numeric: tabular-nums; color: #8a2f55; }
-.fmTimeCard .fmTimeNote { margin-top: 8px; font-size: 11px; color: #8a5468; line-height: 1.4; }
+.fmTimeCard .fmTimeNote { margin-top: 8px; font-size: calc(11px * var(--fm-menu-text, 1)); color: #8a5468; line-height: 1.4; }
 .fmBreakToast {
     position: fixed !important;
     right: 20px;
@@ -5870,7 +5921,7 @@ html.fmClockOn:not(.flockmodCustomizationsDisabled) .fmClockItem { display: list
     background: linear-gradient(160deg, #fff4f8 0%, #ffe1ec 55%, #fcd0e0 100%);
     box-shadow: 0 8px 24px rgba(0, 0, 0, .4), 0 0 14px rgba(244, 143, 177, .4);
     font-family: Rubik, sans-serif;
-    font-size: 12.5px;
+    font-size: calc(12.5px * var(--fm-menu-text, 1));
     line-height: 1.45;
     flex-wrap: wrap;
 }
@@ -5882,7 +5933,7 @@ html.fmClockOn:not(.flockmodCustomizationsDisabled) .fmClockItem { display: list
     border-radius: 6px;
     padding: 3px 10px;
     font: inherit;
-    font-size: 12px;
+    font-size: calc(12px * var(--fm-menu-text, 1));
     cursor: pointer;
     background: #fff;
     color: #b83d6c;
@@ -6392,3 +6443,380 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .fmNewDot {
 .fmCnStack .fmCnScrollRow button:hover:not(:disabled) { background: color-mix(in srgb, var(--fmcn-to) 30%, var(--fmcn-bg)); }
 .fmCnStack .fmCnScrollRow button:disabled { opacity: .4; cursor: default; }
 .fmCnStack .fmCnScrollRow i { margin-right: 3px; font-size: .85em; }
+
+
+/* =========================================================
+   THEME CARDS (v1.6.6, Themes tab)
+   The little panel that shows a card, plus the drop highlight
+   on the code box. Uses the menu's own grey + sakura pink.
+   ========================================================= */
+.dialog[name="themeModMenu"] .themeModCardPanel {
+    margin: 2px 0 12px;
+    padding: 10px;
+    border: 1px solid #36383d;
+    border-radius: 4px;
+    background-color: #242529;
+}
+
+.dialog[name="themeModMenu"] .themeModCardHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.dialog[name="themeModMenu"] .themeModCardTitle {
+    font-size: calc(.8rem * var(--fm-menu-text, 1));
+    font-weight: 600;
+    color: #f48fb1 !important;
+}
+
+.dialog[name="themeModMenu"] .themeModCardTitle i { margin-right: 4px; }
+
+.dialog[name="themeModMenu"] .themeModCardClose {
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: #b9bbbe;
+    cursor: pointer;
+}
+
+.dialog[name="themeModMenu"] .themeModCardClose:hover { background-color: #36383d; color: #fff; }
+
+.dialog[name="themeModMenu"] .themeModCardPreview {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: #1b1c1f;
+}
+
+.dialog[name="themeModMenu"] .themeModCardImage {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.dialog[name="themeModMenu"] .themeModCardImage:not([src]) { visibility: hidden; }
+
+.dialog[name="themeModMenu"] .themeModCardBusy {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    text-align: center;
+    background-color: rgba(27, 28, 31, .72);
+    color: #ffd2e2;
+    font-size: calc(.75rem * var(--fm-menu-text, 1));
+}
+
+.dialog[name="themeModMenu"] .themeModCardFields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 10px 0 8px;
+}
+
+.dialog[name="themeModMenu"] .themeModCardFields label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: calc(.68rem * var(--fm-menu-text, 1));
+    color: #b9bbbe !important;
+}
+
+.dialog[name="themeModMenu"] .themeModCardButtons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.dialog[name="themeModMenu"] .themeModCardButtons .themeModButton { flex: 1 1 auto; }
+
+.dialog[name="themeModMenu"] .themeModCardSave {
+    background-color: #f48fb1 !important;
+    border-color: #f48fb1 !important;
+    color: #3a1020 !important;
+    font-weight: 600;
+}
+
+.dialog[name="themeModMenu"] .themeModCardSave:hover:not(:disabled) {
+    background-color: #f7a1c0 !important;
+    box-shadow: 0 0 8px rgba(244, 143, 177, .45);
+}
+
+.dialog[name="themeModMenu"] .themeModCardButtons .themeModButton:disabled { opacity: .5; cursor: default; }
+
+.dialog[name="themeModMenu"] .themeModCardNote {
+    margin-top: 8px;
+    font-size: calc(.66rem * var(--fm-menu-text, 1));
+    line-height: 1.4;
+    color: #b9bbbe !important;
+}
+
+.dialog[name="themeModMenu"] .themeModCardNote:empty { display: none; }
+
+.dialog[name="themeModMenu"] .themeModCodeBox.themeModCardDrop {
+    border-color: #f48fb1;
+    box-shadow: 0 0 0 2px rgba(244, 143, 177, .35);
+}
+
+.dialog[name="themeModMenu"] .themeModCardPick i { margin-right: 3px; }
+
+
+/* =========================================================
+   THEME PACKS (v1.6.6, Themes tab)
+   Same look as the theme card panel.
+   ========================================================= */
+.dialog[name="themeModMenu"] .themeModPackPanel {
+    margin: 2px 0 12px;
+    padding: 10px;
+    border: 1px solid #36383d;
+    border-radius: 4px;
+    background-color: #242529;
+}
+
+.dialog[name="themeModMenu"] .themeModPackBusy,
+.dialog[name="themeModMenu"] .themeModPackText {
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
+    line-height: 1.45;
+    color: #b9bbbe !important;
+    margin-bottom: 6px;
+}
+
+.dialog[name="themeModMenu"] .themeModPackBusy { padding: 14px 0; text-align: center; color: #ffd2e2 !important; }
+
+.dialog[name="themeModMenu"] .themeModPackLabel {
+    margin: 10px 0 4px;
+    font-size: calc(.62rem * var(--fm-menu-text, 1));
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #9a9ca1 !important;
+}
+
+.dialog[name="themeModMenu"] .themeModPackRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 2px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    background-color: #2b2d31;
+    font-size: calc(.74rem * var(--fm-menu-text, 1));
+    color: #e8e3e6 !important;
+    cursor: pointer;
+}
+
+.dialog[name="themeModMenu"] .themeModPackRow.isLocked { cursor: default; }
+.dialog[name="themeModMenu"] .themeModPackRow input { margin: 0; flex-shrink: 0; accent-color: #e0668f; }
+.dialog[name="themeModMenu"] .themeModPackName { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; gap: 0 4px; }
+.dialog[name="themeModMenu"] .themeModPackDetail { color: #8f9196 !important; font-size: calc(.68rem * var(--fm-menu-text, 1)); }
+.dialog[name="themeModMenu"] .themeModPackSub { flex-basis: 100%; font-size: calc(.64rem * var(--fm-menu-text, 1)); color: #9a9ca1 !important; }
+.dialog[name="themeModMenu"] .themeModPackNote { flex-shrink: 0; font-size: calc(.64rem * var(--fm-menu-text, 1)); color: #9a9ca1 !important; }
+.dialog[name="themeModMenu"] .themeModPackNote.isKeep { color: #f5b25c !important; }
+.dialog[name="themeModMenu"] .themeModPackIcon { flex-shrink: 0; font-size: calc(.75rem * var(--fm-menu-text, 1)); color: #b9bbbe; }
+
+.dialog[name="themeModMenu"] .themeModPackThumb {
+    flex-shrink: 0;
+    width: 34px;
+    height: 22px;
+    border-radius: 3px;
+    background-size: cover;
+    background-position: center;
+}
+
+.dialog[name="themeModMenu"] .themeModPackQuality { margin-top: 10px; align-items: flex-start; }
+.dialog[name="themeModMenu"] .themeModPackQuality input { margin-top: 2px; }
+
+.dialog[name="themeModMenu"] .themeModPackBy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 8px 0 0;
+    font-size: calc(.68rem * var(--fm-menu-text, 1));
+    color: #b9bbbe !important;
+}
+
+.dialog[name="themeModMenu"] .themeModPackSize { margin: 10px 0 8px; }
+
+.dialog[name="themeModMenu"] .themeModPackSizeLine {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
+    font-weight: 600;
+    color: #e8e3e6 !important;
+}
+
+.dialog[name="themeModMenu"] .themeModPackFit[data-level="ok"] { color: #7fd6a2 !important; }
+.dialog[name="themeModMenu"] .themeModPackFit[data-level="big"] { color: #f5b25c !important; }
+.dialog[name="themeModMenu"] .themeModPackFit[data-level="over"] { color: #ff7a8a !important; }
+
+.dialog[name="themeModMenu"] .themeModPackBar {
+    height: 7px;
+    margin: 5px 0 4px;
+    border-radius: 4px;
+    background-color: #3a3c42;
+    overflow: hidden;
+}
+
+.dialog[name="themeModMenu"] .themeModPackBarFill { height: 100%; width: 0; border-radius: 4px; background-color: #7fd6a2; }
+.dialog[name="themeModMenu"] .themeModPackBarFill[data-level="big"] { background-color: #f5b25c; }
+.dialog[name="themeModMenu"] .themeModPackBarFill[data-level="over"] { background-color: #ff7a8a; }
+
+.dialog[name="themeModMenu"] .themeModPackHint { min-height: 1em; font-size: calc(.64rem * var(--fm-menu-text, 1)); color: #9a9ca1 !important; }
+.dialog[name="themeModMenu"] .themeModPackCenter { margin-top: 6px; text-align: center; }
+
+.dialog[name="themeModMenu"] .themeModPackSafe,
+.dialog[name="themeModMenu"] .themeModPackWarn {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin: 8px 0;
+    padding: 7px 9px;
+    border-radius: 4px;
+    font-size: calc(.66rem * var(--fm-menu-text, 1));
+    line-height: 1.45;
+}
+
+.dialog[name="themeModMenu"] .themeModPackSafe { background-color: #2b2d31; color: #b9bbbe !important; }
+.dialog[name="themeModMenu"] .themeModPackSafe i { color: #f48fb1; margin-top: 2px; }
+.dialog[name="themeModMenu"] .themeModPackWarn { background-color: #3a2f22; color: #ffd9a6 !important; }
+.dialog[name="themeModMenu"] .themeModPackWarn i { margin-top: 2px; }
+
+.dialog[name="themeModMenu"] .themeModPackSummary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 5px;
+    background-color: #2b2d31;
+}
+
+.dialog[name="themeModMenu"] .themeModPackSummaryArt {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 7px;
+    background-size: cover;
+    background-position: center;
+}
+
+.dialog[name="themeModMenu"] .themeModPackSummaryText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dialog[name="themeModMenu"] .themeModPackSummaryName { font-size: calc(.82rem * var(--fm-menu-text, 1)); font-weight: 600; color: #fff !important; }
+.dialog[name="themeModMenu"] .themeModPackChecked { font-size: calc(.66rem * var(--fm-menu-text, 1)); color: #7fd6a2 !important; }
+
+.dialog[name="themeModMenu"] .themeModPackPrimary {
+    background-color: #f48fb1 !important;
+    border-color: #f48fb1 !important;
+    color: #3a1020 !important;
+    font-weight: 600;
+}
+
+.dialog[name="themeModMenu"] .themeModPackPrimary:hover:not(:disabled) {
+    background-color: #f7a1c0 !important;
+    box-shadow: 0 0 8px rgba(244, 143, 177, .45);
+}
+
+/* v1.6.6: Menu text size reset (General has no section resets) */
+.dialog[name="themeModMenu"] .themeModMenuTextControl { gap: 8px; }
+.dialog[name="themeModMenu"] .themeModMenuTextControl .themeModRange { width: 124px; }
+.dialog[name="themeModMenu"] .themeModMenuTextControl .themeModRangeValue { width: 44px; }
+.dialog[name="themeModMenu"] .themeModMenuTextReset {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    margin-left: 2px;
+    padding: 0;
+    border: 1px solid #4f5156;
+    border-radius: 50%;
+    background-color: #303136;
+    color: #c8cace;
+    font-size: 10px;
+    cursor: pointer;
+}
+.dialog[name="themeModMenu"] .themeModMenuTextReset:hover { border-color: #f48fb1; color: #fff; }
+.dialog[name="themeModMenu"] .themeModMenuTextReset[hidden] { display: none; }
+
+/* v1.6.6: FlockMod's color picker on reference images */
+.dialog[name="themeModReference"] .themeModRefStage.themeModRefPicking,
+.dialog[name="themeModReference"] .themeModRefStage.themeModRefPicking .themeModRefItem {
+    cursor: crosshair;
+}
+
+.dialog[name="themeModReference"] .themeModRefPickSwatch {
+    position: absolute;
+    left: -22px;
+    top: -58px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .45), 0 3px 10px rgba(0, 0, 0, .35);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .15s ease;
+    z-index: 5;
+}
+
+.dialog[name="themeModReference"] .themeModRefPickSwatch.visible {
+    opacity: 1;
+}
+
+/* FlockMod's color window stays out of sight while a picked color is passed to it */
+/* (everything inside too: FlockMod's scroll areas force their content visible) */
+html.themeModQuietColorDialog .dialogHolder:has(> .dialog[name="color"]),
+html.themeModQuietColorDialog .dialogHolder:has(> .dialog[name="color"]) *,
+html.themeModQuietColorDialog .dialog[name="color"],
+html.themeModQuietColorDialog .dialog[name="color"] * {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    transition: none !important;
+    animation: none !important;
+    pointer-events: none !important;
+}
+
+/* v1.6.6: Import gets a sakura accent (outline), so it stands out
+   without competing with the solid pink Apply button */
+.dialog[name="themeModMenu"] .themeModImportButton {
+    border-color: #f48fb1 !important;
+    color: #f7a1c0 !important;
+    background: rgba(244, 143, 177, .1) !important;
+    font-weight: 600 !important;
+}
+.dialog[name="themeModMenu"] .themeModImportButton:hover {
+    background: #f48fb1 !important;
+    border-color: #f48fb1 !important;
+    color: #3a1020 !important;
+    box-shadow: 0 0 8px rgba(244, 143, 177, .45);
+}
+.dialog[name="themeModMenu"] .themeModImportButton:active {
+    background: #e0709a !important;
+    border-color: #e0709a !important;
+    color: #3a1020 !important;
+}
+
+/* Save (My Themes) gets the same sakura accent as Import */
+.dialog[name="themeModMenu"] .themeModSaveButton {
+    border-color: #f48fb1 !important;
+    color: #f7a1c0 !important;
+    background: rgba(244, 143, 177, .1) !important;
+    font-weight: 600 !important;
+}
+.dialog[name="themeModMenu"] .themeModSaveButton:hover {
+    background: #f48fb1 !important;
+    border-color: #f48fb1 !important;
+    color: #3a1020 !important;
+    box-shadow: 0 0 8px rgba(244, 143, 177, .45);
+}
+.dialog[name="themeModMenu"] .themeModSaveButton:active {
+    background: #e0709a !important;
+    border-color: #e0709a !important;
+    color: #3a1020 !important;
+}
