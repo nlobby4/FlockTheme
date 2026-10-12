@@ -16,7 +16,7 @@ A browser extension made to mod flockmod and make it customizable
 7. Open Chrome and type chrome://extensions/ in the search
 8. Make sure "Developer Mode" is turned on in your browser's extension tab
 9. Click on "Load unpacked" on the top left corner
-10. Choose the extracted file (The folder titled "Flockmod Themer and Mod" found)
+10. Choose the extracted file (The folder titled "Flockmod Themer and Mod")
 11. Make sure the extension is turned on
 12. Reload Flockmod and enjoy!
 ---
