@@ -1059,6 +1059,7 @@ html.flockmodPopupFieldActive:not(.flockmodCustomizationsDisabled) .dialog:not([
 html.flockmodPopupFieldActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .darkInput,
 html.flockmodPopupFieldActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmList > select,
 html.flockmodPopupFieldActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSlider,
+html.flockmodPopupFieldActive:not(.flockmodCustomizationsDisabled) .context-menu-list .fmSwitch,
 html.flockmodPopupFieldActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSwitch {
     background-color: var(--flockmod-custom-popup-field, #43444a) !important;
     border-color: var(--flockmod-custom-popup-field, #43444a) !important;
@@ -1146,6 +1147,7 @@ html.flockmodSelectedColorActive:not(.flockmodCustomizationsDisabled) .dialog:no
 
 /* Accent 1: slider fills + switch on-states inside popups */
 html.flockmodSidebarAccentActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSlider > .fmSelectedArea,
+html.flockmodSidebarAccentActive:not(.flockmodCustomizationsDisabled) .context-menu-list .fmSwitch .fmOn,
 html.flockmodSidebarAccentActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSwitch .fmOn {
     background-color: var(--flockmod-custom-sidebar-accent, #378de4) !important;
 }
@@ -2144,11 +2146,14 @@ html.flockmodPopupBorderActive:not(.flockmodCustomizationsDisabled) .dialog:not(
    "general audience"). ON side already follows Accent 1.
    ========================================================= */
 
+html.flockmodPopupFieldActive:not(.flockmodCustomizationsDisabled) .context-menu-list .fmSwitch .fmOff,
 html.flockmodPopupFieldActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSwitch .fmOff {
     background-color: var(--flockmod-custom-popup-field, #43444a) !important;
 }
 
+html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .fmSwitch .fmOff,
 html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSwitch .fmOff,
+html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .fmSwitch .fmOff span,
 html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSwitch .fmOff span {
     color: var(--flockmod-custom-text2, #fff) !important;
 }
@@ -2179,7 +2184,9 @@ html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .dialog:not([name
 html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .form-control:not(.input-group > *),
 html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmList > select,
 html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSlider,
+html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .context-menu-list .fmSwitch,
 html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSwitch,
+html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .context-menu-list .fmSwitch > .fmThumb,
 html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmThumb,
 html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSelectedArea,
 html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmCheckbox > .simpleBox,
@@ -2215,6 +2222,7 @@ html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .dialog:not([name
    ========================================================= */
 
 html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) #sidebar .fmThumb,
+html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .context-menu-list .fmSwitch > .fmThumb,
 html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmThumb {
     -webkit-mask: var(--flockmod-thumb-mask) center / contain no-repeat;
     mask: var(--flockmod-thumb-mask) center / contain no-repeat;
@@ -2247,13 +2255,16 @@ html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .dialog:not([
 html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) #sidebar .fmSlider,
 html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) #sidebar .fmSwitch,
 html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSlider,
+html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .context-menu-list .fmSwitch,
 html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSwitch {
     overflow: visible !important;
 }
 
 html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) #sidebar .fmSwitch > .fmOn,
 html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) #sidebar .fmSwitch > .fmOff,
+html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .context-menu-list .fmSwitch > .fmOn,
 html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSwitch > .fmOn,
+html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .context-menu-list .fmSwitch > .fmOff,
 html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSwitch > .fmOff,
 html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) #sidebar .fmSlider > .fmSelectedArea,
 html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmSlider > .fmSelectedArea {
@@ -2263,6 +2274,7 @@ html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .dialog:not([
 /* Shaped thumbs: put the number in the middle of the shape
    (FlockMod's thumb places it off to one side) */
 html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) #sidebar .fmThumb,
+html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .context-menu-list .fmSwitch > .fmThumb,
 html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .dialog:not([name="themeModMenu"]) .fmThumb {
     display: flex !important;
     align-items: center !important;
@@ -5832,6 +5844,12 @@ html.flockmodBgCanvasActive:not(.flockmodCustomizationsDisabled) #DrawingArea {
 .dialog[name="themeModMenu"] .fmWhatsNewName-pink { color: #e0478a; text-shadow: 0 0 6px rgba(244, 100, 160, .75), 0 0 12px rgba(244, 100, 160, .45); }
 .dialog[name="themeModMenu"] .fmWhatsNewName-blue { color: #1b83dd; text-shadow: 0 0 6px rgba(27, 131, 221, .75), 0 0 12px rgba(27, 131, 221, .45); }
 .dialog[name="themeModMenu"] .fmWhatsNewName-teal { color: #2babba; text-shadow: 0 0 6px rgba(43, 171, 186, .75), 0 0 12px rgba(43, 171, 186, .45); }
+.dialog[name="themeModMenu"] .fmWhatsNewCat { display: inline-block; margin-right: 3px; vertical-align: -2px; text-shadow: none; }
+.dialog[name="themeModMenu"] .fmWhatsNewCat svg { display: block; overflow: visible; }
+.dialog[name="themeModMenu"] .fmWhatsNewCat.fmWhatsNewName-blue svg { filter: drop-shadow(0 0 3px rgba(27, 131, 221, .7)); }
+.dialog[name="themeModMenu"] .fmWhatsNewCat.fmWhatsNewName-pink svg { filter: drop-shadow(0 0 3px rgba(244, 100, 160, .7)); }
+.dialog[name="themeModMenu"] .fmWhatsNewCat.fmWhatsNewName-teal svg { filter: drop-shadow(0 0 3px rgba(43, 171, 186, .7)); }
+.dialog[name="themeModMenu"] .fmWhatsNewCat.fmWhatsNewName-orange svg { filter: drop-shadow(0 0 3px rgba(255, 150, 50, .7)); }
 .dialog[name="themeModMenu"] .fmWhatsNewName-orange { color: #e07a1f; text-shadow: 0 0 6px rgba(255, 150, 50, .8), 0 0 12px rgba(255, 150, 50, .45); }
 
 
@@ -6040,7 +6058,8 @@ html.fmHlOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmCnLine.fmCnHl {
 }
 .fmCnStack .fmCnCard.fmCnOut { opacity: 0; transform: translateY(6px); }
 html.fmAnimMenu .fmCnStack .fmCnCard:not(.fmCnOut):not(.fmCnNoAnim) { animation: fmCnIn calc(.25s * var(--fm-anim-speed, 1)) ease-out; }
-@keyframes fmCnIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* 3px: stays inside the list's 4px bottom room, so the scrollbar doesn't flash */
+@keyframes fmCnIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
 /* Earlier messages (scrolling up) fade in softly where they belong */
 html.fmAnimMenu .fmCnStack .fmCnCard.fmCnEarlier:not(.fmCnOut) { animation: fmCnFadeIn calc(.35s * var(--fm-anim-speed, 1)) ease-out; }
 @keyframes fmCnFadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -6819,4 +6838,399 @@ html.themeModQuietColorDialog .dialog[name="color"] * {
     background: #e0709a !important;
     border-color: #e0709a !important;
     color: #3a1020 !important;
+}
+
+
+/* =========================================================
+   USER RIGHT-CLICK MENU (FlockMod's newer user popup:
+   Ignore / Mute / Silence switches, icon tray, rank buttons).
+   Switches reuse the popup switch rules above. Names and rank
+   text keep their role colors.
+   ========================================================= */
+html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-row-btn,
+html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-row-static,
+html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-row-label,
+html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-icon-btn,
+html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-copy,
+html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-head-ip-value {
+    color: var(--flockmod-custom-text2, #fff) !important;
+}
+
+html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-row-btn:hover,
+html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-row-btn.context-menu-hover,
+html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-icon-btn:hover,
+html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-icon-btn.context-menu-hover,
+html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-step-btn:hover,
+html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-copy:hover {
+    background-color: var(--flockmod-custom-hover, #4f5156) !important;
+}
+
+/* Demote / Promote buttons = Popup Button colors */
+html.flockmodPopupButtonActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-step-btn:not(:hover) {
+    background-color: var(--flockmod-custom-popup-button, #7c7f87) !important;
+}
+html.flockmodPopupButtonTextActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-step-btn {
+    color: var(--flockmod-custom-popup-buttontext, #fff) !important;
+    border-color: var(--flockmod-custom-popup-buttontext, #fff) !important;
+}
+
+html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-step-btn,
+html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .context-menu-list .cm-icon-btn {
+    border-radius: var(--flockmod-ui-radius, 5px) !important;
+}
+
+/* In the right-click menu the knob would vanish into the menu's own
+   background, so it follows Text Color 2 instead (like the icons).
+   The divider lines match it. */
+html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .fmSwitch > .fmThumb {
+    background-color: var(--flockmod-custom-text2, #fff) !important;
+}
+html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .context-menu-separator {
+    border-color: var(--flockmod-custom-text2, #fff) !important;
+    opacity: 0.5;
+}
+
+/* Menu item icons (Sync board, Kick, Ban...) match the other icons */
+html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .context-menu-icon::before,
+html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .context-menu-list .context-menu-item > i {
+    color: var(--flockmod-custom-text2, #fff) !important;
+}
+
+/* v1.6.7: on the right side, the list's scrollbar would sit past the
+   screen edge. Flip the list so the scrollbar is on its canvas side;
+   the cards inside stay normal and keep their usual sides. */
+.fmCnStack.fmCnRight .fmCnList { direction: rtl; }
+.fmCnStack.fmCnRight .fmCnList > * { direction: ltr; }
+html.fmBubOn:not(.flockmodCustomizationsDisabled) .fmCnStack.fmCnRight .fmCnCard.fmCnOwn,
+html.fmBubOn:not(.flockmodCustomizationsDisabled).fmBubOthers .fmCnStack.fmCnRight .fmCnCard:not(.fmCnOwn):not(.fmCnEvent) { align-self: flex-end; }
+html.fmBubOn.fmCnOwnRight:not(.flockmodCustomizationsDisabled) .fmCnStack.fmCnRight .fmCnCard.fmCnOwn { align-self: flex-start; }
+
+/* v1.6.7: scrollbar can be grabbed (JS sets fmCnBarHot over its strip) */
+.fmCnStack.fmCnOpen.fmCnBarHot .fmCnList { pointer-events: auto; }
+
+/* =========================================================
+   CHAT WINDOW: TABS ON TOP (Interface > Chat Window, v1.6.7)
+   FlockMod's chat lists its channels in a left column. This
+   turns that column into a row of tabs above the messages.
+   Only layout changes; colors keep following the theme.
+   ========================================================= */
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .modal-body > .container-fluid > .row {
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .modal-body .row > .sidebar {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    display: flex !important;
+    align-items: flex-end;
+    gap: 6px;
+    padding: 8px 8px 0 !important;
+}
+/* "Join the open tab" off: a thin line under the row instead */
+html.fmChatTopTabs:not(.fmChatTabsJoin):not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .modal-body .row > .sidebar {
+    border-bottom: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .sidebar > .chatBar {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: auto !important;
+}
+/* The tab list's scroll box (OverlayScrollbars) is built for a fixed
+   height column; let it size to the tabs instead */
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .chatBar .os-padding,
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .chatBar .os-viewport,
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .chatBar .os-content {
+    position: static !important;
+    height: auto !important;
+    width: auto !important;
+    margin: 0 !important;
+    overflow: visible !important;
+}
+/* Everything else OverlayScrollbars adds (scrollbars, size helpers,
+   the "glue" spacer that kept the old column tall) */
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .chatBar > :not(.os-padding) {
+    display: none !important;
+}
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .sidebarElements {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    gap: 3px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+}
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .sidebarElements .channelTitle {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 6px 14px !important;
+    border-radius: 8px 8px 0 0;
+    white-space: nowrap;
+    overflow: visible !important;
+    /* FlockMod's side stripe (green for news, yellow for PMs) moves to
+       the top of the tab. Its color is copied into --fm-tab-ind by JS. */
+    border-left-width: 0 !important;
+    border-top: 6px solid var(--fm-tab-ind, transparent) !important;
+    transition: none !important;   /* so the copied stripe color is never mid-fade */
+}
+/* Tab stripe: Side keeps FlockMod's own stripe on the tab's left (a bit slimmer) */
+html.fmChatTopTabs.fmChatTabsSide:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .sidebarElements .channelTitle {
+    border-top: 0 !important;
+    border-left-width: 6px !important;
+    border-left-style: solid !important;
+}
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .sidebarElements .channelCaption,
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .sidebarElements .channelIcons,
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .sidebarElements .channelClose {
+    padding: 0 !important;
+    max-width: none !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+}
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .sidebarElements .channelTitle > * {
+    float: none !important;
+    position: static !important;
+    margin: 0 !important;
+}
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .sidebar > .chatText2 {
+    flex: 0 0 auto;
+    align-self: center;
+    margin: 0 !important;
+}
+
+/* The open tab joins the messages below it: it takes the color at the
+   top of the message area (worked out by JS, gradients included) */
+html.fmChatTopTabs.fmChatTabsJoin:not(.flockmodCustomizationsDisabled) .dialog[name="chat"][style*="--fm-tab-sel"] .sidebarElements .channelTitle.selected {
+    background-color: var(--fm-tab-sel) !important;
+    background-image: none !important;
+}
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .modal-body .row > .dynamicDialogArea {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0;
+    height: auto !important;
+}
+
+/* Tabs on top: only the top corners are rounded (Border Radius still
+   sets how round), so the open tab meets the messages with a flat edge */
+html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .sidebarElements .channelTitle {
+    border-radius: var(--flockmod-ui-radius, 8px) var(--flockmod-ui-radius, 8px) 0 0 !important;
+}
+
+/* =========================================================
+   CHAT OVERLAY: REPLIES, REACTIONS, EDITS, DELETES (v1.6.7)
+   ========================================================= */
+.fmCnStack .fmCnMsg { position: relative; border-radius: 6px; }
+.fmCnStack .fmCnMsg + .fmCnMsg { margin-top: 2px; }
+.fmCnStack .fmCnMsg.fmCnActsOn { background: color-mix(in srgb, var(--fmcn-text) 7%, transparent); }
+
+/* the message it replies to */
+.fmCnStack .fmCnQuote {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin: 0 0 2px;
+    padding: 1px 6px;
+    border-left: 2px solid color-mix(in srgb, var(--fmcn-c) 70%, transparent);
+    border-radius: 0 4px 4px 0;
+    background: color-mix(in srgb, var(--fmcn-text) 7%, transparent);
+    font-size: .82em;
+    opacity: .85;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.fmCnStack .fmCnQuote i { font-size: .8em; opacity: .7; }
+.fmCnStack .fmCnQuote b { flex: 0 0 auto; font-weight: 700; }
+.fmCnStack .fmCnQuote span { overflow: hidden; text-overflow: ellipsis; }
+.fmCnStack .fmCnQuoteGone { font-style: italic; opacity: .75; }
+.fmCnStack .fmCnQuote[data-reply-to] { cursor: pointer; }
+.fmCnStack .fmCnQuote[data-reply-to]:hover { background: color-mix(in srgb, var(--fmcn-c) 22%, transparent); }
+/* the message a quote points to, after clicking the quote */
+.fmCnStack .fmCnMsg.fmCnFlash { animation: fmCnFlash 1.4s ease-out; }
+@keyframes fmCnFlash {
+    0%, 35% { background: color-mix(in srgb, var(--fmcn-c, #f48fb1) 45%, transparent); }
+    100% { background: transparent; }
+}
+
+.fmCnStack .fmCnEdited { margin-left: 3px; font-size: .8em; opacity: .6; }
+.fmCnStack .fmCnDeleted { font-style: italic; opacity: .6; }
+
+/* reactions under a message */
+.fmCnStack .fmCnReacts { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.fmCnStack .fmCnReact {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 0 6px;
+    min-height: calc(20px * var(--fmcn-s));
+    border: 1px solid color-mix(in srgb, var(--fmcn-text) 18%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--fmcn-text) 8%, transparent);
+    color: var(--fmcn-text);
+    font-size: .9em;
+    line-height: 1.2;
+    cursor: pointer;
+}
+.fmCnStack .fmCnReact span { font-size: .85em; font-weight: 700; }
+.fmCnStack .fmCnReact.fmCnMine {
+    border-color: var(--fmcn-c);
+    background: color-mix(in srgb, var(--fmcn-c) 25%, transparent);
+}
+.fmCnStack .fmCnReact:hover { background: color-mix(in srgb, var(--fmcn-c) 35%, transparent); }
+
+/* the React / Reply / Edit / Delete bar (and the emoji row) */
+.fmCnStack .fmCnActs,
+.fmCnStack .fmCnReactPick {
+    --fmcn-c: var(--fmcn-public);
+    position: absolute;
+    z-index: 5;
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--fmcn-bg) 97%, transparent);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .35);
+    pointer-events: auto;
+}
+.fmCnStack .fmCnActs button,
+.fmCnStack .fmCnReactPick button {
+    display: grid;
+    place-items: center;
+    width: calc(24px * var(--fmcn-s));
+    height: calc(24px * var(--fmcn-s));
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--fmcn-text);
+    font-size: .9em;
+    cursor: pointer;
+}
+.fmCnStack .fmCnReactPick button { width: calc(28px * var(--fmcn-s)); height: calc(28px * var(--fmcn-s)); font-size: 1.15em; }
+.fmCnStack .fmCnActs button:hover,
+.fmCnStack .fmCnReactPick button:hover { background: color-mix(in srgb, var(--fmcn-c) 30%, transparent); }
+.fmCnStack .fmCnActs button[data-act="delete"]:hover,
+.fmCnStack .fmCnActs button.fmCnArmed { background: #d9534f; color: #fff; }
+
+/* "Replying to ... / Editing" above the reply box */
+.fmCnStack .fmCnCompose {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 3px 4px 3px 9px;
+    border-left: 3px solid var(--fmcn-c, var(--fmcn-public));
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--fmcn-bg) 94%, transparent);
+    font-size: .85em;
+    pointer-events: auto;
+}
+.fmCnStack .fmCnCompose[hidden] { display: none; }
+.fmCnStack .fmCnComposeIcon { opacity: .7; }
+.fmCnStack .fmCnComposeLabel { flex: 0 0 auto; font-weight: 700; }
+.fmCnStack .fmCnComposeText { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .75; }
+.fmCnStack .fmCnComposeX {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--fmcn-text);
+    cursor: pointer;
+}
+.fmCnStack .fmCnComposeX:hover { background: color-mix(in srgb, var(--fmcn-text) 15%, transparent); }
+
+/* FlockMod's own reaction row, opened out of sight for the overlay */
+html.fmQuietReact .reactionPicker { visibility: hidden !important; pointer-events: none !important; }
+
+/* Deleted by a mod: "deleted" in red, the mod's name in their rank color */
+.fmCnStack .fmCnDeleted .fmCnModWord { color: #e5534b; font-weight: 700; font-style: normal; }
+.fmCnStack .fmCnDeleted .fmCnModName { font-weight: 700; font-style: normal; }
+.fmCnStack .fmCnDeleted .fmCnModName:not([class*="rank"]) { color: var(--fmcn-text, inherit); }
+.fmCnStack .fmCnMsg.fmCnGone .fmCnDeleted:has(.fmCnModWord) { opacity: .85; }
+
+/* =========================================================
+   CHAT BUBBLES: REPLIES + REACTIONS (v1.6.7)
+   In bubble mode each FlockMod message line is one row, so the
+   reply quote and the reactions sat beside the bubble. Now the
+   quote goes above it and the reactions below it, on the same
+   side as the bubble (right for yours with "on the right").
+   ========================================================= */
+html.fmBubOn:not(.flockmodCustomizationsDisabled) #chatMessages .chatBlock.messageBlock .msgLine:has(> .msgReply, > .msgReactions) {
+    flex-wrap: wrap;
+}
+html.fmBubOn:not(.flockmodCustomizationsDisabled) #chatMessages .chatBlock.messageBlock .msgLine > .msgReply {
+    order: -2;
+    flex: 0 1 auto;
+    max-width: 85%;
+    box-sizing: border-box;
+    margin: 0 0 1px !important;
+    border-radius: 10px;
+}
+/* an invisible full-width piece after the quote = a line break */
+html.fmBubOn:not(.flockmodCustomizationsDisabled) #chatMessages .chatBlock.messageBlock .msgLine:has(> .msgReply)::before {
+    content: "";
+    order: -1;
+    flex: 0 0 100%;
+    height: 0;
+}
+html.fmBubOn:not(.flockmodCustomizationsDisabled) #chatMessages .chatBlock.messageBlock .msgLine > .msgReactions {
+    order: 5;
+    flex: 0 0 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin: 1px 0 0 !important;
+}
+html.fmBubOn:not(.flockmodCustomizationsDisabled).fmBubRight #chatMessages .messageBlock[data-type="MYMSG"] .msgLine > .msgReactions {
+    justify-content: flex-end;
+}
+
+/* "+" in the overlay's reaction row, and the emoji panel while picking a reaction */
+.fmCnStack .fmCnReactPick .fmCnReactMore { font-size: .85em; opacity: .8; }
+.fmCnStack .fmCnEmojiPanel.fmCnEmojiReact { box-shadow: 0 0 0 2px var(--fmcn-public), 0 3px 10px rgba(0, 0, 0, .3); }
+html.fmQuietReact .emojiContainer { visibility: hidden !important; pointer-events: none !important; }
+
+/* =========================================================
+   CHAT: REPLY BOX + MESSAGE BUTTONS (Colors > Chat, v1.6.7)
+   ========================================================= */
+html.flockmodChatReplyActive:not(.flockmodCustomizationsDisabled) #chatMessages .msgReply,
+html.flockmodChatReplyActive:not(.flockmodCustomizationsDisabled) #messengerConversation .msgReply,
+html.flockmodChatReplyActive:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .composerContext {
+    background-color: var(--flockmod-custom-chat-reply, #2a2b2f) !important;
+}
+html.flockmodChatReplyTextActive:not(.flockmodCustomizationsDisabled) #chatMessages .msgReply,
+html.flockmodChatReplyTextActive:not(.flockmodCustomizationsDisabled) #chatMessages .msgReply *,
+html.flockmodChatReplyTextActive:not(.flockmodCustomizationsDisabled) #messengerConversation .msgReply,
+html.flockmodChatReplyTextActive:not(.flockmodCustomizationsDisabled) #messengerConversation .msgReply *,
+html.flockmodChatReplyTextActive:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .composerContext,
+html.flockmodChatReplyTextActive:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .composerContext * {
+    color: var(--flockmod-custom-chat-replytext, #ddd) !important;
+}
+/* the bar FlockMod puts on a message you hover (it holds the React button) */
+html.flockmodChatActionsActive:not(.flockmodCustomizationsDisabled) #chatMessages .msgLine > :has(> button[name="react"]),
+html.flockmodChatActionsActive:not(.flockmodCustomizationsDisabled) .reactionPicker:not(html.fmQuietReact *) {
+    background-color: var(--flockmod-custom-chat-actions, #1d1e22) !important;
+    border-color: var(--flockmod-custom-chat-actions, #1d1e22) !important;
+}
+html.flockmodChatActionIconsActive:not(.flockmodCustomizationsDisabled) #chatMessages .msgLine > :has(> button[name="react"]) button,
+html.flockmodChatActionIconsActive:not(.flockmodCustomizationsDisabled) #chatMessages .msgLine > :has(> button[name="react"]) button i,
+html.flockmodChatActionIconsActive:not(.flockmodCustomizationsDisabled) .reactionPicker .reactionMore,
+html.flockmodChatActionIconsActive:not(.flockmodCustomizationsDisabled) .reactionPicker .reactionMore i {
+    color: var(--flockmod-custom-chat-actionicons, #fff) !important;
+}
+html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) #chatMessages .msgLine > :has(> button[name="react"]) button:hover,
+html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) .reactionPicker .reactionPick:hover {
+    background-color: var(--flockmod-custom-hover, #4f5156) !important;
 }
