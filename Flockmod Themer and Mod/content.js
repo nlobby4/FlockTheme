@@ -8,6 +8,7 @@
        WHAT'S NEW  <-- edit this list for every release
        Newest version goes FIRST. The "version" must match the
        "version" in manifest.json. Each note is one bullet point.
+       Start a note with **Bold words:** so it's easy to skim (keep notes short).
        Credit someone with {pink:Name}, {blue:Name}, {teal:Name} or {orange:Name}
        (a glowing colored name). {cat:blue} (or pink/teal/orange) adds a
        little cat face in that color, e.g. "Inspired by {cat:blue}{blue:Name}".
@@ -21,6 +22,19 @@
        shows them again anytime).
        ========================================================= */
     const CHANGELOG = [
+        {
+            version: "1.6.8",
+            notes: [
+                "**Tools button:** reference images, streamer mode and drawing guides, next to the flower.",
+                "**Streamer mode:** hides chat, PMs and other names while you record (new Advanced tab).",
+                "**Drawing guides:** ruler, 1 to 3-point perspective and a grid. Only you see them.",
+                "**My cursor:** an easier-to-see brush cursor, plus an optional crosshair (Colors > Canvas). Requested by {teal:Mazda}.",
+                "**Chat overlay:** the typing box grows to fit long messages.",
+                "**Reference window:** the wand button (title bar) hides its popup decoration.",
+                "**Fixed:** no more white trail when erasing on a custom canvas color."
+            ],
+            spots: ["Advanced > Streamer Mode", "Advanced > Drawing Guides", "#themeModMyCursorLook"]
+        },
         {
             version: "1.6.7",
             notes: [
@@ -537,7 +551,8 @@
             <input type="range" id="themeModCanvasDimStrength" class="themeModRange" min="5" max="90" step="5" value="${CANVAS_DIM_STRENGTH_DEFAULT}" data-default="${CANVAS_DIM_STRENGTH_DEFAULT}">
             <span id="themeModCanvasDimStrengthValue" class="themeModRangeValue">${CANVAS_DIM_STRENGTH_DEFAULT}%</span>
         </div>
-    </div>`;
+    </div>
+    ${buildMyCursorRowsHTML()}`;
     }
 
     function setupCanvasDimmer(dialog) {
@@ -570,6 +585,142 @@
         dialog.querySelector(".closeButton").addEventListener("click", () => {
             slider.value = String(readCanvasDimStrength());
             show();
+        });
+    }
+
+    /* =========================================================
+       MY CURSOR (Colors > Canvas)  v1.6.8
+       Makes YOUR brush circle on the canvas easier to see
+       over any drawing. FlockMod marks your own cursor ".cursor.myself",
+       so only yours changes; everyone else's stays as FlockMod draws
+       them. Pure CSS (nothing redrawn), and only on your screen.
+       Looks: default (FlockMod), outline (white ring with dark edges),
+       invert (flips against what's under it, like Photoshop) and color.
+       ========================================================= */
+    const MYCUR_LS = {
+        look: "flockmodMyCursorLook",
+        color: "flockmodMyCursorColor",
+        cross: "flockmodMyCursorCross"
+    };
+    const MYCUR_LOOKS = ["default", "outline", "invert", "color"];
+    const MYCUR_DEFAULTS = { look: "default", color: "#f48fb1", cross: false };
+
+    function readSavedMyCursor() {
+        const look = localStorage.getItem(MYCUR_LS.look);
+        const color = localStorage.getItem(MYCUR_LS.color);
+        return {
+            look: MYCUR_LOOKS.includes(look) ? look : MYCUR_DEFAULTS.look,
+            color: /^#[0-9a-f]{6}$/i.test(color || "") ? color : MYCUR_DEFAULTS.color,
+            cross: localStorage.getItem(MYCUR_LS.cross) === "true"
+        };
+    }
+
+    function applyMyCursor(st) {
+        const root = document.documentElement;
+        const on = st.look !== "default";
+        root.classList.toggle("fmMyCur", on);
+        root.classList.toggle("fmMyCurOutline", st.look === "outline");
+        root.classList.toggle("fmMyCurInvert", st.look === "invert");
+        root.classList.toggle("fmMyCurColor", st.look === "color");
+        root.classList.toggle("fmMyCurCross", Boolean(st.cross));   /* works with any look, Default too */
+        root.style.setProperty("--fm-mycur-color", st.color);
+
+        /* "My color": a tiny SVG filter that paints your cursor's lines in
+           your color (keeps their see-through edges), for any cursor shape */
+        if (st.look === "color") {
+            let svg = document.getElementById("fmMyCurSvg");
+            if (!svg) {
+                svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svg.id = "fmMyCurSvg";
+                svg.setAttribute("aria-hidden", "true");
+                svg.setAttribute("width", "0");
+                svg.setAttribute("height", "0");
+                svg.style.cssText = "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none";
+                svg.innerHTML = '<filter id="fmMyCurColorize" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=""></feColorMatrix></filter>';
+                document.documentElement.appendChild(svg);
+            }
+            const hex = st.color.replace("#", "");
+            const [r, g, b] = [0, 2, 4].map((i) => (parseInt(hex.slice(i, i + 2), 16) / 255).toFixed(4));
+            svg.querySelector("feColorMatrix").setAttribute("values",
+                `0 0 0 0 ${r}  0 0 0 0 ${g}  0 0 0 0 ${b}  0 0 0 1 0`);
+        }
+    }
+
+    function applySavedMyCursor() {
+        applyMyCursor(readSavedMyCursor());
+    }
+
+    function buildMyCursorRowsHTML() {
+        return `
+    <div class="fmGroupLabel">My cursor</div>
+    <div class="themeModSetting themeModNoDivider">
+        <div class="themeModSettingText">
+            <div class="themeModSettingName">My Cursor</div>
+            <div class="themeModSettingDescription">Makes your brush cursor easier to see on the canvas, in any FlockMod cursor shape. Only yours changes.</div>
+        </div>
+        <select id="themeModMyCursorLook" class="themeModSelect">
+            <option value="default" selected>Default (FlockMod)</option>
+            <option value="outline">Outline</option>
+            <option value="invert">Invert (like Photoshop)</option>
+            <option value="color">My color</option>
+        </select>
+    </div>
+    <div class="themeModSetting themeModNoDivider">
+        <div class="themeModSettingText">
+            <div class="themeModSettingName">Cursor Color</div>
+            <div class="themeModSettingDescription">Used by "My color".</div>
+        </div>
+        <input type="color" id="themeModMyCursorColor" value="${MYCUR_DEFAULTS.color}" data-default="${MYCUR_DEFAULTS.color}">
+    </div>
+    <div class="themeModSetting themeModNoDivider">
+        <div class="themeModSettingText">
+            <div class="themeModSettingName">Crosshair</div>
+            <div class="themeModSettingDescription">A tiny + in the middle (Circle and Square cursors), to see where small brushes land.</div>
+        </div>
+        ${animToggleHTML("themeModMyCursorCross").replace('id="themeModMyCursorCross"', 'id="themeModMyCursorCross" data-default="false"')}
+    </div>`;
+    }
+
+    function setupMyCursor(dialog) {
+        const look = dialog.querySelector("#themeModMyCursorLook");
+        const color = dialog.querySelector("#themeModMyCursorColor");
+        const cross = dialog.querySelector("#themeModMyCursorCross");
+
+        if (!look || !color || !cross) {
+            return;
+        }
+
+        const fill = (st) => {
+            look.value = st.look;
+            color.value = st.color;
+            cross.checked = st.cross;
+        };
+        const read = () => ({ look: look.value, color: color.value, cross: cross.checked });
+        const preview = () => applyMyCursor(read());
+
+        fill(readSavedMyCursor());
+        look.addEventListener("change", preview);
+        cross.addEventListener("change", preview);
+        color.addEventListener("input", preview);
+
+        dialog.querySelector(".themeModApplyButton").addEventListener("click", () => {
+            const st = read();
+            localStorage.setItem(MYCUR_LS.look, st.look);
+            localStorage.setItem(MYCUR_LS.color, st.color);
+            localStorage.setItem(MYCUR_LS.cross, String(st.cross));
+        });
+
+        dialog.querySelector(".themeModResetButton").addEventListener("click", () => {
+            fill(MYCUR_DEFAULTS);
+            localStorage.setItem(MYCUR_LS.look, MYCUR_DEFAULTS.look);
+            localStorage.setItem(MYCUR_LS.color, MYCUR_DEFAULTS.color);
+            localStorage.setItem(MYCUR_LS.cross, String(MYCUR_DEFAULTS.cross));
+            applyMyCursor(MYCUR_DEFAULTS);
+        });
+
+        dialog.querySelector(".closeButton").addEventListener("click", () => {
+            fill(readSavedMyCursor());
+            applySavedMyCursor();
         });
     }
 
@@ -3197,7 +3348,7 @@ function buildSimpleColorRowsHTML() {
         <button type="button" class="fmCnEmo" title="Emoji" aria-label="Emoji"><i class="fas fa-smile"></i></button>
         <button type="button" class="fmCnPic" title="Add a picture (or paste one)" aria-label="Add a picture"><i class="fas fa-image"></i></button>
         <input class="fmCnFile" type="file" accept="image/*" hidden>
-        <input class="fmCnInput" type="text" maxlength="250" autocomplete="off" spellcheck="true">
+        <textarea class="fmCnInput" rows="1" maxlength="250" autocomplete="off" spellcheck="true"></textarea>
         <button type="button" class="fmCnSend" title="Send" aria-label="Send"><i class="fas fa-paper-plane"></i></button>
     </div>
     <div class="fmCnNote"></div>
@@ -3211,6 +3362,20 @@ function buildSimpleColorRowsHTML() {
         cnHost().appendChild(cnStack);
 
         const input = cnStack.querySelector(".fmCnInput");
+
+        /* v1.6.8: the typing box wraps and grows (up to a few lines, then
+           scrolls), so long messages stay readable. Chat messages are one
+           line, so pasted line breaks become spaces. Browsers without CSS
+           field-sizing get the same growing from cnFitInput. */
+        input.addEventListener("input", () => {
+            if (/[\r\n]/.test(input.value)) {
+                const at = input.selectionStart;
+                input.value = input.value.replace(/\r?\n/g, " ");
+                input.setSelectionRange(at, at);
+            }
+            cnFitInput(input);
+        });
+
         const width = Number(localStorage.getItem(CN_LS.width));
         cnStack.style.width = `${width >= 180 && width <= 480 ? width : CN_WIDTH_DEFAULT}px`;
         cnStack.classList.toggle("fmCnCollapsed", localStorage.getItem(CN_LS.hidden) === "true");
@@ -3694,6 +3859,7 @@ function buildSimpleColorRowsHTML() {
         });
 
         cnStack.querySelector(".fmCnPill").addEventListener("click", () => {
+            if (streamHidesOverlay()) return;   /* v1.6.8: streamer mode keeps it hidden */
             /* pen/finger: the tap that just opened the cards doesn't hide them too */
             if (!cnStack.classList.contains("fmCnCollapsed") && Date.now() - (cnStack._tapOpened || 0) < 700) {
                 cnStack._tapOpened = 0;
@@ -3950,14 +4116,17 @@ function buildSimpleColorRowsHTML() {
             return;
         }
 
+        const streaming = streamHidesOverlay();
         const collapsed = cnStack.classList.contains("fmCnCollapsed");
-        cnStack.querySelector(".fmCnPillText").textContent = collapsed ? "Show chat" : "Hide chat";
-        cnStack.querySelector(".fmCnPill").title = collapsed
-            ? "Show the chat overlay again"
-            : "Hover to see recent messages. Click to hide.";
+        cnStack.querySelector(".fmCnPillText").textContent = streaming ? "Chat hidden" : (collapsed ? "Show chat" : "Hide chat");
+        cnStack.querySelector(".fmCnPill").title = streaming
+            ? "Streamer mode is hiding the chat overlay"
+            : (collapsed
+                ? "Show the chat overlay again"
+                : "Hover to see recent messages. Click to hide.");
         const badge = cnStack.querySelector(".fmCnBadge");
         badge.textContent = cnUnread > 99 ? "99+" : String(cnUnread);
-        badge.hidden = !(collapsed && cnUnread > 0);
+        badge.hidden = !((collapsed || streaming) && cnUnread > 0);
     }
 
     /* ---------- Reply box open / close ----------
@@ -4021,6 +4190,15 @@ function buildSimpleColorRowsHTML() {
     }
 
     /* Focus in the reply box (not just a tab you clicked) */
+    /* Grows the typing box to fit (only where CSS field-sizing isn't supported) */
+    const CN_FIELD_SIZING = typeof CSS !== "undefined" && CSS.supports && CSS.supports("field-sizing", "content");
+
+    function cnFitInput(input) {
+        if (CN_FIELD_SIZING || !input) return;
+        input.style.height = "auto";
+        input.style.height = `${input.scrollHeight + 3}px`;
+    }
+
     function cnTyping() {
         return Boolean(cnStack?.querySelector(".fmCnExtra")?.contains(document.activeElement));
     }
@@ -4206,7 +4384,7 @@ function buildSimpleColorRowsHTML() {
     }
 
     function cnOpenControls() {
-        if (!cnStack) return;
+        if (!cnStack || streamHidesOverlay()) return;   /* v1.6.8: hidden by streamer mode */
         clearTimeout(cnCloseT);
         cnCloseT = 0;
         if (cnStack.classList.contains("fmCnOpen")) return;
@@ -5060,7 +5238,8 @@ function buildSimpleColorRowsHTML() {
             setTimeout(cnRenderControls, 600);   /* a new PM's chat tab shows up a moment later */
         }
 
-        if (cnStack.classList.contains("fmCnCollapsed")) {
+        /* v1.6.8: streamer mode hiding the overlay works like "Hide chat" */
+        if (cnStack.classList.contains("fmCnCollapsed") || streamHidesOverlay()) {
             if (!m.own && !m.event) {
                 cnUnread++;
                 cnUpdatePill();
@@ -6442,7 +6621,7 @@ function buildSimpleColorRowsHTML() {
         const t = timeSummary();
         const brk = BREAK_CHOICES.find(([v]) => v === liveClock.brk);
         card.innerHTML =
-            '<div class="fmTimeTitle"><span class="fmTourFlower" aria-hidden="true"></span>Time on FlockMod</div>' +
+            '<div class="fmTimeTitle fmPanelTitle"><span class="fmTourFlower" aria-hidden="true"></span>Time on FlockMod</div>' +
             `<div class="fmTimeRow"><span>This session</span><b>${fmtDuration(t.session)}</b></div>` +
             `<div class="fmTimeRow"><span>Today</span><b>${fmtDuration(t.today)}</b></div>` +
             `<div class="fmTimeRow"><span>Last 7 days</span><b>${fmtDuration(t.week)}</b></div>` +
@@ -6462,8 +6641,8 @@ function buildSimpleColorRowsHTML() {
         toast.setAttribute("role", "status");
         toast.dataset.fm = "break";
         toast.innerHTML =
-            '<span class="fmTourFlower" aria-hidden="true"></span>' +
-            `<div class="fmBreakText"><b>Time for a little break?</b><br>You've been drawing for ${fmtDuration(mins * 60)}. Stretch, sip some water and rest your eyes.</div>` +
+            '<div class="fmPanelTitle"><span class="fmTourFlower" aria-hidden="true"></span>Time for a little break?</div>' +
+            `<div class="fmBreakText">You've been drawing for ${fmtDuration(mins * 60)}. Stretch, sip some water and rest your eyes.</div>` +
             '<div class="fmBreakButtons"><button type="button" data-break="ok">Thanks!</button><button type="button" data-break="snooze">In 10 min</button></div>';
         document.documentElement.appendChild(toast);
 
@@ -7856,7 +8035,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         /* Fallback: a badge on a bottom bar button with an envelope/chat icon */
         return [...document.querySelectorAll("#bottombar .nav-link .badge")].find((badge) => {
             const link = badge.closest(".nav-link");
-            return link && !link.matches(".themeModMenuButton, .themeModRefButton") &&
+            return link && !link.matches(".themeModMenuButton, .themeModRefButton, .themeModToolsButton") &&
                 link.querySelector(".fa-envelope, .fa-comment, .fa-comments, .fa-comment-dots, .fa-inbox");
         }) || null;
     }
@@ -8265,7 +8444,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
        ========================================================= */
 
     const REF_SELECTOR = '.dialog[name="themeModReference"]';
-    const REF_BUTTON_SELECTOR = ".themeModRefButton";
     const REF_DB_NAME = "flockmodThemeModRefs";
     const REF_DB_STORE = "images";
     const REF_LIST_LS = "flockmodRefList";
@@ -8340,10 +8518,11 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                 gray: Boolean(v.gray),
                 opacity: Number.isFinite(v.opacity) ? Math.min(100, Math.max(30, v.opacity)) : 100,
                 strip: Boolean(v.strip),
-                board: Boolean(v.board)
+                board: Boolean(v.board),
+                plain: Boolean(v.plain)   /* v1.6.8: no popup decoration on this window */
             };
         } catch (error) {
-            return { flip: false, gray: false, opacity: 100, strip: false, board: false };
+            return { flip: false, gray: false, opacity: 100, strip: false, board: false, plain: false };
         }
     }
 
@@ -8579,6 +8758,9 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                         </div>
                         <div class="dialogTitleButtons">
                             <div style="text-align: right;">
+                                <a href="#" class="btn btn-md themeModRefPlain" data-ref="plain" title="Hide the popup decoration on this window">
+                                    <i class="fas fa-magic titleButton"></i>
+                                </a>
                                 <a href="#" class="btn btn-md themeModRefHelp" title="How to use the reference window">
                                     <i class="fas fa-info-circle titleButton"></i>
                                 </a>
@@ -8758,6 +8940,11 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
             opacity.value = String(view.opacity);
             q('[data-ref="flip"]').classList.toggle("active", view.flip);
             q('[data-ref="gray"]').classList.toggle("active", view.gray);
+            /* v1.6.8: only shown while a popup decoration style is picked */
+            const plainBtn = q('[data-ref="plain"]');
+            plainBtn.hidden = !(liveDeco && liveDeco.style !== "none");
+            plainBtn.classList.toggle("active", view.plain);
+            plainBtn.title = view.plain ? "Show the popup decoration on this window again" : "Hide the popup decoration on this window";
             q('[data-ref="strip"]').classList.toggle("active", view.strip);
             win.classList.toggle("themeModRefStripOpen", view.strip && has);
         }
@@ -8989,6 +9176,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                 case "tidy": boardTidy(); boardFitAll(); boardSaveSoon(); break;
                 case "flip": view.flip = !view.flip; saveRefView(view); updateChrome(); break;
                 case "gray": view.gray = !view.gray; saveRefView(view); updateChrome(); break;
+                case "plain": event.preventDefault(); view.plain = !view.plain; refPlain = view.plain; saveRefView(view); updateChrome(); updateDecorations(true); break;
                 case "strip": view.strip = !view.strip; saveRefView(view); updateChrome(); renderStrip(); break;
                 case "remove": removeCurrent(); break;
                 case "prev": go(-1); break;
@@ -10110,38 +10298,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
             }
         ];
     }
-
-    function addRefButton() {
-        const bottomBar = document.querySelector("#bottombar > nav > div > ul:nth-child(3)");
-
-        if (!bottomBar || bottomBar.querySelector(REF_BUTTON_SELECTOR)) {
-            return;
-        }
-
-        const modItem = bottomBar.querySelector(MOD_BUTTON_SELECTOR);
-
-        if (!modItem) {
-            return;
-        }
-
-        const item = document.createElement("li");
-        item.className = "nav-item";
-
-        const button = document.createElement("a");
-        button.href = "#";
-        button.className = "nav-link themeModRefButton";
-        button.title = "Reference images (only you can see them)";
-        button.innerHTML = REF_ICON_SVG;
-
-        button.addEventListener("click", (event) => {
-            event.preventDefault();
-            toggleRefWindow();
-        });
-
-        item.appendChild(button);
-        modItem.closest("li").after(item);
-    }
-
 
     /* =========================================================
        POPUP DECORATIONS (Interface > Popup Decorations)
@@ -11392,6 +11548,9 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
     /* Runs in the 500ms loop (and right after a change): gives every
        popup its decoration box, rebuilding only when the style changed */
+    /* v1.6.8: the reference window's own "no decoration" button */
+    let refPlain = null;
+
     function updateDecorations(force) {
         const st = liveDeco;
         queueMicrotask(watchMaidCaps);   /* v1.6.2: after this run builds any new headpieces */
@@ -11418,7 +11577,10 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
             const isMenu = dialog.getAttribute("name") === "themeModMenu";
             let box = dialog.querySelector(":scope > .fmDeco");
 
-            if (!on || (isMenu && !st.menu)) {
+            if (refPlain === null) refPlain = readRefView().plain;
+            const plainRef = refPlain && dialog.getAttribute("name") === "themeModReference";
+
+            if (!on || (isMenu && !st.menu) || plainRef) {
                 if (box) {
                     box.remove();
                     dialog.classList.remove("fmHasDeco");
@@ -13500,6 +13662,1217 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         };
     }
 
+    /* =========================================================
+       STREAMER MODE (Advanced tab)  v1.6.8
+       Hides private things on YOUR screen while you record or
+       stream: FlockMod's chat, PM windows, the chat overlay, the
+       activity bar's message text and other people's names.
+       It's only classes on <html> (plus the chat overlay keeping
+       new messages for later), so nothing is sent to FlockMod and
+       everyone else sees the room as normal.
+       It works even with "Enable customizations" OFF, since it's
+       about privacy, not looks. It isn't part of themes or share
+       codes (only full backups).
+       The main ON/OFF switch (menu and Tools tray) saves
+       right away; the "Hide while on" switches follow Apply.
+       ========================================================= */
+
+    const STREAM_LS = {
+        on: "flockmodStreamOn",
+        chat: "flockmodStreamChat",
+        pm: "flockmodStreamPm",
+        overlay: "flockmodStreamOverlay",
+        activity: "flockmodStreamActivity",
+        names: "flockmodStreamNames",
+        peek: "flockmodStreamPeek",
+        badge: "flockmodStreamBadge",
+        canvasNames: "flockmodStreamCanvasNames"   /* name tags on the board (yours stays) */
+    };
+
+    const STREAM_DEFAULTS = {
+        on: false, chat: true, pm: true, overlay: true,
+        activity: true, names: true, peek: true, badge: true, canvasNames: true
+    };
+
+    /* one class on <html> per "Hide while on" switch (only while ON) */
+    const STREAM_CLASSES = {
+        chat: "fmStreamChat", pm: "fmStreamPm", overlay: "fmStreamOverlay",
+        activity: "fmStreamActivity", names: "fmStreamNames", peek: "fmStreamPeek", badge: "fmStreamBadge",
+        canvasNames: "fmStreamCanvasNames"
+    };
+
+    let liveStream = { ...STREAM_DEFAULTS };
+
+    function readSavedStream() {
+        const st = { ...STREAM_DEFAULTS };
+        Object.keys(STREAM_DEFAULTS).forEach((k) => {
+            const raw = localStorage.getItem(STREAM_LS[k]);
+            if (raw === "true" || raw === "false") st[k] = raw === "true";
+        });
+        return st;
+    }
+
+    /* The chat overlay is hidden by streamer mode right now */
+    function streamHidesOverlay() {
+        return Boolean(liveStream && liveStream.on && liveStream.overlay);
+    }
+
+    /* Closes the overlay's reply box straight away and hands the keyboard
+       back to FlockMod (a hidden, focused reply box would catch every key,
+       like the v1.6.5 Space-to-pan bug) */
+    function streamCloseOverlayNow() {
+        if (!cnStack) return;
+        clearTimeout(cnCloseT);
+        cnCloseT = 0;
+        if (cnStack.contains(document.activeElement)) document.activeElement.blur();
+        cnStack.classList.remove("fmCnOpen", "fmCnBarHot");
+        cnHideActs();
+        document.querySelector(".fmCnReactPick")?.remove();
+        document.removeEventListener("pointermove", cnOnMove);
+        window.removeEventListener("wheel", cnWheelCatch, { capture: true });
+    }
+
+    function applyStream(st) {
+        const wasHiding = streamHidesOverlay();
+        liveStream = { ...st };
+
+        const root = document.documentElement;
+        root.classList.toggle("fmStreamOn", st.on);
+        Object.entries(STREAM_CLASSES).forEach(([k, cls]) => root.classList.toggle(cls, Boolean(st.on && st[k])));
+
+        const hiding = streamHidesOverlay();
+
+        if (hiding && !wasHiding) {
+            streamCloseOverlayNow();
+        }
+
+        /* Back from streamer mode: show what came in meanwhile, like "Show chat" */
+        if (!hiding && wasHiding && cnStack && !cnStack.classList.contains("fmCnCollapsed")) {
+            cnUnread = 0;
+            cnShowPending(cnViewKey(cnTarget.kind, cnTarget.channel), 0);
+        }
+
+        cnUpdatePill();
+        updateToolsButton();
+        streamMarkOwnLabel();
+    }
+
+    function applySavedStream() {
+        applyStream(readSavedStream());
+    }
+
+    /* The main switch: saves right away (bottom bar button + menu switch) */
+    function setStreamOn(on) {
+        localStorage.setItem(STREAM_LS.on, String(on));
+        applyStream({ ...liveStream, on });
+
+        const menuSwitch = document.querySelector(`${MOD_DIALOG_SELECTOR} #themeModStreamOn`);
+        if (menuSwitch) menuSwitch.checked = on;
+    }
+
+    /* ---------- Eraser preview follows the paper color (v1.6.8) ----------
+       While you erase, FlockMod previews the stroke on your "slate"
+       canvas (canvas.slate.myself) in the room's ORIGINAL paper color
+       (usually white), then really erases when you lift the pen. With
+       another paper color showing (the mod's Paper Color, a loaded
+       theme, or FlockMod's own canvas color), that preview showed as a
+       white trail. A tiny SVG color filter repaints just that preview
+       in whatever paper color is on screen, keeping its see-through
+       amount, so opacity and pen pressure look the same.
+       Only on your screen, only while the eraser is the selected tool
+       (CSS :has), only on the slate. The drawing itself is never
+       touched. The color is read from the board every 500ms (one
+       cheap style read) and the filter only changes when it does. */
+    let eraserPaperColor = "";
+
+    function updateEraserPaper() {
+        const board = document.querySelector("#DrawingArea .boardContainer") || document.querySelector(".boardContainer");
+        const color = board ? getComputedStyle(board).backgroundColor : "";
+        const m = /^rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\s*\)$/.exec(color || "");
+        const ok = Boolean(m) && (m[4] === undefined || Number(m[4]) > 0.99);
+        document.documentElement.classList.toggle("fmEraserPaper", ok);
+
+        if (!ok || color === eraserPaperColor) {
+            return;
+        }
+
+        eraserPaperColor = color;
+        let svg = document.getElementById("fmEraserPaperSvg");
+
+        if (!svg) {
+            svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.id = "fmEraserPaperSvg";
+            svg.setAttribute("aria-hidden", "true");
+            svg.setAttribute("width", "0");
+            svg.setAttribute("height", "0");
+            svg.style.cssText = "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none";
+            svg.innerHTML = '<filter id="fmEraserPaper" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=""></feColorMatrix></filter>';
+            document.documentElement.appendChild(svg);
+        }
+
+        const [r, g, b] = [m[1], m[2], m[3]].map((v) => (Number(v) / 255).toFixed(4));
+        /* every pixel becomes the paper color; its alpha (opacity/pressure) stays */
+        svg.querySelector("feColorMatrix").setAttribute("values",
+            `0 0 0 0 ${r}  0 0 0 0 ${g}  0 0 0 0 ${b}  0 0 0 1 0`);
+    }
+
+    /* ---------- Tools button + tray (v1.6.8) ----------
+       One button next to the flower holds the drawing tools, so the
+       bottom bar doesn't fill up with buttons: Reference images and
+       Streamer mode, Drawing guides. A small pink number
+       on it shows how many tools are on. Their settings live in the
+       mod menu's Advanced tab. The tray is only built while it's open,
+       and the button is only updated when something actually changes. */
+
+    const TOOLS_BUTTON_SELECTOR = ".themeModToolsButton";
+    let toolsTrayToggledAt = 0;
+    let toolsLastCount = -1;
+
+    /* Each tool: its name, icon, whether it's on, a short status and what a click does */
+    function getTools() {
+        const refOpen = Boolean(document.querySelector(REF_SELECTOR));
+        return [
+            {
+                id: "ref", name: "Reference images", icon: "fa-images", on: refOpen,
+                status: refOpen ? "Window open" : "Closed",
+                flip: () => toggleRefWindow()
+            },
+            {
+                id: "stream", name: "Streamer mode", icon: "fa-eye-slash", on: liveStream.on,
+                status: liveStream.on ? "On: private stuff hidden" : "Off",
+                flip: () => setStreamOn(!liveStream.on)
+            },
+            {
+                id: "guides", name: "Drawing guides", icon: "fa-ruler-combined", on: guides.on,
+                status: guidesStatus(),
+                flip: () => setGuidesOn(!guides.on)
+            }
+        ];
+    }
+
+    function addToolsButton() {
+        const bottomBar = document.querySelector("#bottombar > nav > div > ul:nth-child(3)");
+
+        if (!bottomBar || bottomBar.querySelector(TOOLS_BUTTON_SELECTOR)) {
+            return;
+        }
+
+        const modItem = bottomBar.querySelector(MOD_BUTTON_SELECTOR);
+
+        if (!modItem) {
+            return;
+        }
+
+        const item = document.createElement("li");
+        item.className = "nav-item";
+
+        const button = document.createElement("a");
+        button.href = "#";
+        button.className = "nav-link themeModToolsButton";
+        button.setAttribute("role", "button");
+        button.setAttribute("aria-haspopup", "dialog");
+        button.title = "Tools: reference images, streamer mode and drawing guides";
+        button.innerHTML = '<i class="fas fa-th-large" style="color: inherit"></i><span class="fmToolsCount" hidden></span>';
+
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();   /* keep FlockMod's own bottom bar handlers out of it */
+            toggleToolsTray(button);
+            /* a clicked button lets go of the keyboard (Space-to-pan keeps working) */
+            if (event.detail > 0) button.blur();
+        });
+
+        item.appendChild(button);
+        modItem.closest("li").after(item);
+        toolsLastCount = -1;
+        updateToolsButton();
+    }
+
+    /* Cheap: only touches the page when the number of tools on changes */
+    function updateToolsButton() {
+        const button = document.querySelector(TOOLS_BUTTON_SELECTOR);
+
+        if (!button) {
+            return;
+        }
+
+        const count = getTools().filter((t) => t.on).length;
+
+        if (count !== toolsLastCount) {
+            toolsLastCount = count;
+            const badge = button.querySelector(".fmToolsCount");
+            badge.textContent = String(count);
+            badge.hidden = count === 0;
+            button.classList.toggle("fmToolsActive", count > 0);
+        }
+
+        refreshToolsTray();
+    }
+
+    function toggleToolsTray(button) {
+        /* one toggle per click, even if the click arrives twice */
+        if (Date.now() - toolsTrayToggledAt < 300) {
+            return;
+        }
+        toolsTrayToggledAt = Date.now();
+
+        const old = document.querySelector(".fmToolsTray");
+
+        if (old) {
+            old.remove();
+            button.setAttribute("aria-expanded", "false");
+            button.classList.remove("fmToolsOpen");
+            return;
+        }
+
+        const tray = document.createElement("div");
+        tray.className = "fmToolsTray";
+        tray.setAttribute("role", "dialog");
+        tray.setAttribute("aria-label", "Tools");
+        document.documentElement.appendChild(tray);   /* outside FlockMod's page, so nothing there can hide it */
+        button.setAttribute("aria-expanded", "true");
+        button.classList.add("fmToolsOpen");   /* stays "pressed" while open, like the flower with the menu open */
+        refreshToolsTray(true);
+
+        const r = button.getBoundingClientRect();
+        tray.style.left = `${Math.max(8, Math.min(window.innerWidth - tray.offsetWidth - 8, r.left))}px`;
+        tray.style.top = `${Math.max(8, r.top - tray.offsetHeight - 8)}px`;
+
+        tray.addEventListener("click", (event) => {
+            const row = event.target.closest("[data-tool]");
+            const settings = event.target.closest("[data-tools-settings]");
+
+            if (row) {
+                const tool = getTools().find((t) => t.id === row.dataset.tool);
+                if (tool) tool.flip();
+                if (event.detail > 0) row.blur();
+                updateToolsButton();
+            } else if (settings) {
+                closeToolsTray();
+                openModMenuAt("advanced");
+            }
+        });
+
+        const outside = (event) => {
+            if (!tray.isConnected) {
+                window.removeEventListener("pointerdown", outside, true);
+            } else if (!tray.contains(event.target) && !button.contains(event.target)) {
+                closeToolsTray();
+                window.removeEventListener("pointerdown", outside, true);
+            }
+        };
+        setTimeout(() => window.addEventListener("pointerdown", outside, true), 0);
+    }
+
+    function closeToolsTray() {
+        document.querySelector(".fmToolsTray")?.remove();
+        const button = document.querySelector(TOOLS_BUTTON_SELECTOR);
+        button?.setAttribute("aria-expanded", "false");
+        button?.classList.remove("fmToolsOpen");
+    }
+
+    /* (Re)draws the rows, only while the tray is open and something changed */
+    function refreshToolsTray(force) {
+        const tray = document.querySelector(".fmToolsTray");
+
+        if (!tray) {
+            return;
+        }
+
+        const tools = getTools();
+        const key = tools.map((t) => t.status).join("|");
+
+        if (!force && tray.dataset.key === key) {
+            return;
+        }
+
+        tray.dataset.key = key;
+        tray.innerHTML =
+            '<div class="fmPanelTitle"><span class="fmTourFlower" aria-hidden="true"></span>Tools<span class="fmToolsSub">Only you see these</span></div>' +
+            tools.map((t) =>
+                `<button type="button" class="fmToolsRow${t.on ? " fmToolsOn" : ""}" data-tool="${t.id}" aria-pressed="${t.on}">` +
+                    `<span class="fmToolsIcon"><i class="fas ${t.icon}"></i></span>` +
+                    `<span class="fmToolsText"><b>${t.name}</b><span>${t.status}</span></span>` +
+                    '<span class="fmToolsSwitch" aria-hidden="true"><span class="fmToolsSwitchOn">ON</span><span class="fmToolsSwitchOff">OFF</span><span class="fmToolsSwitchThumb"></span></span>' +
+                "</button>").join("") +
+            '<button type="button" class="fmToolsSettings" data-tools-settings><i class="fas fa-cog"></i> Settings are in the mod menu\'s Advanced tab</button>';
+    }
+
+    /* Opens the mod menu (if it isn't open) on one tab */
+    function openModMenuAt(section) {
+        const dialog = document.querySelector(MOD_DIALOG_SELECTOR) || createModMenu();
+        dialog?.querySelector(`.themeModSidebarItem[data-theme-section="${section}"]`)?.click();
+    }
+
+    /* Your own name tag on the board stays readable: it gets a class
+       the blur skips. Runs from the 500ms loop, only while needed. */
+    function streamMarkOwnLabel() {
+        if (!document.documentElement.classList.contains("fmStreamCanvasNames")) {
+            return;
+        }
+
+        const me = myOwnName();
+
+        document.querySelectorAll(".CursorContainer .pointerLabel").forEach((label) => {
+            const own = Boolean(me) && label.textContent.trim() === me;
+            if (label.classList.contains("fmOwnLabel") !== own) {
+                label.classList.toggle("fmOwnLabel", own);
+            }
+        });
+    }
+
+    /* ---------- Top bar reminder (only shows while ON) ---------- */
+
+    function addStreamBadge() {
+        const bar = document.querySelector(".navbar-nav.topbarButtons");
+
+        if (!bar || bar.querySelector(".fmStreamBadgeItem")) {
+            return;
+        }
+
+        const item = document.createElement("li");
+        item.className = "nav-item fmStreamBadgeItem";
+        item.innerHTML = '<span class="fmStreamBadgePill" role="img" aria-label="Streamer mode is on" title="Streamer mode is on (turn it off in Tools, next to the flower)"><i class="fas fa-eye-slash"></i></span>';
+        bar.insertBefore(item, bar.firstElementChild);
+    }
+
+    /* ---------- Advanced panel ---------- */
+
+    function buildAdvancedPanelHTML() {
+        const row = (id, name, desc, def) => `
+                            <div class="themeModSetting themeModNoDivider">
+                                <div class="themeModSettingText">
+                                    <div class="themeModSettingName">${name}</div>
+                                    <div class="themeModSettingDescription">${desc}</div>
+                                </div>
+                                ${animToggleHTML(id).replace(`id="${id}"`, `id="${id}" data-default="${def}"`)}
+                            </div>`;
+
+        return `
+                        <div class="themeModSectionContent" data-theme-panel="advanced">
+
+                            <div class="themeModSubsectionTitle">
+                                Streamer Mode
+                            </div>
+
+                            ${row("themeModStreamOn", "Streamer mode",
+                                "Hide private stuff while you record. You can also turn it on in Tools, next to the flower.", false)}
+
+                            <div class="fmGroupLabel">Hide while on</div>
+
+                            ${row("themeModStreamChat", "Public &amp; staff chat", "Blurs FlockMod's chat window.", true)}
+                            ${row("themeModStreamPm", "PM windows", "Blurs the Messenger window.", true)}
+                            ${row("themeModStreamOverlay", "Hide chat overlay", "Pings and a small unread count stay.", true)}
+                            ${row("themeModStreamActivity", "Activity bar", "Blurs the messages flashing in the top bar.", true)}
+                            ${row("themeModStreamNames", "Usernames", "Blurs other people's names in the user list. Yours stays.", true)}
+                            ${row("themeModStreamCanvasNames", "Names on the canvas", "Blurs other people's name tags on the board. Yours stays.", true)}
+                            ${row("themeModStreamPeek", "Peek on hover", "Hover a blurred spot to read it.", true)}
+                            ${row("themeModStreamBadge", "Streamer badge", "Small pink reminder in the top bar.", true)}
+
+                            <div class="themeModSubsectionTitle themeModSpacingSubsection">
+                                Drawing Guides
+                            </div>
+
+                            ${row("themeModGuidesOn", "Drawing guides",
+                                "A ruler, perspective points and a grid over the canvas. Also in Tools, next to the flower.", false)}
+                            ${row("themeModGuidesHorizon", "Horizon line", "A dashed line through your perspective points.", true)}
+                            ${row("themeModGuidesRemember", "Remember my guides", "Keeps your points where you left them.", true)}
+
+                            <div class="themeModSetting themeModNoDivider">
+                                <div class="themeModSettingText">
+                                    <div class="themeModSettingName">Line color</div>
+                                    <div class="themeModSettingDescription">Pick one that shows on your paper color.</div>
+                                </div>
+                                <input type="color" id="themeModGuidesColor" value="${GUIDES_SETTINGS_DEFAULTS.color}" data-default="${GUIDES_SETTINGS_DEFAULTS.color}">
+                            </div>
+
+                            <div class="themeModSetting themeModNoDivider">
+                                <div class="themeModSettingText">
+                                    <div class="themeModSettingName">Line strength</div>
+                                    <div class="themeModSettingDescription">How see-through the lines are.</div>
+                                </div>
+                                <div class="themeModRangeControl">
+                                    <input type="range" id="themeModGuidesStrength" class="themeModRange" min="10" max="100" step="5" value="${GUIDES_SETTINGS_DEFAULTS.strength}" data-default="${GUIDES_SETTINGS_DEFAULTS.strength}">
+                                    <span id="themeModGuidesStrengthValue" class="themeModRangeValue">${GUIDES_SETTINGS_DEFAULTS.strength}%</span>
+                                </div>
+                            </div>
+
+                            <div class="themeModSetting themeModNoDivider">
+                                <div class="themeModSettingText">
+                                    <div class="themeModSettingName">Lines per point</div>
+                                    <div class="themeModSettingDescription">More lines help with tricky angles. Also sets the grid size.</div>
+                                </div>
+                                <select id="themeModGuidesDensity" class="themeModSelect">
+                                    <option value="few">Few</option>
+                                    <option value="normal" selected>Normal</option>
+                                    <option value="many">Many</option>
+                                </select>
+                            </div>
+
+                            <div class="themeModLocalNote">
+                                <i class="fas fa-eye-slash"></i>
+                                <span>Only changes what your screen shows. Nothing is sent to FlockMod, guides are never part of your drawing, and other people still see the room as normal.</span>
+                            </div>
+
+                        </div>`;
+    }
+
+    function setupAdvancedPanel(dialog) {
+        const main = dialog.querySelector("#themeModStreamOn");
+        const ids = {
+            chat: "#themeModStreamChat", pm: "#themeModStreamPm", overlay: "#themeModStreamOverlay",
+            activity: "#themeModStreamActivity", names: "#themeModStreamNames",
+            peek: "#themeModStreamPeek", badge: "#themeModStreamBadge",
+            canvasNames: "#themeModStreamCanvasNames"
+        };
+        const toggles = {};
+        Object.entries(ids).forEach(([k, sel]) => { toggles[k] = dialog.querySelector(sel); });
+
+        const fill = (st) => {
+            main.checked = st.on;
+            Object.keys(toggles).forEach((k) => { toggles[k].checked = st[k]; });
+        };
+
+        const readInputs = () => {
+            const st = { on: main.checked };
+            Object.keys(toggles).forEach((k) => { st[k] = toggles[k].checked; });
+            return st;
+        };
+
+        fill(readSavedStream());
+
+        /* main switch saves right away, like the bottom bar button */
+        main.addEventListener("change", () => {
+            localStorage.setItem(STREAM_LS.on, String(main.checked));
+            applyStream(readInputs());
+        });
+
+        /* the rest preview live and are kept with Apply */
+        Object.values(toggles).forEach((t) => t.addEventListener("change", () => applyStream(readInputs())));
+
+        const write = (st) => Object.keys(STREAM_LS).forEach((k) => localStorage.setItem(STREAM_LS[k], String(st[k])));
+
+        /* ---- Drawing Guides (v1.6.8) ---- */
+        const g = {
+            on: dialog.querySelector("#themeModGuidesOn"),
+            horizon: dialog.querySelector("#themeModGuidesHorizon"),
+            remember: dialog.querySelector("#themeModGuidesRemember"),
+            color: dialog.querySelector("#themeModGuidesColor"),
+            strength: dialog.querySelector("#themeModGuidesStrength"),
+            strengthValue: dialog.querySelector("#themeModGuidesStrengthValue"),
+            density: dialog.querySelector("#themeModGuidesDensity")
+        };
+
+        const fillGuides = (st) => {
+            g.horizon.checked = st.horizon;
+            g.remember.checked = st.remember;
+            g.color.value = st.color;
+            g.strength.value = String(st.strength);
+            g.strengthValue.textContent = `${st.strength}%`;
+            g.density.value = st.density;
+        };
+
+        const readGuides = () => ({
+            color: g.color.value,
+            strength: Number(g.strength.value),
+            density: g.density.value,
+            horizon: g.horizon.checked,
+            remember: g.remember.checked
+        });
+
+        const previewGuides = () => {
+            g.strengthValue.textContent = `${g.strength.value}%`;
+            applyGuidesSettings(readGuides());
+        };
+
+        g.on.checked = guides.on;
+        fillGuides(readSavedGuidesSettings());
+
+        /* the guides' main switch saves right away, like Tools */
+        g.on.addEventListener("change", () => setGuidesOn(g.on.checked));
+        [g.horizon, g.remember, g.density].forEach((el) => el.addEventListener("change", previewGuides));
+        [g.color, g.strength].forEach((el) => el.addEventListener("input", previewGuides));
+
+        const writeGuides = (st) => ["color", "strength", "density", "horizon", "remember"]
+            .forEach((k) => localStorage.setItem(GUIDES_LS[k], String(st[k])));
+
+        return {
+            save() {
+                write(readInputs());
+                applySavedStream();
+                writeGuides(readGuides());
+                applySavedGuidesSettings();
+            },
+            reset() {
+                const st = { ...STREAM_DEFAULTS };
+                fill(st);
+                write(st);
+                applyStream(st);
+
+                fillGuides(GUIDES_SETTINGS_DEFAULTS);
+                writeGuides(GUIDES_SETTINGS_DEFAULTS);
+                guides.points = JSON.parse(JSON.stringify(GUIDES_POINTS_DEFAULT));
+                localStorage.removeItem(GUIDES_LS.points);
+                localStorage.removeItem(GUIDES_LS.bar);
+                applyGuidesSettings({ ...GUIDES_SETTINGS_DEFAULTS });
+                g.on.checked = false;
+                setGuidesOn(false);
+            }
+        };
+    }
+
+    /* =========================================================
+       DRAWING GUIDES (Tools tray + Advanced tab)  v1.6.8
+       A ruler, 1/2/3-point perspective and a square grid drawn over
+       the canvas. Only on YOUR screen: one SVG placed inside
+       FlockMod's .boardContainer (over the layers, like FlockMod's
+       own grid), so it moves, zooms and rotates with the board by
+       itself, with no math per frame. It's never part of the drawing,
+       saved images or what anyone else sees. Visual only: strokes
+       aren't bent or snapped.
+       Points are kept as fractions of the board (0-1), so they fit
+       any board size. Lines are one <path> per group and only redraw
+       when something changes.
+       ========================================================= */
+
+    const GUIDES_LS = {
+        on: "flockmodGuidesOn",                 /* tool state: saves right away */
+        mode: "flockmodGuidesMode",
+        locked: "flockmodGuidesLocked",
+        points: "flockmodGuidesPoints",
+        bar: "flockmodGuidesBarPos",
+        color: "flockmodGuidesColor",           /* settings: follow Apply */
+        strength: "flockmodGuidesStrength",
+        density: "flockmodGuidesDensity",
+        horizon: "flockmodGuidesHorizon",
+        remember: "flockmodGuidesRemember"
+    };
+
+    const GUIDES_SETTINGS_DEFAULTS = { color: "#e86fa3", strength: 55, density: "normal", horizon: true, remember: true };
+    const GUIDES_MODES = { ruler: "Ruler", one: "1-pt", two: "2-pt", three: "3-pt", grid: "Grid" };
+    const GUIDES_MODE_NAMES = { ruler: "Ruler", one: "1-point", two: "2-point", three: "3-point", grid: "Grid" };
+    const GUIDES_DENSITY = { few: { rays: 16, grid: 8 }, normal: { rays: 24, grid: 12 }, many: { rays: 40, grid: 20 } };
+    const GUIDES_HANDLES = { ruler: ["ra", "rb"], one: ["c"], two: ["v1", "v2"], three: ["v1", "v2", "v3"], grid: [] };
+    const GUIDES_POINTS_DEFAULT = {
+        c: { x: 0.5, y: 0.45 }, v1: { x: 0.08, y: 0.45 }, v2: { x: 0.92, y: 0.45 },
+        v3: { x: 0.5, y: 0.9 }, ra: { x: 0.2, y: 0.75 }, rb: { x: 0.8, y: 0.3 }
+    };
+
+    const guides = {
+        on: false, mode: "two", locked: false, linesHidden: false,
+        points: JSON.parse(JSON.stringify(GUIDES_POINTS_DEFAULT)),
+        settings: { ...GUIDES_SETTINGS_DEFAULTS },
+        svg: null, board: null, bar: null, obs: null, w: 0, h: 0, k: 1,
+        raf: 0, scaleRaf: 0, drag: null, inputReady: false, areaKey: ""
+    };
+
+    function readSavedGuidesSettings() {
+        const st = { ...GUIDES_SETTINGS_DEFAULTS };
+        const color = localStorage.getItem(GUIDES_LS.color);
+        if (/^#[0-9a-f]{6}$/i.test(color || "")) st.color = color;
+        const strength = Number(localStorage.getItem(GUIDES_LS.strength));
+        if (Number.isFinite(strength) && strength >= 10 && strength <= 100) st.strength = Math.round(strength);
+        const density = localStorage.getItem(GUIDES_LS.density);
+        if (GUIDES_DENSITY[density]) st.density = density;
+        ["horizon", "remember"].forEach((k) => {
+            const raw = localStorage.getItem(GUIDES_LS[k]);
+            if (raw === "true" || raw === "false") st[k] = raw === "true";
+        });
+        return st;
+    }
+
+    function readSavedGuidesPoints() {
+        const pts = JSON.parse(JSON.stringify(GUIDES_POINTS_DEFAULT));
+        try {
+            const saved = JSON.parse(localStorage.getItem(GUIDES_LS.points) || "null");
+            if (saved && typeof saved === "object") {
+                Object.keys(pts).forEach((id) => {
+                    const p = saved[id];
+                    /* v1.6.8 test builds started the 3rd point below the board,
+                       out of reach: that one goes back to the new default */
+                    const oldV3 = id === "v3" && p && p.x === 0.5 && p.y === 1.35;
+                    if (p && !oldV3 && Number.isFinite(p.x) && Number.isFinite(p.y) &&
+                        p.x >= -1 && p.x <= 2 && p.y >= -1 && p.y <= 2) {
+                        pts[id] = { x: p.x, y: p.y };
+                    }
+                });
+            }
+        } catch (error) { /* bad data: keep the defaults */ }
+        return pts;
+    }
+
+    function saveGuidesPoints() {
+        if (guides.settings.remember) {
+            localStorage.setItem(GUIDES_LS.points, JSON.stringify(guides.points));
+        }
+    }
+
+    /* Settings (color, strength, density, horizon, remember): preview or saved */
+    function applyGuidesSettings(st) {
+        guides.settings = { ...st };
+        const root = document.documentElement;
+        root.style.setProperty("--fm-guides-color", st.color);
+        root.style.setProperty("--fm-guides-opacity", String(st.strength / 100));
+        if (!st.remember) localStorage.removeItem(GUIDES_LS.points);
+        guidesRender();
+    }
+
+    function applySavedGuides() {
+        guides.on = localStorage.getItem(GUIDES_LS.on) === "true";
+        const mode = localStorage.getItem(GUIDES_LS.mode);
+        guides.mode = GUIDES_MODES[mode] ? mode : "two";
+        guides.locked = localStorage.getItem(GUIDES_LS.locked) === "true";
+        const st = readSavedGuidesSettings();
+        guides.points = st.remember ? readSavedGuidesPoints() : JSON.parse(JSON.stringify(GUIDES_POINTS_DEFAULT));
+        applyGuidesSettings(st);
+        guidesEnsure();
+    }
+
+    function applySavedGuidesSettings() {
+        applyGuidesSettings(readSavedGuidesSettings());
+    }
+
+    /* The main switch (Tools tray, toolbar ✕ and the Advanced tab): saves right away */
+    function setGuidesOn(on) {
+        guides.on = on;
+        guides.linesHidden = false;
+        localStorage.setItem(GUIDES_LS.on, String(on));
+        guidesEnsure();
+        updateToolsButton();
+
+        const menuSwitch = document.querySelector(`${MOD_DIALOG_SELECTOR} #themeModGuidesOn`);
+        if (menuSwitch) menuSwitch.checked = on;
+    }
+
+    function guidesBoardEl() {
+        return document.querySelector("#DrawingArea .boardContainer") || document.querySelector(".boardContainer");
+    }
+
+    /* Called from the 500ms loop: adds/removes the guides, and follows
+       FlockMod when it swaps the board (new room, new board size) */
+    function guidesEnsure() {
+        const show = guides.on && cnIsRoomPage();
+
+        if (!show) {
+            guidesTeardown();
+            return;
+        }
+
+        const board = guidesBoardEl();
+
+        if (!board) {
+            return;
+        }
+
+        if (!guides.svg || guides.svg.parentElement !== board) {
+            guidesBuild(board);
+        }
+
+        const w = parseFloat(board.style.width) || board.offsetWidth || 1280;
+        const h = parseFloat(board.style.height) || board.offsetHeight || 720;
+
+        if (w !== guides.w || h !== guides.h) {
+            guides.w = w;
+            guides.h = h;
+            guidesRender();
+        }
+
+        if (!guides.bar || !guides.bar.isConnected) {
+            guidesBuildBar();
+        } else {
+            /* the canvas area changed (window resized, sidebar moved...): keep the toolbar inside it */
+            const b = guidesBarBounds();
+            const key = `${Math.round(b.left)},${Math.round(b.top)},${Math.round(b.right)},${Math.round(b.bottom)}`;
+            if (key !== guides.areaKey) {
+                guides.areaKey = key;
+                guidesPlaceBar();
+            }
+        }
+    }
+
+    function guidesTeardown() {
+        guides.svg?.remove();
+        guides.bar?.remove();
+        guides.obs?.disconnect();
+        guides.svg = guides.bar = guides.obs = guides.board = null;
+        guides.drag = null;
+        guides.w = guides.h = 0;
+    }
+
+    function guidesBuild(board) {
+        guides.svg?.remove();
+        guides.obs?.disconnect();
+
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("class", "fmGuides");
+        svg.setAttribute("aria-hidden", "true");
+        svg.innerHTML =
+            '<defs><clipPath id="fmGuidesClip"><rect class="fmGuidesClipRect" x="0" y="0" width="1" height="1"></rect></clipPath></defs>' +
+            '<g clip-path="url(#fmGuidesClip)">' +
+                '<path class="fmGuidesRays" vector-effect="non-scaling-stroke"></path>' +
+                '<path class="fmGuidesMain" vector-effect="non-scaling-stroke"></path>' +
+                '<path class="fmGuidesHorizon" vector-effect="non-scaling-stroke"></path>' +
+            "</g>" +
+            '<g class="fmGuidesHandles"></g>';
+        board.appendChild(svg);
+        guides.svg = svg;
+        guides.board = board;
+        guides.w = guides.h = 0;
+        guides.checkReach = true;
+        guides.areaCache = null;
+
+        /* FlockMod zooms/rotates by changing the board's style: only then
+           are the handles resized, so they stay the same size on screen */
+        guides.obs = new MutationObserver(guidesQueueScale);
+        guides.obs.observe(board, { attributes: true, attributeFilter: ["style"] });
+
+        guidesSetupInput();
+    }
+
+    /* Redraws the lines and handles (at most once per frame) */
+    function guidesRender() {
+        if (!guides.svg || guides.raf) {
+            return;
+        }
+
+        guides.raf = requestAnimationFrame(() => {
+            guides.raf = 0;
+            guidesDraw();
+        });
+    }
+
+    function guidesDraw() {
+        const svg = guides.svg;
+        const { w, h } = guides;
+
+        if (!svg || !w || !h) {
+            return;
+        }
+
+        const P = (id) => ({ x: guides.points[id].x * w, y: guides.points[id].y * h });
+        const L = (w + h) * 4;
+        const n = (GUIDES_DENSITY[guides.settings.density] || GUIDES_DENSITY.normal).rays;
+        const r = (v) => Math.round(v * 10) / 10;
+        let rays = "", main = "", horizon = "";
+
+        const fan = (p) => {
+            for (let i = 0; i < n; i++) {
+                const a = (i / n) * Math.PI * 2 + 0.0001;
+                rays += `M${r(p.x)} ${r(p.y)}L${r(p.x + Math.cos(a) * L)} ${r(p.y + Math.sin(a) * L)}`;
+            }
+        };
+
+        const mode = guides.mode;
+
+        if (mode === "one") {
+            fan(P("c"));
+        } else if (mode === "two") {
+            fan(P("v1"));
+            fan(P("v2"));
+        } else if (mode === "three") {
+            fan(P("v1"));
+            fan(P("v2"));
+            fan(P("v3"));
+        } else if (mode === "grid") {
+            const cols = (GUIDES_DENSITY[guides.settings.density] || GUIDES_DENSITY.normal).grid;
+            const cell = w / cols;
+            for (let x = cell; x < w - 0.5; x += cell) rays += `M${r(x)} 0V${r(h)}`;
+            for (let y = cell; y < h - 0.5; y += cell) rays += `M0 ${r(y)}H${r(w)}`;
+        } else {
+            const a = P("ra"), b = P("rb");
+            const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+            main = `M${r(a.x - dx / len * L)} ${r(a.y - dy / len * L)}L${r(b.x + dx / len * L)} ${r(b.y + dy / len * L)}`;
+        }
+
+        if (guides.settings.horizon && (mode === "one" || mode === "two" || mode === "three")) {
+            const y = mode === "one" ? P("c").y : P("v1").y;
+            horizon = `M${r(-L)} ${r(y)}H${r(w + L)}`;
+        }
+
+        svg.querySelector(".fmGuidesClipRect").setAttribute("width", String(w));
+        svg.querySelector(".fmGuidesClipRect").setAttribute("height", String(h));
+        svg.querySelector(".fmGuidesRays").setAttribute("d", rays);
+        svg.querySelector(".fmGuidesMain").setAttribute("d", main);
+        svg.querySelector(".fmGuidesHorizon").setAttribute("d", horizon);
+        svg.classList.toggle("fmGuidesLocked", guides.locked);
+        svg.classList.toggle("fmGuidesLinesHidden", guides.linesHidden);
+
+        const ids = GUIDES_HANDLES[mode] || [];
+        svg.querySelector(".fmGuidesHandles").innerHTML = ids.map((id) => {
+            const p = P(id);
+            return `<g class="fmGuideHandle" data-guide-id="${id}" transform="translate(${r(p.x)} ${r(p.y)}) scale(${r(1 / guides.k * 1000) / 1000})">` +
+                '<circle class="fmGuideHalo" r="15"></circle><circle class="fmGuideDot" r="6.5"></circle></g>';
+        }).join("");
+
+        guidesQueueScale();
+
+        if (guides.checkReach) {
+            guides.checkReach = false;
+            requestAnimationFrame(guidesBringPointsIntoView);
+        }
+    }
+
+    /* Handles keep one size on screen whatever the zoom */
+    function guidesQueueScale() {
+        if (guides.scaleRaf) return;
+        guides.scaleRaf = requestAnimationFrame(() => {
+            guides.scaleRaf = 0;
+            const m = guides.svg?.getScreenCTM();
+            if (!m) return;
+            const k = Math.hypot(m.a, m.b) || 1;
+            if (Math.abs(k - guides.k) < 0.01) return;
+            guides.k = k;
+            guides.svg.querySelectorAll(".fmGuideHandle").forEach((g) => {
+                const id = g.dataset.guideId;
+                const x = guides.points[id].x * guides.w, y = guides.points[id].y * guides.h;
+                g.setAttribute("transform", `translate(${x} ${y}) scale(${1 / k})`);
+            });
+        });
+    }
+
+    /* The part of the canvas area you can actually see: FlockMod's
+       #DrawingArea minus the sidebar laid over it (left or right side)
+       and anything past the window's edges */
+    function guidesVisibleArea() {
+        const now = Date.now();
+
+        /* worked out at most once a second (and again if the window changes size) */
+        if (guides.areaCache && now - guides.areaCache.at < 1000 &&
+            guides.areaCache.ww === window.innerWidth && guides.areaCache.wh === window.innerHeight) {
+            return guides.areaCache.a;
+        }
+
+        const drawing = document.getElementById("DrawingArea");
+        const rect = drawing?.getBoundingClientRect();
+        let left = 0, top = 0, right = window.innerWidth, bottom = window.innerHeight;
+
+        if (rect && rect.width && rect.height) {
+            left = Math.max(left, rect.left);
+            top = Math.max(top, rect.top);
+            right = Math.min(right, rect.right);
+            bottom = Math.min(bottom, rect.bottom);
+        }
+
+        /* Whatever FlockMod lays over the canvas (its sidebar, bars...),
+           look at what is really on top at each spot: walk in from each
+           edge until the canvas itself shows. Our own toolbar, chat
+           overlay and guides count as "canvas", since they sit on it. */
+        if (drawing && right - left > 40 && bottom - top > 40) {
+            const isCanvas = (x, y) => {
+                const el = document.elementFromPoint(x, y);
+                return Boolean(el && (drawing.contains(el) || el.closest?.(".fmGuidesBar, .fmCnStack")));
+            };
+            const step = 12;
+            const rows = [0.3, 0.5, 0.7].map((f) => top + (bottom - top) * f);
+            const cols = [0.3, 0.5, 0.7].map((f) => left + (right - left) * f);
+            const scan = (from, to, dir, fixed, horizontal) => {
+                for (let v = from; dir > 0 ? v < to : v > to; v += step * dir) {
+                    if (horizontal ? isCanvas(v, fixed) : isCanvas(fixed, v)) return v;
+                }
+                return null;
+            };
+            const best = (list, pick) => {
+                const found = list.filter((v) => v !== null);
+                return found.length ? pick(...found) : null;
+            };
+            const midX = (left + right) / 2, midY = (top + bottom) / 2;
+            const l = best(rows.map((y) => scan(left + 1, midX, 1, y, true)), Math.min);
+            const r = best(rows.map((y) => scan(right - 1, midX, -1, y, true)), Math.max);
+            const t = best(cols.map((x) => scan(top + 1, midY, 1, x, false)), Math.min);
+            const b = best(cols.map((x) => scan(bottom - 1, midY, -1, x, false)), Math.max);
+            if (l !== null && r !== null && r - l > 60) { left = l; right = r; }
+            if (t !== null && b !== null && b - t > 60) { top = t; bottom = b; }
+        }
+
+        const a = { left, top, right, bottom };
+        guides.areaCache = { a, at: now, ww: window.innerWidth, wh: window.innerHeight };
+        return a;
+    }
+
+    /* Board fraction for a screen point, kept inside what you can see */
+    function guidesScreenToBoard(cx, cy) {
+        const m = guides.svg?.getScreenCTM();
+        if (!m || !guides.w || !guides.h) return null;
+        const a = guidesVisibleArea();
+        const pad = 12;
+        cx = Math.max(a.left + pad, Math.min(a.right - pad, cx));
+        cy = Math.max(a.top + pad, Math.min(a.bottom - pad, cy));
+        const p = new DOMPoint(cx, cy).matrixTransform(m.inverse());
+        const clamp = (v) => Math.max(-1, Math.min(2, v));
+        return { x: clamp(p.x / guides.w), y: clamp(p.y / guides.h) };
+    }
+
+    /* When guides are turned on (or the page loads): any point that ended up
+       out of sight is brought back to the nearest visible edge */
+    function guidesBringPointsIntoView() {
+        const svg = guides.svg;
+        if (!svg || !guides.w) return;
+        const a = guidesVisibleArea();
+        let moved = false;
+
+        svg.querySelectorAll(".fmGuideHandle .fmGuideDot").forEach((dot) => {
+            const r = dot.getBoundingClientRect();
+            const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+            if (cx >= a.left && cx <= a.right && cy >= a.top && cy <= a.bottom) return;
+            const p = guidesScreenToBoard(cx, cy);
+            const id = dot.parentNode.dataset.guideId;
+            if (!p || !guides.points[id]) return;
+            guides.points[id] = p;
+            if (id === "v1" || id === "v2") {
+                guides.points.v1.y = p.y;
+                guides.points.v2.y = p.y;
+            }
+            moved = true;
+        });
+
+        if (moved) {
+            saveGuidesPoints();
+            guidesDraw();
+        }
+    }
+
+    /* ---------- dragging the points ----------
+       Caught on the window first (capture), so FlockMod never sees the
+       press and never starts a stroke. Only presses ON a handle count;
+       drawing anywhere else works exactly as before. */
+    function guidesSetupInput() {
+        if (guides.inputReady) return;
+        guides.inputReady = true;
+
+        const onHandle = (event) => event.target instanceof Element &&
+            event.target.closest(".fmGuideHandle") && guides.svg?.contains(event.target);
+
+        /* the point can't leave the part of the canvas you can see, so it can
+           always be grabbed again (dragging over the sidebar or bars stops at the edge) */
+        const toBoard = (event) => guidesScreenToBoard(event.clientX, event.clientY);
+
+        window.addEventListener("pointerdown", (event) => {
+            if (guides.locked || !onHandle(event)) return;
+            event.preventDefault();             /* also stops the mouse events that follow */
+            event.stopImmediatePropagation();
+            guides.areaCache = null;   /* measure what's visible right now */
+            guides.drag = { id: event.target.closest(".fmGuideHandle").dataset.guideId, pointerId: event.pointerId };
+            guides.svg.classList.add("fmGuidesDragging");
+        }, true);
+
+        window.addEventListener("pointermove", (event) => {
+            if (!guides.drag || event.pointerId !== guides.drag.pointerId) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            const p = toBoard(event);
+            if (!p) return;
+            const id = guides.drag.id;
+            guides.points[id] = p;
+            /* 2/3-point: both side points stay on the same horizon */
+            if (id === "v1" || id === "v2") {
+                guides.points.v1.y = p.y;
+                guides.points.v2.y = p.y;
+            }
+            guidesRender();
+        }, true);
+
+        const end = (event) => {
+            if (!guides.drag || event.pointerId !== guides.drag.pointerId) return;
+            event.stopImmediatePropagation();
+            guides.drag = null;
+            guides.svg?.classList.remove("fmGuidesDragging");
+            saveGuidesPoints();
+        };
+        window.addEventListener("pointerup", end, true);
+        window.addEventListener("pointercancel", end, true);
+
+        /* touch and older mouse events on a handle never reach FlockMod either */
+        ["mousedown", "touchstart"].forEach((type) => {
+            window.addEventListener(type, (event) => {
+                if (!guides.locked && onHandle(event)) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                }
+            }, { capture: true, passive: false });
+        });
+        ["mousemove", "touchmove"].forEach((type) => {
+            window.addEventListener(type, (event) => {
+                if (guides.drag) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                }
+            }, { capture: true, passive: false });
+        });
+    }
+
+    /* ---------- the floating toolbar ---------- */
+
+    function guidesBuildBar() {
+        guides.bar?.remove();
+
+        const bar = document.createElement("div");
+        bar.className = "fmGuidesBar";
+        bar.setAttribute("role", "toolbar");
+        bar.setAttribute("aria-label", "Drawing guides");
+        bar.innerHTML =
+            '<span class="fmGuidesGrip" title="Drag to move. Double-click to put it back in the corner."><i class="fas fa-grip-vertical"></i></span>' +
+            Object.entries(GUIDES_MODES).map(([id, label]) =>
+                `<button type="button" data-guide-mode="${id}" title="${GUIDES_MODE_NAMES[id]}">${label}</button>`).join("") +
+            '<span class="fmGuidesSep"></span>' +
+            '<button type="button" class="fmGuidesIconBtn" data-guide-act="reset" title="Put the points back where they started" aria-label="Put the points back where they started"><i class="fas fa-undo-alt"></i></button>' +
+            '<button type="button" class="fmGuidesIconBtn" data-guide-act="lock"><i class="fas fa-lock-open"></i></button>' +
+            '<button type="button" class="fmGuidesIconBtn" data-guide-act="lines"><i class="fas fa-eye"></i></button>' +
+            '<button type="button" class="fmGuidesIconBtn" data-guide-act="close" title="Turn guides off" aria-label="Turn guides off"><i class="fas fa-times"></i></button>';
+        cnHost().appendChild(bar);
+        guides.bar = bar;
+
+        /* nothing on the toolbar ever reaches FlockMod (no strokes, no hotkeys) */
+        ["pointerdown", "mousedown", "touchstart"].forEach((type) => {
+            bar.addEventListener(type, (event) => event.stopPropagation());
+        });
+
+        bar.addEventListener("click", (event) => {
+            const modeBtn = event.target.closest("[data-guide-mode]");
+            const act = event.target.closest("[data-guide-act]");
+
+            if (modeBtn) {
+                guides.mode = modeBtn.dataset.guideMode;
+                guides.linesHidden = false;
+                guides.checkReach = true;
+                localStorage.setItem(GUIDES_LS.mode, guides.mode);
+                guidesRender();
+                updateToolsButton();
+            } else if (act?.dataset.guideAct === "reset") {
+                /* only this mode's points go back; the others stay as they are */
+                (GUIDES_HANDLES[guides.mode] || []).forEach((id) => {
+                    guides.points[id] = { ...GUIDES_POINTS_DEFAULT[id] };
+                });
+                guides.linesHidden = false;
+                guides.checkReach = true;
+                saveGuidesPoints();
+                guidesRender();
+            } else if (act?.dataset.guideAct === "lock") {
+                guides.locked = !guides.locked;
+                localStorage.setItem(GUIDES_LS.locked, String(guides.locked));
+                guidesRender();
+            } else if (act?.dataset.guideAct === "lines") {
+                guides.linesHidden = !guides.linesHidden;
+                guidesRender();
+            } else if (act?.dataset.guideAct === "close") {
+                setGuidesOn(false);
+                return;
+            }
+
+            guidesRefreshBar();
+            /* a clicked button lets go of the keyboard (Space-to-pan keeps working) */
+            const b = event.target.closest("button");
+            if (b && event.detail > 0) b.blur();
+        });
+
+        guidesSetupBarDrag(bar);
+        guidesRefreshBar();
+        guidesPlaceBar();
+    }
+
+    function guidesRefreshBar() {
+        const bar = guides.bar;
+        if (!bar) return;
+
+        bar.querySelectorAll("[data-guide-mode]").forEach((b) => {
+            const on = b.dataset.guideMode === guides.mode;
+            b.classList.toggle("fmGuidesOn", on);
+            b.setAttribute("aria-pressed", String(on));
+        });
+
+        const lock = bar.querySelector('[data-guide-act="lock"]');
+        lock.classList.toggle("fmGuidesOn", guides.locked);
+        lock.setAttribute("aria-pressed", String(guides.locked));
+        lock.title = guides.locked ? "Locked: points can't move. Click to unlock." : "Lock the points so they can't move by accident";
+        lock.setAttribute("aria-label", lock.title);
+        lock.querySelector("i").className = `fas ${guides.locked ? "fa-lock" : "fa-lock-open"}`;
+
+        const lines = bar.querySelector('[data-guide-act="lines"]');
+        lines.classList.toggle("fmGuidesOn", guides.linesHidden);
+        lines.setAttribute("aria-pressed", String(guides.linesHidden));
+        lines.title = guides.linesHidden ? "Show the lines again" : "Hide the lines for a moment";
+        lines.setAttribute("aria-label", lines.title);
+        lines.querySelector("i").className = `fas ${guides.linesHidden ? "fa-eye-slash" : "fa-eye"}`;
+    }
+
+    /* Where the toolbar may go: the canvas area (never under FlockMod's
+       top bar, bottom bar or sidebar, where it could get lost) */
+    function guidesBarBounds() {
+        const a = guidesVisibleArea();
+        const pad = 6;
+        return { left: a.left + pad, top: a.top + pad, right: a.right - pad, bottom: a.bottom - pad };
+    }
+
+    /* Keeps x/y so the whole toolbar stays inside those bounds */
+    function guidesClampBar(x, y) {
+        const bar = guides.bar;
+        const b = guidesBarBounds();
+        const maxX = Math.max(b.left, b.right - bar.offsetWidth);
+        const maxY = Math.max(b.top, b.bottom - bar.offsetHeight);
+        return { x: Math.max(b.left, Math.min(maxX, x)), y: Math.max(b.top, Math.min(maxY, y)) };
+    }
+
+    /* Puts the toolbar where you left it (or the canvas' top-left), inside the canvas area */
+    function guidesPlaceBar() {
+        const bar = guides.bar;
+        if (!bar) return;
+
+        let pos = null;
+
+        try {
+            pos = JSON.parse(localStorage.getItem(GUIDES_LS.bar) || "null");
+        } catch (error) { pos = null; }
+
+        if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) {
+            const b = guidesBarBounds();
+            pos = { x: b.left + 6, y: b.top + 6 };
+        }
+
+        const p = guidesClampBar(pos.x, pos.y);
+        bar.style.left = `${p.x}px`;
+        bar.style.top = `${p.y}px`;
+    }
+
+    function guidesSetupBarDrag(bar) {
+        const grip = bar.querySelector(".fmGuidesGrip");
+        let start = null;
+
+        grip.addEventListener("pointerdown", (event) => {
+            event.preventDefault();
+            grip.setPointerCapture(event.pointerId);
+            const r = bar.getBoundingClientRect();
+            start = { dx: event.clientX - r.left, dy: event.clientY - r.top };
+            bar.classList.add("fmGuidesBarMoving");
+        });
+
+        grip.addEventListener("pointermove", (event) => {
+            if (!start) return;
+            const p = guidesClampBar(event.clientX - start.dx, event.clientY - start.dy);
+            bar.style.left = `${p.x}px`;
+            bar.style.top = `${p.y}px`;
+        });
+
+        /* double-click / double-tap the grip: back to the canvas' top-left corner */
+        grip.addEventListener("dblclick", () => {
+            localStorage.removeItem(GUIDES_LS.bar);
+            guidesPlaceBar();
+        });
+
+        const stop = () => {
+            if (!start) return;
+            start = null;
+            bar.classList.remove("fmGuidesBarMoving");
+            localStorage.setItem(GUIDES_LS.bar, JSON.stringify({ x: parseFloat(bar.style.left), y: parseFloat(bar.style.top) }));
+        };
+        grip.addEventListener("pointerup", stop);
+        grip.addEventListener("pointercancel", stop);
+    }
+
+    /* For the Tools tray */
+    function guidesStatus() {
+        if (!guides.on) return "Off";
+        return `On: ${GUIDES_MODE_NAMES[guides.mode] || "2-point"}`;
+    }
+
     function setupThumbShape(dialog) {
         const toggle = dialog.querySelector("#themeModThumbShapeEnabled");
         const select = dialog.querySelector("#themeModThumbShape");
@@ -14171,6 +15544,10 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         });
 
         add(CANVAS_DIM_STRENGTH_LS, "int", CANVAS_DIM_STRENGTH_DEFAULT, { min: 5, max: 90 });
+        /* v1.6.8: My cursor (codes without it = FlockMod's cursor) */
+        add(MYCUR_LS.look, "enum", MYCUR_DEFAULTS.look, { choices: MYCUR_LOOKS });
+        add(MYCUR_LS.color, "color", MYCUR_DEFAULTS.color);
+        add(MYCUR_LS.cross, "bool", MYCUR_DEFAULTS.cross);
         add("flockmodCustomText1ColorEnabled", "bool", false);
         add("flockmodCustomText1Color", "color", "#ffffff");
         add("flockmodCustomText2ColorEnabled", "bool", false);
@@ -17550,6 +18927,10 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                             Backgrounds
                         </button>
 
+                        <button class="themeModSidebarItem" data-theme-section="advanced">
+                            Advanced
+                        </button>
+
                         <div class="themeModSidebarFill"></div>
 
                     </div>
@@ -18449,6 +19830,8 @@ ${buildSafetyPanelHTML()}
 
                         </div>
 
+${buildAdvancedPanelHTML()}
+
                         </div><!-- closes themeModSectionsScroll -->
 
                     </div><!-- closes themeModPanel -->
@@ -18515,6 +19898,7 @@ ${buildSafetyPanelHTML()}
         setupClockPanel(dialog);
         setupChatWindowPanel(dialog);
         setupCanvasDimmer(dialog);
+        setupMyCursor(dialog);   /* v1.6.8 */
 
         const enabledToggle =
             dialog.querySelector("#themeModEnabled");
@@ -18927,6 +20311,9 @@ const bubbleControls = setupBubbleControls(dialog);
 /* Safety tab */
 const safetyControls = setupSafetyPanel(dialog);
 
+/* v1.6.8: Advanced tab (Streamer mode) */
+const advancedControls = setupAdvancedPanel(dialog);
+
         fontSelect.addEventListener("change", () => {
             applyFontValue(fontSelect.value);
         });
@@ -19071,6 +20458,7 @@ const safetyControls = setupSafetyPanel(dialog);
             decoControls.save();
             bubbleControls.save();
             safetyControls.save();
+            advancedControls.save();
         });
 
         /* ---------- Copy to detailed ----------
@@ -19216,6 +20604,7 @@ const safetyControls = setupSafetyPanel(dialog);
             decoControls.reset();
             bubbleControls.reset();
             safetyControls.reset();
+            advancedControls.reset();
 
             /* Reset only clears the colors of the mode you are in, so
                your detailed theme survives a reset in simple mode. */
@@ -19711,7 +21100,7 @@ const safetyControls = setupSafetyPanel(dialog);
     function setupSubsectionResets(dialog, { actionsNote, decoControls }) {
         /* v1.6.3: Animations, Sounds, Safety and Backgrounds too */
         const panels = dialog.querySelectorAll(
-            ["colors", "interface", "animations", "sounds", "safety", "backgrounds"]
+            ["colors", "interface", "animations", "sounds", "safety", "backgrounds", "advanced"]
                 .map((p) => `.themeModSectionContent[data-theme-panel="${p}"]`).join(", ")
         );
 
@@ -20174,12 +21563,26 @@ const safetyControls = setupSafetyPanel(dialog);
 
                 entry.notes.forEach((note) => {
                     const li = document.createElement("li");
-                    /* {pink:Name} / {blue:Name} / {teal:Name} / {orange:Name} = a glowing colored name */
-                    String(note).split(/(\{(?:pink|blue|teal|orange|cat):[^}]+\})/).forEach((part) => {
+                    let text = String(note);
+                    /* v1.6.8: notes without **bold** get their short "Lead:" bolded, so older ones skim nicely too */
+                    if (!text.includes("**")) {
+                        const lead = text.match(/^([^:{}]{1,40}):\s/);
+                        if (lead && lead[1].trim().split(/\s+/).length <= 5) {
+                            text = `**${lead[1]}:**${text.slice(lead[0].length - 1)}`;
+                        }
+                    }
+                    /* {pink:Name} / {blue:Name} / {teal:Name} / {orange:Name} = a glowing colored name, **text** = bold */
+                    text.split(/(\{(?:pink|blue|teal|orange|cat):[^}]+\}|\*\*[^*]+\*\*)/).forEach((part) => {
                         const m = part.match(/^\{(pink|blue|teal|orange):([^}]+)\}$/);
                         const cat = part.match(/^\{cat:(pink|blue|teal|orange)\}$/);
+                        const bold = part.match(/^\*\*([^*]+)\*\*$/);
 
-                        if (cat) {
+                        if (bold) {
+                            const b = document.createElement("b");
+                            b.className = "fmWhatsNewLead";
+                            b.textContent = bold[1];
+                            li.appendChild(b);
+                        } else if (cat) {
                             /* v1.6.7: a little cat face (ears, eyes, pink cheeks) */
                             const face = document.createElement("span");
                             face.className = `fmWhatsNewCat fmWhatsNewName-${cat[1]}`;
@@ -21181,11 +22584,11 @@ const safetyControls = setupSafetyPanel(dialog);
                 target: () => dialog.querySelector('.themeModSidebarItem[data-theme-section="safety"]')
             },
             {
-                icon: "fa-images",
-                title: "Reference window",
-                text: "This button opens a window for your reference images. Only you can see it, and it has its own \u24D8 tour.",
+                icon: "fa-th-large",
+                title: "Tools",
+                text: "This button holds your tools: reference images, streamer mode and drawing guides. Only you can see them. Their settings are in the Advanced tab.",
                 before: () => {},
-                target: () => document.querySelector(REF_BUTTON_SELECTOR)
+                target: () => document.querySelector(TOOLS_BUTTON_SELECTOR)
             },
             {
                 icon: "fa-sync-alt",
@@ -21287,6 +22690,12 @@ const safetyControls = setupSafetyPanel(dialog);
                 step("fa-clock", "Timing", "How quickly someone gets flagged, and how long their name stays red.", title("Timing")),
                 step("fa-eye", "Watch for", "Pick which kinds of griefing count, like big erasing or scribbling.", title("Watch For")),
                 step("fa-bell", "Warnings", "The popup, how often it can repeat, and the highlight color. It's all local and only you see it.", title("Warnings"))
+            ],
+            advanced: [
+                step("fa-eye-slash", "Streamer mode", "Hides chat, PMs and names on your screen while you record. The Tools button next to the flower turns it on and off too.", row("Streamer mode")),
+                step("fa-sliders-h", "Pick what hides", "Choose what gets hidden while it's on. Press Apply Changes to keep these.", el(".fmGroupLabel")),
+                step("fa-ruler-combined", "Drawing guides", "A ruler, 1, 2 or 3-point perspective and a grid over the canvas. Drag the points, and lock them while you draw.", title("Drawing Guides")),
+                step("fa-lock", "Only on your screen", "Nothing is sent to FlockMod, and everyone else sees the room as normal.", el(".themeModLocalNote"))
             ],
             backgrounds: [
                 step("fa-image", "Background images", "Put your own image behind the sidebar, chat, messenger or around the canvas.", row("Sidebar Background Image")),
@@ -22230,6 +23639,8 @@ const safetyControls = setupSafetyPanel(dialog);
                 applySavedDeco();
                 applySavedBubbles();
                 applySavedTroll();
+                applySavedStream();
+                applySavedGuidesSettings();
                 rememberMenuRect(dialog);
 
                 dialog.remove();
@@ -22276,7 +23687,7 @@ const safetyControls = setupSafetyPanel(dialog);
     /* Cards for every settings tab that has sections. Colors also
        gets group labels, Gradient pills, "N settings · M on" counts
        and one-line descriptions. */
-    const CARD_PANELS = ["general", "colors", "interface", "themes", "sounds", "safety", "backgrounds"];
+    const CARD_PANELS = ["general", "colors", "interface", "themes", "sounds", "safety", "backgrounds", "advanced"];
 
     function enhanceCardsLayout(dialog) {
         CARD_PANELS.forEach((name) => enhancePanelCards(dialog, name));
@@ -22695,7 +24106,7 @@ const safetyControls = setupSafetyPanel(dialog);
             card.innerHTML =
                 '<div class="fmWhatsNewHead"><span class="fmTourFlower" aria-hidden="true"></span>' +
                 '<div class="fmWhatsNewTitle">Reset everything?</div></div>' +
-                '<div class="fmCloseAskText">Every page goes back to default right away: colors, interface, popups, chat bubbles, backgrounds, animations, sounds and safety. ' +
+                '<div class="fmCloseAskText">Every page goes back to default right away: colors, interface, popups, chat bubbles, backgrounds, animations, sounds, safety and streamer mode. ' +
                 (simple ? "In Simple coloring only your simple colors reset. " : "") +
                 'Your saved themes are kept.</div>' +
                 '<div class="fmCloseAskText fmCloseAskTip">Just one part? Use the \u21BA next to a section title.</div>' +
@@ -23370,9 +24781,12 @@ const safetyControls = setupSafetyPanel(dialog);
         applySavedDeco();
         applySavedBubbles();
         applySavedTroll();
+        applySavedStream();
+        applySavedGuides();
         applySavedBackgrounds();
         applySavedThumbShape();
         applySavedCanvasDim();
+        applySavedMyCursor();
         applySavedChatHighlight();
         applySavedChatNotif();
         applySavedClock();
@@ -23406,6 +24820,13 @@ const safetyControls = setupSafetyPanel(dialog);
                 return;
             }
 
+            /* v1.6.8: the chat overlay hidden by streamer mode never keeps
+               the keyboard; the key goes on to FlockMod */
+            if (streamHidesOverlay() && target.closest(CN_SELECTOR)) {
+                target.blur();
+                return;
+            }
+
             /* v1.6.4: Space in the chat overlay's EMPTY reply box is
                FlockMod's hold-to-pan, not a typed space. The box lets go of
                the keyboard and the press goes on to FlockMod (the rest of
@@ -23428,13 +24849,14 @@ const safetyControls = setupSafetyPanel(dialog);
                 target.dispatchEvent(new CustomEvent("themeModEscape"));
             }
 
-            if (event.type === "keydown" && event.key === "Enter" && target.matches("input")) {
+            if (event.type === "keydown" && event.key === "Enter" && target.matches("input, textarea.fmCnInput")) {
+                if (target.matches("textarea") && !event.isComposing) event.preventDefault();   /* send, not a new line */
                 target.dispatchEvent(new CustomEvent("themeModEnter"));
             }
 
             /* v1.6.3: the chat cards' @ list uses arrows and Tab */
             if (event.type === "keydown" && ["ArrowUp", "ArrowDown", "Tab"].includes(event.key) &&
-                target.matches("input") && target.closest(CN_SELECTOR)) {
+                target.matches("input, textarea.fmCnInput") && target.closest(CN_SELECTOR)) {
                 const keyEvent = new CustomEvent("themeModKey", { detail: { key: event.key }, cancelable: true });
                 if (!target.dispatchEvent(keyEvent)) {
                     event.preventDefault();
@@ -23500,7 +24922,12 @@ const safetyControls = setupSafetyPanel(dialog);
             }
 
             addModButton();
-            addRefButton();
+            addToolsButton();     /* v1.6.8: reference images + streamer mode live in here */
+            updateToolsButton();  /* the pink number, if a tool was turned on/off elsewhere */
+            addStreamBadge();
+            streamMarkOwnLabel(); /* v1.6.8: your own name tag isn't blurred */
+            updateEraserPaper();  /* v1.6.8: eraser preview in the paper color */
+            guidesEnsure();       /* v1.6.8: drawing guides follow FlockMod's board (does nothing while off) */
             addClockButton();
             checkSeeThroughTargets();
             cnPlace();           /* chat notification cards follow the sidebar side */

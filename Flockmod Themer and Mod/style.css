@@ -5908,54 +5908,36 @@ html.fmClockOn:not(.flockmodCustomizationsDisabled) .fmClockItem { display: list
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
-    width: 220px;
-    padding: 12px 14px 10px;
-    border: 1px solid #f7a1c0;
-    border-radius: 10px;
-    color: #4a2433;
-    background: linear-gradient(160deg, #fff4f8 0%, #ffe1ec 55%, #fcd0e0 100%);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, .4), 0 0 14px rgba(244, 143, 177, .4);
-    font-family: Rubik, sans-serif;
-    font-size: calc(13px * var(--fm-menu-text, 1));
+    width: 230px;
 }
-.fmTimeCard .fmTimeTitle { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 700; color: #b83d6c; }
+.fmTimeCard .fmTimeRow { display: flex; justify-content: space-between; margin: 0 12px; padding: 5px 0; border-bottom: 1px solid var(--fmp-line); }
+.fmTimeCard .fmTimeRow:first-of-type { margin-top: 6px; }
+.fmTimeCard .fmTimeRow b { font-variant-numeric: tabular-nums; font-weight: 500; }
+.fmTimeCard .fmTimeNote { padding: 8px 12px 10px; font-size: calc(11px * var(--fm-menu-text, 1)); color: var(--fmp-sub); line-height: 1.4; }
 .fmTimeCard .fmTourFlower, .fmBreakToast .fmTourFlower { width: 20px; height: 20px; flex: none; }
-.fmTimeCard .fmTimeRow { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed rgba(184, 61, 108, .2); }
-.fmTimeCard .fmTimeRow b { font-variant-numeric: tabular-nums; color: #8a2f55; }
-.fmTimeCard .fmTimeNote { margin-top: 8px; font-size: calc(11px * var(--fm-menu-text, 1)); color: #8a5468; line-height: 1.4; }
 .fmBreakToast {
     position: fixed !important;
     right: 20px;
     bottom: 60px;
     z-index: 2147483000 !important;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    max-width: 300px;
-    padding: 12px 14px;
-    border: 1px solid #f7a1c0;
-    border-radius: 10px;
-    color: #4a2433;
-    background: linear-gradient(160deg, #fff4f8 0%, #ffe1ec 55%, #fcd0e0 100%);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, .4), 0 0 14px rgba(244, 143, 177, .4);
-    font-family: Rubik, sans-serif;
-    font-size: calc(12.5px * var(--fm-menu-text, 1));
+    display: block;
+    width: 290px;
     line-height: 1.45;
-    flex-wrap: wrap;
 }
-.fmBreakToast .fmBreakText { flex: 1; min-width: 0; }
-.fmBreakToast .fmBreakText b { color: #b83d6c; }
-.fmBreakToast .fmBreakButtons { display: flex; gap: 6px; width: 100%; justify-content: flex-end; }
+.fmBreakToast .fmBreakText { padding: 10px 12px 4px; font-size: calc(12.5px * var(--fm-menu-text, 1)); }
+.fmBreakToast .fmBreakButtons { display: flex; gap: 6px; padding: 6px 12px 10px; justify-content: flex-end; }
 .fmBreakToast button {
-    border: 1px solid #f48fb1;
-    border-radius: 6px;
+    border: 1px solid var(--fmp-border);
+    border-radius: 5px;
     padding: 3px 10px;
     font: inherit;
     font-size: calc(12px * var(--fm-menu-text, 1));
     cursor: pointer;
-    background: #fff;
-    color: #b83d6c;
+    background: var(--fmp-btn);
+    color: var(--fmp-btn-text);
 }
+.fmBreakToast button:hover { filter: brightness(1.12); }
+/* the main button keeps the mod's pink accent, like Apply Changes */
 .fmBreakToast button[data-break="ok"] { background: linear-gradient(135deg, #f48fb1, #e0668f); color: #fff; border-color: #e0668f; }
 html.fmAnimMenu .fmBreakToast { animation: fmWhatsNewIn calc(.35s * var(--fm-anim-speed, 1)) cubic-bezier(.25, .8, .25, 1); }
 .fmClockButton, .fmClockButton:hover { text-decoration: none !important; }
@@ -6161,12 +6143,21 @@ html.fmAnimMenu .fmCnStack .fmCnCard.fmCnEarlier:not(.fmCnOut) { animation: fmCn
 }
 .fmCnStack.fmCnRight .fmCnExtraIn { align-items: flex-end; }
 
-.fmCnStack .fmCnReplyRow { display: flex; gap: 4px; width: 100%; }
+.fmCnStack .fmCnReplyRow { display: flex; align-items: flex-end; gap: 4px; width: 100%; }
 .fmCnStack .fmCnInput {
+    /* v1.6.8: wraps and grows with what you type, up to about 5 lines, then scrolls */
     flex: 1;
     min-width: 0;
-    height: calc(28px * var(--fmcn-s));
-    padding: 0 8px;
+    box-sizing: border-box;
+    field-sizing: content;
+    min-height: calc(28px * var(--fmcn-s));
+    max-height: calc(7.4em + 10px);
+    padding: calc(4px * var(--fmcn-s)) 8px;
+    line-height: 1.35;
+    resize: none;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
     border: 1px solid color-mix(in srgb, var(--fmcn-text) 25%, transparent);
     border-radius: 6px;
     background: color-mix(in srgb, var(--fmcn-bg) 96%, transparent);
@@ -7233,4 +7224,601 @@ html.flockmodChatActionIconsActive:not(.flockmodCustomizationsDisabled) .reactio
 html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) #chatMessages .msgLine > :has(> button[name="react"]) button:hover,
 html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) .reactionPicker .reactionPick:hover {
     background-color: var(--flockmod-custom-hover, #4f5156) !important;
+}
+
+/* =========================================================
+   STREAMER MODE (v1.6.8, Advanced tab)
+   Only what YOUR screen shows. Works even with customizations
+   OFF (privacy, not looks), so no :not(.flockmodCustomizationsDisabled).
+   ========================================================= */
+
+/* What gets blurred. The chat is blurred part by part (messages, chat
+   title, #public / #staff / PM list, the typing box), so hovering one
+   part only shows that part. Each one is a fixed-size box, never the
+   whole (tall) message history, so the blur stays cheap. */
+html.fmStreamChat .chatBox,
+html.fmStreamChat #chatTitle,
+html.fmStreamChat .dialog[name="chat"] .sidebar,
+html.fmStreamChat .chatTextGroup .form-control,
+html.fmStreamPm .dialog[name="messenger"] #messengerConversation,
+html.fmStreamPm .dialog[name="messenger"] .messengerSideBar,
+html.fmStreamActivity #headerTitle,
+html.fmStreamNames #sidebar tr.someoneelse td[class*="rank"],
+html.fmStreamCanvasNames .CursorContainer .cursor:not(.myself) .pointerLabel:not(.fmOwnLabel),
+html.fmStreamNames .fmTrollToast .fmTrollToastTitle b {
+    filter: blur(9px);
+    /* keeps the blur inside its own box, so it never smudges what's next
+       to it (like the "v13" title beside the activity bar) */
+    clip-path: inset(0);
+    transition: filter .15s ease;
+}
+
+html.fmStreamActivity #headerTitle,
+html.fmStreamNames #sidebar tr.someoneelse td[class*="rank"],
+html.fmStreamCanvasNames .CursorContainer .cursor:not(.myself) .pointerLabel:not(.fmOwnLabel),
+html.fmStreamNames .fmTrollToast .fmTrollToastTitle b {
+    filter: blur(6px);
+}
+
+/* Peek on hover (or while typing in it) */
+html.fmStreamPeek.fmStreamChat .chatBox:hover,
+html.fmStreamPeek.fmStreamChat #chatTitle:hover,
+html.fmStreamPeek.fmStreamChat .dialog[name="chat"] .sidebar:hover,
+html.fmStreamPeek.fmStreamChat .chatTextGroup .form-control:is(:hover, :focus),
+html.fmStreamPeek.fmStreamPm .dialog[name="messenger"] #messengerConversation:hover,
+html.fmStreamPeek.fmStreamPm .dialog[name="messenger"] .messengerSideBar:hover,
+html.fmStreamPeek.fmStreamActivity #headerTitle:hover,
+html.fmStreamPeek.fmStreamNames #sidebar tr.someoneelse:hover td[class*="rank"],
+html.fmStreamPeek.fmStreamNames .fmTrollToast:hover .fmTrollToastTitle b {
+    filter: none;
+}
+
+/* Chat overlay: only its pill stays ("Chat hidden" + unread count) */
+html.fmStreamOverlay .fmCnStack > :not(.fmCnPill),
+html.fmStreamOverlay .fmCnReactPick {
+    display: none !important;
+}
+
+html.fmStreamOverlay .fmCnStack .fmCnPill {
+    pointer-events: none;
+}
+
+/* =========================================================
+   TOOLS BUTTON + TRAY (v1.6.8)
+   ========================================================= */
+.themeModToolsButton {
+    position: relative;
+}
+
+/* While the tray is open it keeps your bottom bar hover color,
+   the same way the flower does while the mod menu is open */
+html.flockmodBottomBarHoverActive:not(.flockmodCustomizationsDisabled) .bottomNavbar .navbar-nav .themeModToolsButton.fmToolsOpen {
+    background-color: var(--flockmod-custom-bottombar-hover, #4b4a50) !important;
+}
+
+.themeModToolsButton.fmToolsActive,
+.themeModToolsButton.fmToolsActive:hover {
+    color: #f7a8c8 !important;
+}
+
+.themeModToolsButton .fmToolsCount {
+    position: absolute;
+    top: 2px;
+    right: 0;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    border-radius: 999px;
+    background: #f48fb1;
+    color: #3a1828;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 15px;
+    text-align: center;
+    pointer-events: none;
+}
+
+.themeModToolsButton .fmToolsCount[hidden] {
+    display: none;
+}
+
+.fmToolsTray {
+    position: fixed !important;
+    z-index: 2147483000 !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 280px;
+}
+
+.fmToolsTray .fmToolsSub {
+    margin-left: auto;
+    font-weight: 400;
+    font-size: calc(11px * var(--fm-menu-text, 1));
+    color: var(--fmp-sub);
+}
+
+.fmToolsTray .fmToolsRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin: 0;
+    padding: 9px 12px;
+    border: none;
+    border-bottom: 1px solid var(--fmp-line);
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.fmToolsTray .fmToolsRow:hover {
+    background: var(--fmp-row);
+}
+
+.fmToolsTray .fmToolsIcon {
+    width: 30px;
+    height: 30px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: var(--fmp-row);
+    color: var(--fmp-sub);
+}
+
+.fmToolsTray .fmToolsOn .fmToolsIcon {
+    color: var(--fmp-accent);
+}
+
+.fmToolsTray .fmToolsText {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.fmToolsTray .fmToolsText b {
+    font-weight: 500;
+}
+
+.fmToolsTray .fmToolsText span {
+    font-size: calc(11px * var(--fm-menu-text, 1));
+    color: var(--fmp-sub);
+}
+
+/* Same look as the mod menu's ON/OFF switches */
+.fmToolsTray .fmToolsSwitch {
+    position: relative;
+    width: 58px;
+    height: 24px;
+    flex: none;
+    box-sizing: border-box;
+    border: 1px solid #4f5156;
+    border-radius: 12px;
+    background: #242529;
+    overflow: hidden;
+}
+
+.fmToolsTray .fmToolsSwitchOn,
+.fmToolsTray .fmToolsSwitchOff {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1;
+    color: #ffffff;
+    transition: opacity .3s ease;
+}
+
+.fmToolsTray .fmToolsSwitchOn { left: 8px; opacity: 0; }
+.fmToolsTray .fmToolsSwitchOff { right: 7px; opacity: 1; }
+.fmToolsTray .fmToolsOn .fmToolsSwitchOn { opacity: 1; }
+.fmToolsTray .fmToolsOn .fmToolsSwitchOff { opacity: 0; }
+
+.fmToolsTray .fmToolsSwitchThumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    transition: transform .35s cubic-bezier(.25, .8, .25, 1);
+}
+
+.fmToolsTray .fmToolsOn .fmToolsSwitchThumb {
+    transform: translateX(34px);
+}
+
+.fmToolsTray .fmToolsSettings {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    color: var(--fmp-sub);
+    font: inherit;
+    font-size: calc(11px * var(--fm-menu-text, 1));
+    text-align: center;
+    cursor: pointer;
+}
+
+.fmToolsTray .fmToolsSettings:hover {
+    color: var(--fmp-text);
+    text-decoration: underline;
+}
+
+/* =========================================================
+   MOD PANELS: the Tools tray, the clock card and the break reminder (v1.6.8)
+   Built like a FlockMod popup: dark like the mod menu by default.
+   If you colored your popups (Colors > Popups), they follow those.
+   (To keep them always dark, delete the "follow popup colors"
+   block below; nothing else depends on it.)
+   ========================================================= */
+.fmToolsTray,
+.fmTimeCard,
+.fmBreakToast {
+    --fmp-bg: #1d1e22;
+    --fmp-row: #2f3136;
+    --fmp-title: #4f4f55;
+    --fmp-title-text: #ffffff;
+    --fmp-text: #ffffff;
+    --fmp-sub: #acb0b6;
+    --fmp-border: #707379;
+    --fmp-line: color-mix(in srgb, var(--fmp-text) 10%, transparent);   /* soft divider on any background */
+    --fmp-accent: #f48fb1;
+    --fmp-btn: #2f3136;
+    --fmp-btn-text: #ffffff;
+    overflow: hidden;
+    padding: 0;
+    border: 1px solid var(--fmp-border);
+    border-radius: 6px;
+    color: var(--fmp-text);
+    background: var(--fmp-bg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
+    font-family: Rubik, sans-serif;
+    font-size: calc(13px * var(--fm-menu-text, 1));
+    letter-spacing: .02rem;
+}
+
+.fmToolsTray .fmPanelTitle,
+.fmTimeCard .fmPanelTitle,
+.fmBreakToast .fmPanelTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 7px 12px;
+    background: var(--fmp-title);
+    color: var(--fmp-title-text);
+    font-weight: 500;
+}
+
+.fmToolsTray .fmTourFlower {
+    width: 18px;
+    height: 18px;
+    flex: none;
+}
+
+/* ---- follow popup colors ---- */
+html.flockmodPopupBackgroundActive:not(.flockmodCustomizationsDisabled) :is(.fmToolsTray, .fmTimeCard, .fmBreakToast) { --fmp-bg: var(--flockmod-custom-popup-background); }
+html.flockmodPopupContentActive:not(.flockmodCustomizationsDisabled) :is(.fmToolsTray, .fmTimeCard, .fmBreakToast) { --fmp-row: var(--flockmod-custom-popup-content); }
+html.flockmodPopupTitleBarActive:not(.flockmodCustomizationsDisabled) :is(.fmToolsTray, .fmTimeCard, .fmBreakToast) { --fmp-title: var(--flockmod-custom-popup-titlebar); }
+html.flockmodPopupTitleTextActive:not(.flockmodCustomizationsDisabled) :is(.fmToolsTray, .fmTimeCard, .fmBreakToast) { --fmp-title-text: var(--flockmod-custom-popup-titletext); }
+html.flockmodPopupBorderActive:not(.flockmodCustomizationsDisabled) :is(.fmToolsTray, .fmTimeCard, .fmBreakToast) { --fmp-border: var(--flockmod-custom-popup-border); }
+html.flockmodText1ColorActive:not(.flockmodCustomizationsDisabled) :is(.fmToolsTray, .fmTimeCard, .fmBreakToast) { --fmp-text: var(--flockmod-custom-text1); }
+html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) :is(.fmToolsTray, .fmTimeCard, .fmBreakToast) { --fmp-sub: var(--flockmod-custom-text2); }
+html.flockmodPopupButtonActive:not(.flockmodCustomizationsDisabled) :is(.fmToolsTray, .fmTimeCard, .fmBreakToast) { --fmp-btn: var(--flockmod-custom-popup-button); }
+html.flockmodPopupButtonTextActive:not(.flockmodCustomizationsDisabled) :is(.fmToolsTray, .fmTimeCard, .fmBreakToast) { --fmp-btn-text: var(--flockmod-custom-popup-buttontext); }
+
+/* Top bar reminder */
+.fmStreamBadgeItem {
+    display: none;
+    align-items: center;
+    margin-right: 6px;
+}
+
+html.fmStreamBadge .fmStreamBadgeItem {
+    display: flex;
+    flex-shrink: 0;
+}
+
+.fmStreamBadgePill {
+    /* v1.6.8: just a small eye, so the top bar never gets squeezed */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    flex: none;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: #3a2230;
+    border: 1px solid #f7a8c8;
+    color: #ffc4dc;
+    font-size: 12px;
+}
+
+/* canvas name tags keep their little pointer shape */
+html.fmStreamCanvasNames .CursorContainer .cursor:not(.myself) .pointerLabel:not(.fmOwnLabel) {
+    clip-path: none;
+}
+
+/* =========================================================
+   DRAWING GUIDES (v1.6.8)
+   One SVG inside FlockMod's board (so it zooms/pans/rotates with
+   it), over the layers (10-14), the Canvas Dimmer (20) and
+   FlockMod's grid (25). Lines never catch clicks; only the small
+   point handles do. Works with customizations OFF too (it's a tool).
+   ========================================================= */
+.boardContainer > svg.fmGuides {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    z-index: 26;
+    pointer-events: none;
+}
+
+svg.fmGuides path {
+    fill: none;
+    stroke: var(--fm-guides-color, #e86fa3);
+    stroke-width: 1px;
+    opacity: var(--fm-guides-opacity, .55);
+}
+
+svg.fmGuides .fmGuidesMain {
+    stroke-width: 1.5px;
+    opacity: min(1, calc(var(--fm-guides-opacity, .55) + .3));
+}
+
+svg.fmGuides .fmGuidesHorizon {
+    stroke-width: 1.5px;
+    stroke-dasharray: 8 6;
+    opacity: min(1, calc(var(--fm-guides-opacity, .55) + .3));
+}
+
+svg.fmGuides.fmGuidesLinesHidden path,
+svg.fmGuides.fmGuidesLinesHidden .fmGuidesHandles {
+    display: none;
+}
+
+svg.fmGuides .fmGuideHandle {
+    pointer-events: auto;
+    cursor: grab;
+    touch-action: none;
+}
+
+svg.fmGuides.fmGuidesDragging .fmGuideHandle {
+    cursor: grabbing;
+}
+
+svg.fmGuides .fmGuideHalo {
+    fill: var(--fm-guides-color, #e86fa3);
+    opacity: .2;
+}
+
+svg.fmGuides .fmGuideDot {
+    fill: var(--fm-guides-color, #e86fa3);
+    stroke: #ffffff;
+    stroke-width: 2.5px;
+}
+
+/* Locked: the points are small grey dots you can't grab */
+svg.fmGuides.fmGuidesLocked .fmGuideHandle {
+    pointer-events: none;
+}
+
+svg.fmGuides.fmGuidesLocked .fmGuideHalo {
+    display: none;
+}
+
+svg.fmGuides.fmGuidesLocked .fmGuideDot {
+    fill: #8a8f96;
+}
+
+/* The floating toolbar (built like the other mod panels) */
+.fmGuidesBar {
+    --fmp-bg: #1d1e22;
+    --fmp-row: #2f3136;
+    --fmp-text: #ffffff;
+    --fmp-sub: #acb0b6;
+    --fmp-border: #707379;
+    position: fixed;
+    z-index: 96;   /* inside FlockMod's screen: over the canvas, under popups */
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px;
+    border: 1px solid var(--fmp-border);
+    border-radius: 999px;
+    background: var(--fmp-bg);
+    color: var(--fmp-text);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
+    font-family: Rubik, sans-serif;
+    font-size: calc(12px * var(--fm-menu-text, 1));
+    user-select: none;
+    touch-action: none;
+}
+
+.fmGuidesBar .fmGuidesGrip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 28px;
+    color: var(--fmp-sub);
+    cursor: grab;
+    touch-action: none;
+}
+
+.fmGuidesBar.fmGuidesBarMoving .fmGuidesGrip {
+    cursor: grabbing;
+}
+
+.fmGuidesBar button {
+    height: 28px;
+    min-width: 28px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--fmp-text);
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.fmGuidesBar button.fmGuidesIconBtn {
+    padding: 0;
+    width: 28px;
+}
+
+.fmGuidesBar button:hover {
+    background: var(--fmp-row);
+}
+
+/* the picked mode keeps the mod's pink accent */
+.fmGuidesBar button.fmGuidesOn,
+.fmGuidesBar button.fmGuidesOn:hover {
+    background: #f48fb1;
+    color: #3a1828;
+}
+
+.fmGuidesBar .fmGuidesSep {
+    width: 1px;
+    height: 18px;
+    margin: 0 2px;
+    background: var(--fmp-border);
+    opacity: .6;
+}
+
+html.flockmodPopupBackgroundActive:not(.flockmodCustomizationsDisabled) .fmGuidesBar { --fmp-bg: var(--flockmod-custom-popup-background); }
+html.flockmodPopupContentActive:not(.flockmodCustomizationsDisabled) .fmGuidesBar { --fmp-row: var(--flockmod-custom-popup-content); }
+html.flockmodPopupBorderActive:not(.flockmodCustomizationsDisabled) .fmGuidesBar { --fmp-border: var(--flockmod-custom-popup-border); }
+html.flockmodText1ColorActive:not(.flockmodCustomizationsDisabled) .fmGuidesBar { --fmp-text: var(--flockmod-custom-text1); }
+html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .fmGuidesBar { --fmp-sub: var(--flockmod-custom-text2); }
+
+/* Eraser preview follows the paper color (v1.6.8): only your live
+   stroke canvas, only while the eraser tool is selected */
+html.fmEraserPaper:has(#drawingTools .selectedTool .fa-eraser) .CanvasContainer canvas.slate.myself {
+    filter: url(#fmEraserPaper) !important;
+}
+
+/* =========================================================
+   MY CURSOR (Colors > Canvas)  v1.6.8
+   Only your own cursor (.cursor.myself), whatever shape you picked in
+   FlockMod (circle, square, crosshair, cross, dot). FlockMod's own thin
+   lines are recolored with a filter, so every shape keeps its exact
+   size, position and thickness. Your name tag is never changed.
+   ========================================================= */
+
+/* Outline: white lines with a soft dark edge, readable on anything.
+   Lite mode uses this for Invert too (Invert's blending is the one
+   heavier part, so slower computers skip it). */
+html.fmMyCurOutline:not(.flockmodCustomizationsDisabled) .CursorContainer .cursor.myself > .pointer,
+html.fmMyCurInvert.fmLite:not(.flockmodCustomizationsDisabled) .CursorContainer .cursor.myself > .pointer {
+    filter: brightness(0) invert(1) drop-shadow(0 0 .6px rgba(0, 0, 0, .95)) drop-shadow(0 0 .6px rgba(0, 0, 0, .95));
+}
+
+/* My color: your color (an SVG color filter the script keeps up to date) with a soft dark edge */
+html.fmMyCurColor:not(.flockmodCustomizationsDisabled) .CursorContainer .cursor.myself > .pointer {
+    filter: url(#fmMyCurColorize) drop-shadow(0 0 .6px rgba(0, 0, 0, .9));
+}
+
+/* Invert: your cursor sits straight on the board so it can blend with the
+   drawing; FlockMod's cursor layer stops grouping its cursors, and
+   everyone else's cursors and your name tag stay on top as before. */
+html.fmMyCurInvert:not(.fmLite):not(.flockmodCustomizationsDisabled) .CursorContainer {
+    z-index: auto !important;
+    isolation: auto !important;
+    transform: none !important;
+    will-change: auto !important;
+    filter: none !important;
+    opacity: 1 !important;
+    contain: none !important;
+}
+
+html.fmMyCurInvert:not(.fmLite):not(.flockmodCustomizationsDisabled) .CursorContainer .cursor {
+    z-index: 60;
+}
+
+html.fmMyCurInvert:not(.fmLite):not(.flockmodCustomizationsDisabled) .CursorContainer .cursor.myself {
+    z-index: auto !important;
+    isolation: auto !important;
+    transform: none !important;
+    filter: none !important;
+    opacity: 1 !important;
+}
+
+html.fmMyCurInvert:not(.fmLite):not(.flockmodCustomizationsDisabled) .CursorContainer .cursor.myself > * {
+    z-index: 60;
+}
+
+html.fmMyCurInvert:not(.fmLite):not(.flockmodCustomizationsDisabled) .CursorContainer .cursor.myself > .pointerLabel {
+    z-index: 61;
+}
+
+/* FlockMod's thin lines turned white, then flipped against what's under them */
+html.fmMyCurInvert:not(.fmLite):not(.flockmodCustomizationsDisabled) .CursorContainer .cursor.myself > .pointer {
+    filter: brightness(0) invert(1);
+    mix-blend-mode: difference;
+}
+
+/* Crosshair: a tiny + in the middle of the Circle and Square shapes
+   (FlockMod's Crosshair, Cross and Dot already mark the middle).
+   With a look picked it takes that look's color from the filter above. */
+html.fmMyCurCross:not(.flockmodCustomizationsDisabled) .CursorContainer .cursor.myself > :is(.pointerCircle, .pointerSquare)::before,
+html.fmMyCurCross:not(.flockmodCustomizationsDisabled) .CursorContainer .cursor.myself > :is(.pointerCircle, .pointerSquare)::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 0 .6px rgba(20, 20, 20, .8);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+html.fmMyCurCross:not(.flockmodCustomizationsDisabled) .CursorContainer .cursor.myself > :is(.pointerCircle, .pointerSquare)::before {
+    width: 9px;
+    height: 1px;
+}
+
+html.fmMyCurCross:not(.flockmodCustomizationsDisabled) .CursorContainer .cursor.myself > :is(.pointerCircle, .pointerSquare)::after {
+    width: 1px;
+    height: 9px;
+}
+
+/* with a look picked, the filter gives the + its color and edge */
+html.fmMyCur.fmMyCurCross:not(.flockmodCustomizationsDisabled) .CursorContainer .cursor.myself > :is(.pointerCircle, .pointerSquare)::before,
+html.fmMyCur.fmMyCurCross:not(.flockmodCustomizationsDisabled) .CursorContainer .cursor.myself > :is(.pointerCircle, .pointerSquare)::after {
+    box-shadow: none;
+}
+
+/* v1.6.8: the reference window's decoration button (title bar, next to ⓘ).
+   Hidden when no popup style is picked. Same color as the other title
+   buttons; a little faded while the decoration is off. */
+.dialog[name="themeModReference"] .themeModRefPlain[hidden] {
+    display: none !important;
+}
+
+.dialog[name="themeModReference"] .themeModRefPlain.active .titleButton {
+    opacity: .5;
+}
+
+/* v1.6.8: What's new notes start with a bold lead, easy to skim */
+.dialog[name="themeModMenu"] .fmWhatsNewBody .fmWhatsNewLead {
+    font-weight: 700;
+    color: inherit;
 }
