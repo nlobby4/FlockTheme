@@ -1,10 +1,106 @@
+/* =============================================================
+   FLOCKTHEME CODE MAP (style.css)
+   Every section starts with a banner that ends in a unique @tag.
+   Search for a tag (e.g. "@sounds") to jump there. Tags that match
+   a feature in content.js use the same name in both files.
+   New sections: add a banner with a new @tag and a line here.
+   (Comments only: the browser ignores all of this.)
+   -------------------------------------------------------------
+   @top                  File title
+   @modmenu              Mod menu button
+   @menu-dialog          Mod menu window
+   @menu-backdrop        Mod menu backdrop
+   @menu-content         Mod menu content area
+   @menu-general         General tab settings
+   @menu-ranges          Mod menu sliders
+   @menu-toggles         Mod menu switches
+   @menu-actions         Apply / Reset bar
+   @fontsize             UI font size
+   @fontweight           UI font weight
+   @spacing              UI spacing
+   @checkboxes           Checkbox size
+   @colors-topbar        Colors: top bar
+   @colors-bottombar     Colors: bottom bar
+   @colors-sidebar2      Colors: secondary sidebar
+   @colors-collapser     Colors: collapser bars
+   @colors-popups        Colors: popups + menus
+   @colors-chat          Colors: chat
+   @colors-general       General colors in popups
+   @activitybar          Top bar activity bar
+   @search               Mod menu jump chips + search
+   @themes               Themes tab
+   @copytodetailed       "Copy to detailed" button
+   @fonts                Custom fonts (Interface > Font)
+   @backgrounds          Background images
+   @backgrounds-tab      Backgrounds tab + "saved locally" notes
+   @messenger            Messenger + activity bar text
+   @popups-tabs          Popups: Configuration tabs + selector buttons
+   @popups-tables        Popups: tables (Hotkeys...)
+   @popups-roommanager   Popups: Room Manager
+   @popups-switchoff     Popups: switch OFF side
+   @radius               Border radius
+   @thumbshapes          Slider thumb shapes
+   @lockedswitches       Locked switches (.readOnly)
+   @roomlist             Room list
+   @gradients            Gradients
+   @animations           Animations
+   @bloomswitch          Sakura bloom switch
+   @layerbuttons         Layers header buttons
+   @alerts               "Saved!" alerts
+   @celebrations         Celebration effects
+   @toolstrip2           Second tool strip
+   @sounds               Sounds panel
+   @refwindow            Reference images window
+   @decorations          Popup decorations
+   @bubbles              Chat bubbles
+   @safety               Safety: troll detection
+   @selectedtool         Selected tool icon
+   @checkmarks           Checkmarks
+   @tour                 Quick tour
+   @updates              Version + update check
+   @general-extras       General: update dot, backup, links
+   @storagemeter         General: storage meter
+   @thankyou             Thank You card
+   @whatsnew-card        What's new card
+   @deco-titlebar        Popup decorations: title bar + border
+   @menulayout           Calmer menu layout (cards)
+   @stylepickers         Style pickers
+   @backgrounds-speed    Background images speed
+   @canvas               Canvas
+   @style-roseleaves     Style: Rose + Leaves
+   @style-lamb           Style: Lamb
+   @style-cafe           Style: Cozy cafe
+   @style-celestial      Style: Celestial
+   @style-grinball       Style: Grin ball
+   @style-shoreline      Style: Shoreline
+   @style-sharks         Style: Sharks
+   @style-lunamoth       Style: Luna moth
+   @style-luckydays      Style: Lucky Days
+   @style-darkmaid       Style: Dark Maid
+   @guards               "You didn't apply your changes!" card
+   @refboard             Reference board view
+   @clock                Clock, time card, break reminder
+   @chatoverlay          Chat overlay
+   @themecards           Theme cards
+   @themepacks           Theme packs
+   @userpopup            User right-click menu
+   @chattabs             Chat window tabs on top
+   @chatoverlay-replies  Chat overlay: replies, reactions, edits
+   @bubbles-replies      Chat bubbles: replies + reactions
+   @chat-replybox        Chat: reply box + message buttons
+   @streamer             Streamer mode
+   @toolsbutton          Tools button + tray
+   @modpanels            Mod panels (tray, clock card, reminder)
+   @guides               Drawing guides
+   @mycursor             My cursor
+   ============================================================= */
+
 /* =========================================================
-   FLOCKMOD CUSTOMIZER
+   FLOCKMOD CUSTOMIZER   @top
    ========================================================= */
 
-
 /* =========================================================
-   THEME MOD MENU
+   THEME MOD MENU   @modmenu
    ========================================================= */
 
 /* Mod Menu button */
@@ -13,9 +109,8 @@
     color: inherit !important;
 }
 
-
 /* =========================================================
-   THEME MOD MENU DIALOG
+   THEME MOD MENU DIALOG   @menu-dialog
    ========================================================= */
 
 .dialog[name="themeModMenu"] {
@@ -26,7 +121,6 @@
     background-color: #1d1e22 !important;
     border: 1px solid #707379 !important;
 }
-
 
 /* Title bar */
 
@@ -48,7 +142,6 @@
 .dialog[name="themeModMenu"] .dialogTitlebar {
     flex-shrink: 0;
 }
-
 
 /* Title */
 
@@ -92,9 +185,8 @@
     border-width: 2px !important;
 }
 
-
 /* =========================================================
-   THEME MOD MENU BACKDROP
+   THEME MOD MENU BACKDROP   @menu-backdrop
    ========================================================= */
 
 .themeModBackdrop {
@@ -105,9 +197,8 @@
     pointer-events: none; /* no longer created; kept so any leftover one can't block clicks */
 }
 
-
 /* =========================================================
-   THEME MOD MENU CONTENT
+   THEME MOD MENU CONTENT   @menu-content
    ========================================================= */
 
 .themeModDialogInner {
@@ -273,15 +364,6 @@
     padding-right: 8px;
 }
 
-.themeModSectionsScroll {
-    flex: 1;
-    min-width: 0;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 8px;
-}
-
 .themeModSidebarFill {
     flex: 1;
     background-color: #242529;
@@ -300,11 +382,8 @@
     display: none;
 }
 
-
-
-
 /* =========================================================
-   GENERAL SETTINGS
+   GENERAL SETTINGS   @menu-general
    ========================================================= */
 
 .themeModSetting {
@@ -370,9 +449,8 @@ html.flockmodFontActive:not(.flockmodCustomizationsDisabled) .optiontitle {
     border-color: #707379;
 }
 
-
 /* =========================================================
-   THEME MOD RANGE CONTROLS
+   THEME MOD RANGE CONTROLS   @menu-ranges
    ========================================================= */
 
 .themeModRangeControl {
@@ -402,9 +480,8 @@ html.flockmodFontActive:not(.flockmodCustomizationsDisabled) .optiontitle {
     font-variant-numeric: tabular-nums;
 }
 
-
 /* =========================================================
-   THEME MOD TOGGLE
+   THEME MOD TOGGLE   @menu-toggles
    ========================================================= */
 
 .themeModToggle {
@@ -438,10 +515,6 @@ html.flockmodFontActive:not(.flockmodCustomizationsDisabled) .optiontitle {
 
 .themeModToggleOption {
     position: relative;
-    z-index: 2;
-    font-size: 9px;
-    font-weight: 600;
-    line-height: 1;
     color: #8f9298;
     transition: color 0.15s ease;
 }
@@ -502,9 +575,8 @@ html.flockmodFontActive:not(.flockmodCustomizationsDisabled) .optiontitle {
     opacity: 0;
 }
 
-
 /* =========================================================
-   THEME MOD ACTIONS
+   THEME MOD ACTIONS   @menu-actions
    ========================================================= */
 
 .themeModActions {
@@ -600,9 +672,8 @@ html.flockmodFontActive:not(.flockmodCustomizationsDisabled) .optiontitle {
     border-color: #e0709a !important;
 }
 
-
 /* =========================================================
-   FLOCKMOD UI FONT SIZE
+   FLOCKMOD UI FONT SIZE   @fontsize
    ========================================================= */
 
 html.flockmodFontSizeActive:not(.flockmodCustomizationsDisabled) .optionTitle {
@@ -638,9 +709,8 @@ html.flockmodFontSizeActive:not(.flockmodCustomizationsDisabled) .typeBox {
     font-size: calc(11.52px * var(--flockmod-custom-ui-font-size, 1)) !important;
 }
 
-
 /* =========================================================
-   FLOCKMOD UI FONT WEIGHT
+   FLOCKMOD UI FONT WEIGHT   @fontweight
    ========================================================= */
 
 html.flockmodFontWeightActive:not(.flockmodCustomizationsDisabled) .optionTitle,
@@ -669,9 +739,8 @@ html.flockmodFontWeightActive:not(.flockmodCustomizationsDisabled) .typeBox {
     font-weight: var(--flockmod-custom-ui-font-weight, 400) !important;
 }
 
-
 /* =========================================================
-   FLOCKMOD UI SPACING
+   FLOCKMOD UI SPACING   @spacing
    ========================================================= */
 
 html.flockmodSpacingActive:not(.flockmodCustomizationsDisabled) .optionBG {
@@ -688,9 +757,8 @@ html.flockmodSpacingActive:not(.flockmodCustomizationsDisabled) .optionTitle {
 
 /* (border radius rules are in the BORDER RADIUS section at the end) */
 
-
 /* =========================================================
-   FLOCKMOD CHECKBOX NATIVE SIZE
+   FLOCKMOD CHECKBOX NATIVE SIZE   @checkboxes
    ========================================================= */
 
 html:not(.flockmodCustomizationsDisabled) .fmCheckbox,
@@ -701,7 +769,7 @@ html:not(.flockmodCustomizationsDisabled) .fmCheckbox > div {
 /* ---------------------------------------------------------
    1) TEXT COLOR 1  (adds: "Rearrange" text)
    --------------------------------------------------------- */
- 
+
 html.flockmodText1ColorActive:not(.flockmodCustomizationsDisabled) .containerTitle,
 html.flockmodText1ColorActive:not(.flockmodCustomizationsDisabled) .sub-title,
 html.flockmodText1ColorActive:not(.flockmodCustomizationsDisabled) #sidebar a[name="options"], /* NEW */
@@ -714,12 +782,11 @@ html.flockmodText1ColorActive:not(.flockmodCustomizationsDisabled) h6 {
     color: var(--flockmod-custom-text1, #fff) !important;
 }
 
-
 /* ---------------------------------------------------------
    2) TEXT COLOR 2  (adds: user list "YOU" + live tool icons;
       the color box is excluded, usernames are untouched)
    --------------------------------------------------------- */
- 
+
 html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .optionTitle,
 html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .optionField,
 html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .headerCaption,
@@ -738,13 +805,12 @@ html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .fmThumb {
     color: var(--flockmod-custom-text2, #fff) !important;
 }
 
-
 /* ---------------------------------------------------------
    2) SELECTED COLORS — REPLACE the whole section with this.
       Layers and tools are scoped (#sidebar / #drawingTools)
       so they outrank any native rule.
    --------------------------------------------------------- */
- 
+
 html.flockmodSelectedColorActive:not(.flockmodCustomizationsDisabled) #sidebar .selectedLayer,
 html.flockmodSelectedColorActive:not(.flockmodCustomizationsDisabled) #drawingTools .selectedTool,
 html.flockmodSelectedColorActive:not(.flockmodCustomizationsDisabled) .tablePagination.selected,
@@ -755,14 +821,13 @@ html.flockmodSelectedColorActive:not(.flockmodCustomizationsDisabled) #sidebar t
     background-color: var(--flockmod-custom-selected, #4f5156) !important;
 }
 
-
 /* ---------------------------------------------------------
    3) HOVER COLORS — REPLACE the whole section with this.
       Covers: layer rows, sidebar tool buttons, and user list
       rows (YOU + other users). Selected items keep their
       selected color while hovered.
    --------------------------------------------------------- */
- 
+
 html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) #sidebar .layerPreview:not(.selectedLayer):hover,
 html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) #drawingTools a:not(.selectedTool):hover,
 html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) #sidebar tr.someoneelse:not(.selected):hover,
@@ -772,9 +837,8 @@ html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) #sidebar tr.m
     background-color: var(--flockmod-custom-hover, #4f5156) !important;
 }
 
-
 /* =========================================================
-   COLORS PANEL — TOP BAR (all opt-in, scoped to the top bar)
+   COLORS PANEL — TOP BAR (all opt-in, scoped to the top bar)   @colors-topbar
    ========================================================= */
 
 /* Button text/icon color (existing setting, unchanged) */
@@ -808,7 +872,7 @@ html.flockmodTopBarProgressActive:not(.flockmodCustomizationsDisabled) #topbarPr
 }
 
 /* =========================================================
-   COLORS PANEL — BOTTOM BAR (all opt-in, scoped to the bottom bar)
+   COLORS PANEL — BOTTOM BAR (all opt-in, scoped to the bottom bar)   @colors-bottombar
    ========================================================= */
 
 html.flockmodBottomBarBackgroundActive:not(.flockmodCustomizationsDisabled) .bottomNavbar {
@@ -833,7 +897,7 @@ html.flockmodBottomBarSelectedActive:not(.flockmodCustomizationsDisabled) .botto
 /* ---------------------------------------------------------
    3) PRIMARY SIDEBAR COLOR  (adds: pressure bar thumb)
    --------------------------------------------------------- */
- 
+
 html.flockmodSidebarPrimaryActive:not(.flockmodCustomizationsDisabled) #sidebar,
 html.flockmodSidebarPrimaryActive:not(.flockmodCustomizationsDisabled) #sidebar .fmSlider:not(.readOnly) > .fmThumb:not(:hover),
 html.flockmodSidebarPrimaryActive:not(.flockmodCustomizationsDisabled) #sidebar .fmSlider.readOnly > .fmThumb, /* NEW */
@@ -841,9 +905,8 @@ html.flockmodSidebarPrimaryActive:not(.flockmodCustomizationsDisabled) #sidebar 
     background-color: var(--flockmod-custom-sidebar-primary, #1d1e22) !important;
 }
 
-
 /* =========================================================
-   COLORS PANEL — SIDEBAR — SECONDARY SIDEBAR COLOR (opt-in)
+   COLORS PANEL — SIDEBAR — SECONDARY SIDEBAR COLOR (opt-in)   @colors-sidebar2
    Section content areas, Layers list + header bar, tool strip.
    ========================================================= */
 
@@ -855,7 +918,7 @@ html.flockmodSidebarSecondaryActive:not(.flockmodCustomizationsDisabled) .toolba
 }
 
 /* =========================================================
-   COLORS PANEL — SIDEBAR — COLLAPSER COLOR (opt-in)
+   COLORS PANEL — SIDEBAR — COLLAPSER COLOR (opt-in)   @colors-collapser
    The .containerFooter bars at the bottom of each section.
    ========================================================= */
 
@@ -868,7 +931,7 @@ html.flockmodSidebarCollapserActive:not(.flockmodCustomizationsDisabled) #sideba
       Change: user list even rows now skip hovered rows
       (:not(:hover)) so Hover Colors can win on them.
    --------------------------------------------------------- */
- 
+
 html.flockmodSidebarInactiveActive:not(.flockmodCustomizationsDisabled) #sidebar .layerPreview:not(.selectedLayer):not(:hover),
 html.flockmodSidebarInactiveActive:not(.flockmodCustomizationsDisabled) #sidebar select,
 html.flockmodSidebarInactiveActive:not(.flockmodCustomizationsDisabled) #sidebar .fmSlider:not(.readOnly),
@@ -886,22 +949,21 @@ html.flockmodSidebarInactiveActive:not(.flockmodCustomizationsDisabled) #sidebar
    5) ACCENT 1  (adds: pressure bar filled side)
       Only the second rule changes; the first is unchanged.
    --------------------------------------------------------- */
- 
+
 html.flockmodSidebarAccentActive:not(.flockmodCustomizationsDisabled) #sidebar {
     border-left-color: var(--flockmod-custom-sidebar-accent, #378de4) !important;
 }
- 
+
 html.flockmodSidebarAccentActive:not(.flockmodCustomizationsDisabled) #sidebar .fmSlider:not(.readOnly) > .fmSelectedArea,
 html.flockmodSidebarAccentActive:not(.flockmodCustomizationsDisabled) #sidebar .fmSlider.readOnly > .fmSelectedArea, /* NEW */
 html.flockmodSidebarAccentActive:not(.flockmodCustomizationsDisabled) #sidebar .fmSwitch:not(.readOnly) .fmOn {
     background-color: var(--flockmod-custom-sidebar-accent, #378de4) !important;
 }
 
-
 /* ---------------------------------------------------------
    6) SIDEBAR ICON COLOR  (adds: RGB/wheel switch, Rearrange cog)
    --------------------------------------------------------- */
- 
+
 html.flockmodSidebarIconActive:not(.flockmodCustomizationsDisabled) #sidebar .containerTitle i,
 html.flockmodSidebarIconActive:not(.flockmodCustomizationsDisabled) #sidebar .sidebarCollapseIcon,
 html.flockmodSidebarIconActive:not(.flockmodCustomizationsDisabled) #sidebar .sidebarCollapseIcon i,
@@ -921,7 +983,7 @@ html.flockmodSidebarIconActive:not(.flockmodCustomizationsDisabled) #drawingTool
       This is the fade at the bottom of a section when its
       content is cut off, e.g. after collapsing it.
    --------------------------------------------------------- */
- 
+
 html.flockmodSidebarSecondaryActive:not(.flockmodCustomizationsDisabled) .containerSidebar .scrollNotBottom:not(.scrollNoOverflow)::after {
     background: linear-gradient(
         to bottom,
@@ -934,7 +996,7 @@ html.flockmodSidebarSecondaryActive:not(.flockmodCustomizationsDisabled) .contai
    2) SCROLL FADE ON THE SIDEBAR ITSELF — follows Primary
       Sidebar Color (the sidebar background).
    --------------------------------------------------------- */
- 
+
 html.flockmodSidebarPrimaryActive:not(.flockmodCustomizationsDisabled) .sidebar .scrollNotBottom:not(.scrollNoOverflow)::after {
     background: linear-gradient(
         to bottom,
@@ -948,7 +1010,7 @@ html.flockmodSidebarPrimaryActive:not(.flockmodCustomizationsDisabled) .sidebar 
       (FlockMod's scrollbars are OverlayScrollbars, theme
       "os-theme-light" in all three vanilla themes.)
    --------------------------------------------------------- */
- 
+
 html.flockmodSidebarCollapserActive:not(.flockmodCustomizationsDisabled) #sidebar .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle {
     background: var(--flockmod-custom-sidebar-collapser, #3a3c43) !important;
 }
@@ -993,9 +1055,9 @@ html.flockmodSidebarIconActive:not(.flockmodCustomizationsDisabled) #sidebarColl
 html.flockmodSidebarCollapserActive:not(.flockmodCustomizationsDisabled) #sidebar {
     scrollbar-color: var(--flockmod-custom-sidebar-collapser, #3a3c43) transparent;
 }
- 
+
 /* =========================================================
-   COLORS PANEL — POPUPS & MENUS (all opt-in)
+   COLORS PANEL — POPUPS & MENUS (all opt-in)   @colors-popups
    Every rule skips the mod's own menu via
    .dialog:not([name="themeModMenu"]).
    ========================================================= */
@@ -1083,7 +1145,7 @@ html.flockmodPopupButtonTextActive:not(.flockmodCustomizationsDisabled) .dialog:
 }
 
 /* =========================================================
-   COLORS PANEL — CHAT (all opt-in; usernames never touched,
+   COLORS PANEL — CHAT (all opt-in; usernames never touched,   @colors-chat
    MOTD / GM messages keep their native meaning colors)
    ========================================================= */
 
@@ -1107,7 +1169,7 @@ html.flockmodChatTimestampActive:not(.flockmodCustomizationsDisabled) #chatMessa
 }
 
 /* =========================================================
-   EXISTING GENERAL COLORS — extended into popups
+   EXISTING GENERAL COLORS — extended into popups   @colors-general
    ========================================================= */
 
 /* Text Color 2: popup text, menus, text boxes, channel names */
@@ -1153,7 +1215,7 @@ html.flockmodSidebarAccentActive:not(.flockmodCustomizationsDisabled) .dialog:no
 }
 
 /* =========================================================
-   TOP BAR — ACTIVITY BAR (the bar around the PM / EVENT /
+   TOP BAR — ACTIVITY BAR (the bar around the PM / EVENT /   @activitybar
    MOTD / GM / room tags). The tags keep their native colors.
    ========================================================= */
 
@@ -1162,7 +1224,7 @@ html.flockmodTopBarActivityActive:not(.flockmodCustomizationsDisabled) #headerTi
 }
 
 /* =========================================================
-   MOD MENU — SECTION HEADER: JUMP CHIPS + SEARCH
+   MOD MENU — SECTION HEADER: JUMP CHIPS + SEARCH   @search
    ========================================================= */
 
 .dialog[name="themeModMenu"] .themeModPanelHeader {
@@ -1315,7 +1377,7 @@ html.flockmodTopBarActivityActive:not(.flockmodCustomizationsDisabled) #headerTi
 }
 
 /* =========================================================
-   MOD MENU — THEMES TAB
+   MOD MENU — THEMES TAB   @themes
    ========================================================= */
 
 .dialog[name="themeModMenu"] .themeModButton {
@@ -1602,7 +1664,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModUndoRow.fmUndoFresh {
 }
 
 /* =========================================================
-   MOD MENU — "COPY TO DETAILED" (left side of Apply/Reset bar)
+   MOD MENU — "COPY TO DETAILED" (left side of Apply/Reset bar)   @copytodetailed
    ========================================================= */
 
 .dialog[name="themeModMenu"] .themeModCopyToDetailed {
@@ -1665,7 +1727,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModUndoRow.fmUndoFresh {
 }
 
 /* =========================================================
-   MOD MENU — CUSTOM FONTS (Interface > Font)
+   MOD MENU — CUSTOM FONTS (Interface > Font)   @fonts
    ========================================================= */
 
 .dialog[name="themeModMenu"] .themeModFontAddControls {
@@ -1740,9 +1802,8 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModUndoRow.fmUndoFresh {
     font-size: calc(.66rem * var(--fm-menu-text, 1));
 }
 
-
 /* =========================================================
-   BACKGROUND IMAGES (Backgrounds tab)
+   BACKGROUND IMAGES (Backgrounds tab)   @backgrounds
    Layer 1 = shade (dim) gradient, layer 2 = the image.
    ========================================================= */
 
@@ -1818,7 +1879,7 @@ html.flockmodBgChatSeeThroughActive:not(.flockmodCustomizationsDisabled) .dialog
 }
 
 /* =========================================================
-   MOD MENU — BACKGROUNDS TAB + "saved locally" notes
+   MOD MENU — BACKGROUNDS TAB + "saved locally" notes   @backgrounds-tab
    ========================================================= */
 
 .dialog[name="themeModMenu"] .themeModLocalNote {
@@ -1878,7 +1939,7 @@ html.flockmodBgChatSeeThroughActive:not(.flockmodCustomizationsDisabled) .dialog
 }
 
 /* =========================================================
-   MESSENGER + ACTIVITY BAR TEXT
+   MESSENGER + ACTIVITY BAR TEXT   @messenger
    ========================================================= */
 
 /* Text Color 2 (and simple mode's softer text): the popup window
@@ -1972,7 +2033,7 @@ html.flockmodBgMessengerSeeThroughActive:not(.flockmodCustomizationsDisabled) .d
 }
 
 /* =========================================================
-   POPUPS — Configuration menu tabs, selector buttons,
+   POPUPS — Configuration menu tabs, selector buttons,   @popups-tabs
    checkboxes, slider thumbs
    ========================================================= */
 
@@ -2012,7 +2073,7 @@ html.flockmodPopupBackgroundActive:not(.flockmodCustomizationsDisabled) .dialog:
 }
 
 /* =========================================================
-   POPUPS — TABLES (Hotkeys and other list popups)
+   POPUPS — TABLES (Hotkeys and other list popups)   @popups-tables
    ========================================================= */
 
 /* Header bar + the strip holding the page buttons */
@@ -2094,7 +2155,7 @@ html.flockmodPopupButtonTextActive:not(.flockmodCustomizationsDisabled) .dialog:
 }
 
 /* =========================================================
-   POPUPS — Room Manager: formatting toolbar, "danger"
+   POPUPS — Room Manager: formatting toolbar, "danger"   @popups-roommanager
    buttons, separators, scrollbars
    ========================================================= */
 
@@ -2142,7 +2203,7 @@ html.flockmodPopupBorderActive:not(.flockmodCustomizationsDisabled) .dialog:not(
 }
 
 /* =========================================================
-   POPUPS — switch OFF side (e.g. "public room",
+   POPUPS — switch OFF side (e.g. "public room",   @popups-switchoff
    "general audience"). ON side already follows Accent 1.
    ========================================================= */
 
@@ -2158,9 +2219,8 @@ html.flockmodText2ColorActive:not(.flockmodCustomizationsDisabled) .dialog:not([
     color: var(--flockmod-custom-text2, #fff) !important;
 }
 
-
 /* =========================================================
-   BORDER RADIUS (Interface > Border Radius)
+   BORDER RADIUS (Interface > Border Radius)   @radius
    Only active when the slider is moved off 5 (the default),
    so FlockMod's own shapes are untouched otherwise.
    ========================================================= */
@@ -2216,7 +2276,7 @@ html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .dialog:not([name
 }
 
 /* =========================================================
-   SLIDER THUMB SHAPES (Interface > Slider Thumbs)
+   SLIDER THUMB SHAPES (Interface > Slider Thumbs)   @thumbshapes
    Masking keeps the thumb's own color and number; "contain"
    keeps the shape's proportions on wide thumbs.
    ========================================================= */
@@ -2307,7 +2367,7 @@ html.flockmodThumbShapeActive:not(.flockmodCustomizationsDisabled) .flockmodThum
     display: flow-root !important;
 }
 /* =========================================================
-   LOCKED SWITCHES (".readOnly"), e.g. the lasso / rectangle
+   LOCKED SWITCHES (".readOnly"), e.g. the lasso / rectangle   @lockedswitches
    "Type" switch in Tool Options while a selection is active.
    FlockMod greys these out with its own colors, and the rules
    above only covered unlocked switches. These follow the same
@@ -2338,7 +2398,7 @@ html.flockmodSidebarAccentActive:not(.flockmodCustomizationsDisabled) .fmSwitch.
 }
 
 /* =========================================================
-   ROOM LIST (room buttons + the room description box).
+   ROOM LIST (room buttons + the room description box).   @roomlist
    Not limited to .dialog, since the room list isn't always
    inside a popup.
    Boxes = Popup Field, hovered room = Hover Color,
@@ -2390,7 +2450,7 @@ html.flockmodRadiusActive:not(.flockmodCustomizationsDisabled) .roomDescription 
 }
 
 /* =========================================================
-   GRADIENTS (Colors panel, detailed mode)
+   GRADIENTS (Colors panel, detailed mode)   @gradients
    Each needs both the color's own class (color ON) and its
    gradient class. The gradient is a background-image drawn over
    the plain color, which stays as the fallback.
@@ -2488,7 +2548,7 @@ html.flockmodBgMessengerSeeThroughActive.flockmodPopupContentActive.flockmodGrad
 }
 
 /* =========================================================
-   ANIMATIONS (Animations tab)
+   ANIMATIONS (Animations tab)   @animations
    Only opacity + the separate scale / translate / rotate
    properties are animated. Those run on the graphics card and
    don't fight FlockMod's own "transform" or positioning.
@@ -2605,7 +2665,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] input[type="color"].fmPulse {
 }
 
 /* =========================================================
-   SAKURA BLOOM SWITCH (General > Enable customizations)
+   SAKURA BLOOM SWITCH (General > Enable customizations)   @bloomswitch
    While ON, the thumb is always a pink flower (no animation
    needed for that). Turning it ON plays the bloom + glow once.
    ========================================================= */
@@ -2662,9 +2722,8 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModBloomToggle.fmBloomPlay .t
     }
 }
 
-
 /* =========================================================
-   LAYERS HEADER BUTTONS (clear layer, etc.)
+   LAYERS HEADER BUTTONS (clear layer, etc.)   @layerbuttons
    The icon color was covered already; FlockMod's own grey
    hover/focus background (it stays after clicking) and the
    greyed-out "disabled" look were not.
@@ -2686,7 +2745,7 @@ html.flockmodSidebarIconActive:not(.flockmodCustomizationsDisabled) #sidebar .si
 }
 
 /* =========================================================
-   ALERTS (the "Saved!" style popups at the top right)
+   ALERTS (the "Saved!" style popups at the top right)   @alerts
    Box = Popup Background, border = Popup Border,
    text = Popup Title Text, timer bar = Accent 1.
    ========================================================= */
@@ -2723,7 +2782,7 @@ html.fmAnimPopups:not(.flockmodCustomizationsDisabled) #alertContainer .alertMes
 }
 
 /* =========================================================
-   CELEBRATION EFFECTS (Mod menu effects)
+   CELEBRATION EFFECTS (Mod menu effects)   @celebrations
    ========================================================= */
 
 /* Petal burst from the Apply button (lives inside the menu, above
@@ -2815,7 +2874,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModApplyButton.fmApplyGlow {
 }
 
 /* =========================================================
-   SECOND TOOL STRIP (new in FlockMod's update: Pan, Lasso,
+   SECOND TOOL STRIP (new in FlockMod's update: Pan, Lasso,   @toolstrip2
    Rectangle, Zoom In/Out in a ".toolbar > ul.sidemenu").
    Colored exactly like the main tool strip (#drawingTools).
    ========================================================= */
@@ -2871,7 +2930,7 @@ html.fmAnimSelect:not(.flockmodCustomizationsDisabled) .toolbar > ul.sidemenu .s
 }
 
 /* =========================================================
-   SOUNDS PANEL
+   SOUNDS PANEL   @sounds
    ========================================================= */
 
 .dialog[name="themeModMenu"] .themeModSoundRow {
@@ -2913,7 +2972,7 @@ html.fmAnimSelect:not(.flockmodCustomizationsDisabled) .toolbar > ul.sidemenu .s
 }
 
 /* =========================================================
-   REFERENCE IMAGES WINDOW
+   REFERENCE IMAGES WINDOW   @refwindow
    A normal FlockMod-style popup (".dialog"), so your Popup
    colors, borders, radius, font and animations all apply.
    Only layout lives here.
@@ -3201,7 +3260,7 @@ html.flockmodPopupContentActive.flockmodGradPopupContentActive:not(.flockmodCust
 }
 
 /* =========================================================
-   POPUP DECORATIONS (Interface > Popup Decorations)
+   POPUP DECORATIONS (Interface > Popup Decorations)   @decorations
    4 color roles. "Match my theme" (default) uses the colors
    read from your popups (--fmdeco-t-*); custom uses the pickers
    (--fmdeco-c-*). Sparkle is a lighter Details unless picked.
@@ -3498,9 +3557,8 @@ html.fmAnimPopups:not(.flockmodCustomizationsDisabled) .dialog > .fmDeco .fmdTai
     padding-left: 14px;
 }
 
-
 /* =========================================================
-   CHAT BUBBLES (Interface > Chat Bubbles) - your screen only
+   CHAT BUBBLES (Interface > Chat Bubbles) - your screen only   @bubbles
    html.fmBubOn:not(.flockmodCustomizationsDisabled)   = html.fmBubOn   (+ data-fm-bub="style")
    Your messages: .messageBlock[data-type="MYMSG"]
    Colors: --fmbub-bg / -text / -border, decoration -a -b -c -d
@@ -3783,7 +3841,7 @@ html.fmAnimPopups.fmBubOn:not(.flockmodCustomizationsDisabled) .fmCnStack .fmBub
 .dialog[name="themeModMenu"] .themeModBubbleColors .themeModDecoColorRow { padding-left: 14px; }
 
 /* =========================================================
-   SAFETY: TROLL DETECTION (your screen only)
+   SAFETY: TROLL DETECTION (your screen only)   @safety
    ========================================================= */
 
 /* User list: flagged name in the highlight color with a ⚠ */
@@ -3935,7 +3993,7 @@ html.fmAnimPopups .fmTrollToast.fmTrollToastOut {
 }
 
 /* =========================================================
-   SELECTED TOOL ICON: readable on the selected background.
+   SELECTED TOOL ICON: readable on the selected background.   @selectedtool
    Uses Primary Sidebar Color (inverted pairing, like the top
    sidebar button); white if Primary isn't set.
    ========================================================= */
@@ -3955,7 +4013,7 @@ html.flockmodSelectedColorActive.flockmodSidebarPrimaryActive:not(.flockmodCusto
 }
 
 /* =========================================================
-   CHECKMARKS (Pressure, preset-load and layer checkboxes)
+   CHECKMARKS (Pressure, preset-load and layer checkboxes)   @checkmarks
    The ✔ follows Accent 1, like slider fills and switch ON sides.
    ========================================================= */
 
@@ -3964,9 +4022,8 @@ html.flockmodSidebarAccentActive:not(.flockmodCustomizationsDisabled) .fmCheckbo
     color: var(--flockmod-custom-sidebar-accent, #378de4) !important;
 }
 
-
 /* =========================================================
-   QUICK TOUR (sakura pink)
+   QUICK TOUR (sakura pink)   @tour
    The welcome prompt docks on top of the mod menu, the steps
    sit beside it. Colors are fixed pink so the tour looks the
    same whatever theme you've made. Animations only play while
@@ -4157,7 +4214,7 @@ html.fmAnimMenu .fmTourRing.fmTourPulse { animation: fmTourPulse calc(1.1s * var
 }
 
 /* =========================================================
-   VERSION + UPDATE CHECK (General panel)
+   VERSION + UPDATE CHECK (General panel)   @updates
    ========================================================= */
 
 .dialog[name="themeModMenu"] .themeModTitleVersion {
@@ -4212,7 +4269,7 @@ html.fmAnimMenu .fmTourRing.fmTourPulse { animation: fmTourPulse calc(1.1s * var
 }
 
 /* =========================================================
-   GENERAL: auto update dot, backup, links
+   GENERAL: auto update dot, backup, links   @general-extras
    ========================================================= */
 
 /* Small pink dot on General when an update is out */
@@ -4295,7 +4352,7 @@ html.fmAnimMenu .fmTourRing.fmTourPulse { animation: fmTourPulse calc(1.1s * var
 }
 
 /* =========================================================
-   GENERAL > THANK YOU (sakura card)
+   GENERAL > THANK YOU (sakura card)   @thankyou
    A soft pink card with a sakura flower and a few resting
    petals. Hovering the card lets the petals drift a little
    (only while menu animations are on). Names glow on hover
@@ -4376,7 +4433,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .themeModThanks:hover .themeModThan
 }
 
 /* =========================================================
-   WHAT'S NEW CARD (inside the mod menu, sakura pink)
+   WHAT'S NEW CARD (inside the mod menu, sakura pink)   @whatsnew-card
    Uses the tour's flower + pink button styles.
    ========================================================= */
 
@@ -4531,7 +4588,7 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .fmWhatsNew {
 }
 
 /* =========================================================
-   POPUP DECORATIONS: Title bar color (fmDecoFrameOn) and
+   POPUP DECORATIONS: Title bar color (fmDecoFrameOn) and   @deco-titlebar
    Border color (fmDecoFrameBorderOn), each with its own switch.
    Only on decorated popups, never on the mod menu. Popup
    backgrounds and text are left to your theme.
@@ -4555,12 +4612,6 @@ html.fmDecoFrameBorderOn:not(.flockmodCustomizationsDisabled) .dialog.fmHasDeco:
     border-color: var(--fmframe-border) !important;
 }
 
-/* The menu's little preview box shows them too */
-html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
-    background: var(--fmframe-title);
-    color: var(--fmframe-titletext);
-    text-shadow: none;
-}
 html.fmDecoFrameBorderOn .dialog[name="themeModMenu"] .themeModDecoPreview {
     border-color: var(--fmframe-border);
 }
@@ -4599,7 +4650,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
 }
 
 /* =========================================================
-   CALMER MENU LAYOUT (v1.3)
+   CALMER MENU LAYOUT (v1.3)   @menulayout
    Section titles everywhere: bigger, white, thin pink bar.
    Colors panel: cards you can fold, one aligned control
    column, Gradient pills, group labels, one-line descriptions.
@@ -4701,7 +4752,6 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
     gap: 8px;
 }
 .dialog[name="themeModMenu"] .fmCardsPanel .themeModSetting > .themeModSettingText {
-    flex: 1 1 0;
     margin-right: 10px;
 }
 .dialog[name="themeModMenu"] .fmCardsPanel .themeModSettingName { margin-bottom: 2px; }
@@ -4818,7 +4868,7 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
 .dialog[name="themeModMenu"].themeModSearching .themeModFoldAll { display: none !important; }
 
 /* =========================================================
-   STYLE PICKERS (Interface > Popup Decorations / Chat Bubbles)
+   STYLE PICKERS (Interface > Popup Decorations / Chat Bubbles)   @stylepickers
    Tile grid + filter chips. The old dropdown is kept hidden.
    Static only: no animations, no hover effects that repaint much.
    ========================================================= */
@@ -4994,9 +5044,8 @@ html.fmDecoFrameOn .dialog[name="themeModMenu"] .themeModDecoPreviewBar {
     vertical-align: middle;
 }
 
-
 /* =========================================================
-   BACKGROUND IMAGES: SPEED (v1.5)
+   BACKGROUND IMAGES: SPEED (v1.5)   @backgrounds-speed
    The image (and its dim) is drawn on its own layer behind the
    section instead of as the section's background. The browser
    then paints it once and reuses it, so changes inside the
@@ -5049,9 +5098,8 @@ html.flockmodBgMessengerActive:not(.flockmodCustomizationsDisabled) .dialog[name
     background-repeat: no-repeat, var(--flockmod-bg-messenger-repeat, no-repeat);
 }
 
-
 /* =========================================================
-   CANVAS (Colors > Canvas) - v1.6
+   CANVAS (Colors > Canvas) - v1.6   @canvas
    FlockMod's paper is the white background of .boardContainer;
    every layer is its own see-through canvas on top, inside
    .CanvasContainer (its own stacking group), so blend modes only
@@ -5094,9 +5142,8 @@ html.flockmodCanvasDimActive:not(.flockmodCustomizationsDisabled) .boardContaine
 .dialog[name="themeModMenu"] .fmCanvasNote i { color: #f48fb1; margin-top: 2px; }
 .dialog[name="themeModMenu"] .fmCanvasNote b { color: #fff; font-weight: 600; }
 
-
 /* =========================================================
-   v1.6 ROSE + LEAVES: stems and vines that run the whole
+   v1.6 ROSE + LEAVES: stems and vines that run the whole   @style-roseleaves
    length of the popup (they tile, so they fit any size), and
    grow with the decoration scale. Colors come from the same
    4 decoration colors as everything else.
@@ -5161,9 +5208,8 @@ html.flockmodCanvasDimActive:not(.flockmodCustomizationsDisabled) .boardContaine
     mask-composite: intersect;
 }
 
-
 /* =========================================================
-   v1.6 LAMB: a wool cloud on top of the popup. Rounded ends +
+   v1.6 LAMB: a wool cloud on top of the popup. Rounded ends +   @style-lamb
    a middle that repeats, so it fits any width; it grows with the
    decoration scale and sits above the title text, never on it.
    ========================================================= */
@@ -5222,9 +5268,8 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="lamb"] .fmCnStack
     margin: 16px 20px 18px !important;
 }
 
-
 /* =========================================================
-   v1.6 COZY CAFE: a striped awning with a scalloped edge above
+   v1.6 COZY CAFE: a striped awning with a scalloped edge above   @style-cafe
    the title bar. Fixed height (the cat and the mug sit on it),
    stripes and scallops repeat to any width.
    ========================================================= */
@@ -5259,9 +5304,8 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="cafe"] .fmCnStack
     margin-top: 20px !important;
 }
 
-
 /* =========================================================
-   v1.6 CELESTIAL: a soft aurora (two color pools, plain
+   v1.6 CELESTIAL: a soft aurora (two color pools, plain   @style-celestial
    gradients, no blur) behind lavender clouds above the title
    bar, a shooting star that streaks in once, and gentle glows.
    ========================================================= */
@@ -5350,9 +5394,8 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="celestial"] .fmCn
     margin-top: 8px !important;
 }
 
-
 /* =========================================================
-   v1.6 GRIN BALL: a faint light rim so the dark balls show
+   v1.6 GRIN BALL: a faint light rim so the dark balls show   @style-grinball
    on dark pages. Bubbles get room on both ends for the balls.
    ========================================================= */
 .fmDeco .fmdGrinRim { filter: drop-shadow(0 0 1px rgba(255, 255, 255, .55)); }
@@ -5367,9 +5410,8 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="grinball"] .fmCnS
     margin-bottom: 18px !important;
 }
 
-
 /* =========================================================
-   v1.6 SHORELINE (inspired by a Discord nameplate): the title
+   v1.6 SHORELINE (inspired by a Discord nameplate): the title   @style-shoreline
    bar becomes the shore. Night water (from your Title bar color),
    a static sand layer and a foam layer behind the title text.
    Only the foam layer moves (transform only, cheap), and only
@@ -5424,7 +5466,7 @@ html.fmAnimPopups:not(.flockmodCustomizationsDisabled) .dialog > .fmDeco .fmDeco
 .fmbShoreGlow { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--fmbub-a) 55%, transparent)); }
 
 /* =========================================================
-   v1.6 SHARKS (inspired by a Discord profile): blue
+   v1.6 SHARKS (inspired by a Discord profile): blue   @style-sharks
    title bar, glowing sharks circling the top-right corner and
    two sharks cruising under the popup (they swim only with
    Animations > Popups on; transform + opacity only).
@@ -5471,9 +5513,8 @@ html.fmAnimPopups:not(.flockmodCustomizationsDisabled) .dialog > .fmDeco .fmDeco
 }
 .fmbSharkGlow { filter: drop-shadow(0 0 4px var(--fmbub-b)); }
 
-
 /* =========================================================
-   v1.6 LUNA MOTH (the Moth style, redrawn): glowing see-through
+   v1.6 LUNA MOTH (the Moth style, redrawn): glowing see-through   @style-lunamoth
    wings and a swarm of tiny glowing moths. The big moth folds
    its wings once on open; the swarms drift slowly (whole piece
    moves, so the glow isn't redrawn: cheap). Animations > Popups.
@@ -5530,10 +5571,8 @@ html.fmAnimPopups:not(.flockmodCustomizationsDisabled) .dialog > .fmDeco .fmdDan
         fmdDangleKf calc(1s * var(--fm-anim-speed, 1)) ease-in-out calc(.3s * var(--fm-anim-speed, 1)) 1;
 }
 
-
-
 /* =========================================================
-   v1.6.2 LUCKY DAYS (designed by nene2nd): teal-to-green title
+   v1.6.2 LUCKY DAYS (designed by nene2nd): teal-to-green title   @style-luckydays
    bar, clovers and hearts that float, sparkles that fade in and
    out. Transform/opacity only; moves only with Animations > Popups.
    ========================================================= */
@@ -5590,7 +5629,7 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="lucky"] .fmCnStac
 }
 
 /* =========================================================
-   v1.6.2 DARK MAID (designed by nene2nd): a maid headpiece over
+   v1.6.2 DARK MAID (designed by nene2nd): a maid headpiece over   @style-darkmaid
    the title bar (stays still), a skull bow pinning it, a candle
    whose flame flickers and glows, and a ribbon whose tails sway
    in the wind. Only small SVG parts move; Animations > Popups.
@@ -5659,9 +5698,8 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="maid"] .fmCnStack
     margin-left: 6px;
 }
 
-
 /* =========================================================
-   v1.6.2 "You didn't apply your changes!" card: the What's new
+   v1.6.2 "You didn't apply your changes!" card: the What's new   @guards
    card's look, smaller, sitting just above Reset / Apply.
    ========================================================= */
 .dialog[name="themeModMenu"] .fmWhatsNew.fmCloseAsk {
@@ -5701,7 +5739,6 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled)[data-fm-bub="maid"] .fmCnStack
 .dialog[name="themeModMenu"] .themeModResetButton i { margin-right: 4px; font-size: .85em; }
 .dialog[name="themeModMenu"] .themeModActionsNote:not(.visible) { pointer-events: none; }
 
-
 /* v1.6.2: background image AROUND the canvas (#DrawingArea). The board
    (paper and layers) sits on top of it, so drawings are never touched.
    Works with Colors > Canvas > Area Around Canvas (that color shows
@@ -5715,9 +5752,8 @@ html.flockmodBgCanvasActive:not(.flockmodCustomizationsDisabled) #DrawingArea {
     background-position: center, center !important;
 }
 
-
 /* =========================================================
-   v1.6.2 REFERENCE BOARD VIEW (PureRef-style)
+   v1.6.2 REFERENCE BOARD VIEW (PureRef-style)   @refboard
    Lives inside the same picture area, so your popup colors,
    gradients and decorations apply as before. Selection uses your
    Selected color (or sakura pink), set by content.js as --fm-ref-sel.
@@ -5852,7 +5888,6 @@ html.flockmodBgCanvasActive:not(.flockmodCustomizationsDisabled) #DrawingArea {
 .dialog[name="themeModMenu"] .fmWhatsNewCat.fmWhatsNewName-orange svg { filter: drop-shadow(0 0 3px rgba(255, 150, 50, .7)); }
 .dialog[name="themeModMenu"] .fmWhatsNewName-orange { color: #e07a1f; text-shadow: 0 0 6px rgba(255, 150, 50, .8), 0 0 12px rgba(255, 150, 50, .45); }
 
-
 /* v1.6.3: update dot on the bottom bar flower */
 .themeModMenuButton.fmHasUpdateDot { position: relative; }
 .themeModMenuButton.fmHasUpdateDot::after {
@@ -5867,7 +5902,6 @@ html.flockmodBgCanvasActive:not(.flockmodCustomizationsDisabled) #DrawingArea {
     box-shadow: 0 0 0 2px rgba(0, 0, 0, .35), 0 0 6px rgba(244, 143, 177, .9);
     pointer-events: none;
 }
-
 
 /* v1.6.3: chat highlights (mentions of your name / extra words) */
 html.fmHlOn:not(.flockmodCustomizationsDisabled) .msgLine.fmHl,
@@ -5890,9 +5924,8 @@ html.fmHlOn:not(.flockmodCustomizationsDisabled) .offlineMessage.fmHl {
 .dialog[name="themeModMenu"] .themeModSaveImagesRow input { margin: 0; accent-color: #e0668f; }
 .dialog[name="themeModMenu"] .themeModSavedHasImages { margin-left: 4px; font-size: .8em; color: #f48fb1; opacity: .85; }
 
-
 /* =========================================================
-   v1.6.3 CLOCK, TIME CARD + BREAK REMINDER
+   v1.6.3 CLOCK, TIME CARD + BREAK REMINDER   @clock
    ========================================================= */
 .fmClockItem { display: none; }
 html.fmClockOn:not(.flockmodCustomizationsDisabled) .fmClockItem { display: list-item; list-style: none; }
@@ -5942,9 +5975,8 @@ html.fmClockOn:not(.flockmodCustomizationsDisabled) .fmClockItem { display: list
 html.fmAnimMenu .fmBreakToast { animation: fmWhatsNewIn calc(.35s * var(--fm-anim-speed, 1)) cubic-bezier(.25, .8, .25, 1); }
 .fmClockButton, .fmClockButton:hover { text-decoration: none !important; }
 
-
 /* =========================================================
-   v1.6.3 CHAT NOTIFICATIONS
+   v1.6.3 CHAT NOTIFICATIONS   @chatoverlay
    Cards beside the canvas, on the side away from the sidebar.
    Colors follow your theme unless set in Colors > Chat
    Notifications: popup background, chat text, Accent 1.
@@ -6322,7 +6354,6 @@ html.fmAnimMenu .fmCnStack .fmCnCard.fmCnEarlier:not(.fmCnOut) { animation: fmCn
 .fmCnStack.fmCnOpen .fmCnGrip { opacity: .8; }
 .fmCnStack.fmCnCollapsed .fmCnGrip { display: none; }
 
-
 /* Chat notification cards follow Interface > Font, Font Size and Font
    Weight (custom fonts too), like the chat itself */
 html.flockmodFontActive:not(.flockmodCustomizationsDisabled) .fmCnStack {
@@ -6378,7 +6409,6 @@ html.flockmodFontWeightActive:not(.flockmodCustomizationsDisabled) .fmCnStack .f
 .fmCnStack .fmCnNewPm:hover { opacity: 1; color: var(--fmcn-pm); }
 .fmCnStack .fmCnTagList button.active,
 .fmCnStack .fmCnTagList button:hover { background: color-mix(in srgb, #d6b147 25%, transparent); }
-
 
 /* v1.6.3: pink dots on new features after an update (tab, section, setting) */
 .dialog[name="themeModMenu"] .fmNewDot {
@@ -6454,9 +6484,8 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .fmNewDot {
 .fmCnStack .fmCnScrollRow button:disabled { opacity: .4; cursor: default; }
 .fmCnStack .fmCnScrollRow i { margin-right: 3px; font-size: .85em; }
 
-
 /* =========================================================
-   THEME CARDS (v1.6.6, Themes tab)
+   THEME CARDS (v1.6.6, Themes tab)   @themecards
    The little panel that shows a card, plus the drop highlight
    on the code box. Uses the menu's own grey + sakura pink.
    ========================================================= */
@@ -6578,9 +6607,8 @@ html.fmAnimMenu .dialog[name="themeModMenu"] .fmNewDot {
 
 .dialog[name="themeModMenu"] .themeModCardPick i { margin-right: 3px; }
 
-
 /* =========================================================
-   THEME PACKS (v1.6.6, Themes tab)
+   THEME PACKS (v1.6.6, Themes tab)   @themepacks
    Same look as the theme card panel.
    ========================================================= */
 .dialog[name="themeModMenu"] .themeModPackPanel {
@@ -6831,9 +6859,8 @@ html.themeModQuietColorDialog .dialog[name="color"] * {
     color: #3a1020 !important;
 }
 
-
 /* =========================================================
-   USER RIGHT-CLICK MENU (FlockMod's newer user popup:
+   USER RIGHT-CLICK MENU (FlockMod's newer user popup:   @userpopup
    Ignore / Mute / Silence switches, icon tray, rank buttons).
    Switches reuse the popup switch rules above. Names and rank
    text keep their role colors.
@@ -6900,7 +6927,7 @@ html.fmBubOn.fmCnOwnRight:not(.flockmodCustomizationsDisabled) .fmCnStack.fmCnRi
 .fmCnStack.fmCnOpen.fmCnBarHot .fmCnList { pointer-events: auto; }
 
 /* =========================================================
-   CHAT WINDOW: TABS ON TOP (Interface > Chat Window, v1.6.7)
+   CHAT WINDOW: TABS ON TOP (Interface > Chat Window, v1.6.7)   @chattabs
    FlockMod's chat lists its channels in a left column. This
    turns that column into a row of tabs above the messages.
    Only layout changes; colors keep following the theme.
@@ -7017,7 +7044,7 @@ html.fmChatTopTabs:not(.flockmodCustomizationsDisabled) .dialog[name="chat"] .si
 }
 
 /* =========================================================
-   CHAT OVERLAY: REPLIES, REACTIONS, EDITS, DELETES (v1.6.7)
+   CHAT OVERLAY: REPLIES, REACTIONS, EDITS, DELETES (v1.6.7)   @chatoverlay-replies
    ========================================================= */
 .fmCnStack .fmCnMsg { position: relative; border-radius: 6px; }
 .fmCnStack .fmCnMsg + .fmCnMsg { margin-top: 2px; }
@@ -7152,7 +7179,7 @@ html.fmQuietReact .reactionPicker { visibility: hidden !important; pointer-event
 .fmCnStack .fmCnMsg.fmCnGone .fmCnDeleted:has(.fmCnModWord) { opacity: .85; }
 
 /* =========================================================
-   CHAT BUBBLES: REPLIES + REACTIONS (v1.6.7)
+   CHAT BUBBLES: REPLIES + REACTIONS (v1.6.7)   @bubbles-replies
    In bubble mode each FlockMod message line is one row, so the
    reply quote and the reactions sat beside the bubble. Now the
    quote goes above it and the reactions below it, on the same
@@ -7194,7 +7221,7 @@ html.fmBubOn:not(.flockmodCustomizationsDisabled).fmBubRight #chatMessages .mess
 html.fmQuietReact .emojiContainer { visibility: hidden !important; pointer-events: none !important; }
 
 /* =========================================================
-   CHAT: REPLY BOX + MESSAGE BUTTONS (Colors > Chat, v1.6.7)
+   CHAT: REPLY BOX + MESSAGE BUTTONS (Colors > Chat, v1.6.7)   @chat-replybox
    ========================================================= */
 html.flockmodChatReplyActive:not(.flockmodCustomizationsDisabled) #chatMessages .msgReply,
 html.flockmodChatReplyActive:not(.flockmodCustomizationsDisabled) #messengerConversation .msgReply,
@@ -7227,7 +7254,7 @@ html.flockmodHoverColorActive:not(.flockmodCustomizationsDisabled) .reactionPick
 }
 
 /* =========================================================
-   STREAMER MODE (v1.6.8, Advanced tab)
+   STREAMER MODE (v1.6.8, Advanced tab)   @streamer
    Only what YOUR screen shows. Works even with customizations
    OFF (privacy, not looks), so no :not(.flockmodCustomizationsDisabled).
    ========================================================= */
@@ -7284,7 +7311,7 @@ html.fmStreamOverlay .fmCnStack .fmCnPill {
 }
 
 /* =========================================================
-   TOOLS BUTTON + TRAY (v1.6.8)
+   TOOLS BUTTON + TRAY (v1.6.8)   @toolsbutton
    ========================================================= */
 .themeModToolsButton {
     position: relative;
@@ -7457,7 +7484,7 @@ html.flockmodBottomBarHoverActive:not(.flockmodCustomizationsDisabled) .bottomNa
 }
 
 /* =========================================================
-   MOD PANELS: the Tools tray, the clock card and the break reminder (v1.6.8)
+   MOD PANELS: the Tools tray, the clock card and the break reminder (v1.6.8)   @modpanels
    Built like a FlockMod popup: dark like the mod menu by default.
    If you colored your popups (Colors > Popups), they follow those.
    (To keep them always dark, delete the "follow popup colors"
@@ -7553,7 +7580,7 @@ html.fmStreamCanvasNames .CursorContainer .cursor:not(.myself) .pointerLabel:not
 }
 
 /* =========================================================
-   DRAWING GUIDES (v1.6.8)
+   DRAWING GUIDES (v1.6.8)   @guides
    One SVG inside FlockMod's board (so it zooms/pans/rotates with
    it), over the layers (10-14), the Canvas Dimmer (20) and
    FlockMod's grid (25). Lines never catch clicks; only the small
@@ -7716,7 +7743,7 @@ html.fmEraserPaper:has(#drawingTools .selectedTool .fa-eraser) .CanvasContainer 
 }
 
 /* =========================================================
-   MY CURSOR (Colors > Canvas)  v1.6.8
+   MY CURSOR (Colors > Canvas)  v1.6.8   @mycursor
    Only your own cursor (.cursor.myself), whatever shape you picked in
    FlockMod (circle, square, crosshair, cross, dot). FlockMod's own thin
    lines are recolored with a filter, so every shape keeps its exact
@@ -7821,4 +7848,157 @@ html.fmMyCur.fmMyCurCross:not(.flockmodCustomizationsDisabled) .CursorContainer 
 .dialog[name="themeModMenu"] .fmWhatsNewBody .fmWhatsNewLead {
     font-weight: 700;
     color: inherit;
+}
+
+/* =========================================================
+   GENERAL: STORAGE METER (v1.6.9)   @storagemeter
+   ========================================================= */
+
+.dialog[name="themeModMenu"] .fmStorageMeter {
+    margin: 0 0 8px;
+    padding: 10px 12px;
+    border: 1px solid #36383d;
+    border-radius: 4px;
+    background-color: #242529;
+    font-size: calc(.72rem * var(--fm-menu-text, 1));
+    line-height: 1.45;
+    color: #c4c6ca;
+    transition: opacity .2s;
+}
+
+.dialog[name="themeModMenu"] .fmStorageMeter:empty {
+    display: none;
+}
+
+.dialog[name="themeModMenu"] .fmStorageMeter.fmStorageBusy {
+    opacity: .6;
+}
+
+.dialog[name="themeModMenu"] .fmStorageTotal {
+    margin-bottom: 6px;
+    color: #9b9da2;
+}
+
+.dialog[name="themeModMenu"] .fmStorageTotal b {
+    font-size: calc(.95rem * var(--fm-menu-text, 1));
+    color: #e6e7ea;
+}
+
+.dialog[name="themeModMenu"] .fmStorageBar {
+    display: flex;
+    gap: 2px;
+    height: 8px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: #313237;
+}
+
+.dialog[name="themeModMenu"] .fmStorageSeg {
+    flex-basis: 0;
+    min-width: 3px;
+}
+
+.dialog[name="themeModMenu"] .fmStorageRows {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 2px 16px;
+}
+
+.dialog[name="themeModMenu"] .fmStorageRow {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.dialog[name="themeModMenu"] .fmStorageDot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.dialog[name="themeModMenu"] .fmStorageName {
+    flex: 1;
+}
+
+.dialog[name="themeModMenu"] .fmStorageSize {
+    font-variant-numeric: tabular-nums;
+    color: #e6e7ea;
+}
+
+.dialog[name="themeModMenu"] .fmStorage-refs { background-color: #f48fb1; }
+.dialog[name="themeModMenu"] .fmStorage-bg { background-color: #a99bff; }
+.dialog[name="themeModMenu"] .fmStorage-sounds { background-color: #6fc7d9; }
+.dialog[name="themeModMenu"] .fmStorage-fonts { background-color: #e8c58f; }
+.dialog[name="themeModMenu"] .fmStorage-settings { background-color: #8a8d93; }
+
+.dialog[name="themeModMenu"] .fmStorageCopy {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #36383d;
+    color: #9b9da2;
+}
+
+.dialog[name="themeModMenu"] .fmStorageCopy i {
+    margin-right: 4px;
+    color: #9be3a6;
+}
+
+.dialog[name="themeModMenu"] .fmStorageNote {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 8px;
+    color: #9b9da2;
+}
+
+.dialog[name="themeModMenu"] .fmStorageWarn {
+    padding: 7px 9px;
+    border: 1px solid #8a6a3a;
+    border-radius: 3px;
+    color: #e8c58f;
+}
+
+.dialog[name="themeModMenu"] .fmStorageWarn i {
+    margin-top: 2px;
+}
+
+.dialog[name="themeModMenu"] .fmStorageTips {
+    margin: 0 0 4px;
+    font-size: calc(.7rem * var(--fm-menu-text, 1));
+    line-height: 1.45;
+    color: #9b9da2;
+}
+
+.dialog[name="themeModMenu"] .fmStorageTips summary {
+    cursor: pointer;
+    color: #c4c6ca;
+}
+
+.dialog[name="themeModMenu"] .fmStorageTips ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+}
+
+.dialog[name="themeModMenu"] .fmStorageTips li {
+    margin-bottom: 3px;
+}
+
+.dialog[name="themeModMenu"] .fmStorageDanger,
+.dialog[name="themeModMenu"] .fmStorageTips li.fmStorageTipDanger {
+    padding: 7px 9px;
+    border: 1px solid #a64545;
+    border-radius: 3px;
+    background-color: rgba(220, 70, 70, .1);
+    color: #ff9a9a;
+}
+
+.dialog[name="themeModMenu"] .fmStorageTips li.fmStorageTipDanger {
+    list-style: none;
+    margin: 6px 0 6px -18px;
+}
+
+.dialog[name="themeModMenu"] .fmStorageDanger i {
+    margin-top: 2px;
 }

@@ -1,3 +1,67 @@
+/* =============================================================
+   FLOCKTHEME CODE MAP (content.js)
+   Every feature starts with a banner that ends in a unique @tag.
+   To find a feature, search for its tag (e.g. "@sounds").
+   Sections are listed in the order they appear in this file.
+   New features: add a banner with a new @tag and a line here.
+   (Comments only: the browser ignores all of this.)
+   -------------------------------------------------------------
+   @changelog            WHAT'S NEW list (CHANGELOG) - edit for every release
+   @core                 Shared basics: switch + row helpers, Lite mode, menu text size, color lists
+   @canvas               Canvas colors + dimmer
+   @mycursor             My cursor (Colors > Canvas)
+   @barcolors            Color lists: chat overlay, toggles, sidebar, top/bottom bar
+   @gradients            Gradients (Colors, detailed mode)
+   @simplecoloring       Simple coloring: few colors fill in the detailed ones
+   @interface            Interface sizes + Text/Selected/Hover previews
+   @fonts-notes          Custom fonts: notes only (code is at @fonts)
+   @backgrounds          Background images (Backgrounds tab)
+   @thumbshapes          Slider thumb shapes (setup is at @thumbshapes-setup)
+   @chathighlights       Chat keyword highlights
+   @chatoverlay          Chat overlay (chat notifications)
+   @chatoverlay-replies  Chat overlay: replies, reactions, edits, deletes
+   @clock                Clock, time on FlockMod, break reminder
+   @chattabs             Chat window tabs on top
+   @animations           Animations tab
+   @celebrations         Petal burst, theme shimmer (mod menu effects)
+   @menusize             Mod menu size + position
+   @sounds               Sounds tab
+   @refwindow            Reference images window
+   @decorations          Popup decorations (styles + placing them)
+   @luckymaid            Lucky Days + Dark Maid styles
+   @bubbles              Chat bubbles
+   @safety               Safety: troll detection
+   @streamer             Streamer mode, Tools button + tray, Advanced tab
+   @guides               Drawing guides
+   @thumbshapes-setup    Slider thumb shape controls
+   @fonts                Custom fonts code
+   @loadsaved            Apply saved fonts, sizes, text colors
+   @flowerbutton         Flower (mod menu) button
+   @themes               Themes: share codes, saved themes, presets
+   @themeimages          Background images saved with themes
+   @themesounds          Sounds saved with themes
+   @themecards           Theme cards
+   @themepacks           Theme packs
+   @themes-panel         Themes tab wiring
+   @buildmenu            createModMenu(): every panel + color wiring
+   @resets               Subsection reset buttons
+   @stylepickers         Style pickers (tile grids)
+   @updates              Version + update check
+   @whatsnew-card        What's new card
+   @newdots              Pink new-feature dots
+   @backup               Full backup file
+   @safecopy             Safety copy of stored files (refs, pictures, sounds, fonts)
+   @tabsync              Settings follow across FlockMod tabs
+   @storagemeter         Storage meter (General)
+   @tour                 Quick tour
+   @menuwindow           Mod menu drag, resize, close
+   @menulayout           Colors panel layout (cards, folding)
+   @guards               Close/Reset guards, Lite mode, text size, unsaved note
+   @search               Jump chips + search
+   @menunav              Tabs, open/close, load saved settings
+   @keyshield            Keyboard shield (mod inputs vs FlockMod hotkeys)
+   @startup              initialize() + the 500ms loop
+   ============================================================= */
 (() => {
     /* v1.6.6: one name for the browser's storage, so theme cards can read a
        theme through a stand-in without ever writing your real settings
@@ -5,7 +69,7 @@
     let localStorage = window.localStorage;
 
     /* =========================================================
-       WHAT'S NEW  <-- edit this list for every release
+       WHAT'S NEW  <-- edit this list for every release   @changelog
        Newest version goes FIRST. The "version" must match the
        "version" in manifest.json. Each note is one bullet point.
        Start a note with **Bold words:** so it's easy to skim (keep notes short).
@@ -22,6 +86,14 @@
        shows them again anytime).
        ========================================================= */
     const CHANGELOG = [
+        {
+            version: "1.6.9",
+            notes: [
+                "**Reference images stay safe:** your browser could clear them when space ran low, leaving empty squares. The mod now keeps a safety copy of your references, background pictures, sounds and fonts, and puts them back by itself.",
+                "**Storage meter:** General now shows how much space the mod uses, whether your safety copy is up to date, and tips for freeing up space.",
+                "**More than one tab:** changes you Apply in one FlockMod tab now show up in your other tabs too, and reference images added or removed in one tab show in the others."
+            ]
+        },
         {
             version: "1.6.8",
             notes: [
@@ -189,7 +261,26 @@
         }
     ];
 
+    /* =========================================================
+       CORE   @core
+       Shared basics: the ON/OFF switch and setting-row helpers every panel
+       uses (modToggleHTML, settingTextHTML), Lite mode, menu text size and
+       the color setting lists.
+       ========================================================= */
+
     let customizationsEnabled = true;
+
+    /* One ON/OFF switch, used by every panel. attrs go on the
+       checkbox (id, data-default, checked...); style on the label. */
+    function modToggleHTML(attrs, style) {
+        return `
+<label class="themeModToggle"${style ? ` style="${style}"` : ""}> <input type="checkbox" ${attrs}> <span class="themeModToggleTrack"> <span class="themeModToggleOption themeModToggleOff">OFF</span> <span class="themeModToggleOption themeModToggleOn">ON</span> <span class="themeModToggleThumb"></span> </span> </label>`;
+    }
+
+    /* The name + description on the left of a setting row */
+    function settingTextHTML(name, desc) {
+        return `<div class="themeModSettingText"> <div class="themeModSettingName"> ${name} </div> <div class="themeModSettingDescription"> ${desc} </div> </div>`;
+    }
 
     const MOD_BUTTON_SELECTOR = ".themeModMenuButton";
     const MOD_DIALOG_SELECTOR = '.dialog[name="themeModMenu"]';
@@ -476,6 +567,11 @@
         }
     ];
 
+    /* =========================================================
+       CANVAS (Colors > Canvas)   @canvas
+       Paper color, area around canvas, canvas dimmer.
+       ========================================================= */
+
     /* v1.6: the drawing canvas. Only what YOU see changes: the paper
        behind the layers (FlockMod's white .boardContainer) and the gray
        area around it. Layers, drawings, blend modes, saved images and
@@ -589,7 +685,7 @@
     }
 
     /* =========================================================
-       MY CURSOR (Colors > Canvas)  v1.6.8
+       MY CURSOR (Colors > Canvas)  v1.6.8   @mycursor
        Makes YOUR brush circle on the canvas easier to see
        over any drawing. FlockMod marks your own cursor ".cursor.myself",
        so only yours changes; everyone else's stays as FlockMod draws
@@ -724,6 +820,11 @@
         });
     }
 
+    /* =========================================================
+       MORE COLOR LISTS   @barcolors
+       Chat overlay, toggles, sidebar, top bar and bottom bar colors.
+       ========================================================= */
+
     /* v1.6.3: chat notification cards (Interface > Chat Notifications).
        OFF = the card follows your theme: popup background, chat text
        and Accent 1 (Simple coloring fills these in too). */
@@ -831,28 +932,9 @@
     function buildSidebarColorRowsHTML(list = SIDEBAR_COLOR_SETTINGS) {
         return list.map((setting) => `
     <div class="themeModSetting themeModNoDivider">
-
-        <div class="themeModSettingText">
-            <div class="themeModSettingName">
-                ${setting.name}
-            </div>
-
-            <div class="themeModSettingDescription">
-                ${setting.description}
-            </div>
-        </div>
-
-        <label class="themeModToggle" style="margin-right: 10px;">
-            <input type="checkbox" id="${setting.toggleId}">
-            <span class="themeModToggleTrack">
-                <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                <span class="themeModToggleOption themeModToggleOn">ON</span>
-                <span class="themeModToggleThumb"></span>
-            </span>
-        </label>
-
+        ${settingTextHTML(`${setting.name}`, `${setting.description}`)}
+        ${modToggleHTML(`id="${setting.toggleId}"`, "margin-right: 10px;")}
         <input type="color" id="${setting.inputId}" value="${setting.defaultColor}">
-
     </div>
     ${gradientRowHTML(setting)}
         `).join("");
@@ -953,28 +1035,9 @@ function applySavedTopBarColors() {
 function buildTopBarColorRowsHTML() {
     return TOPBAR_COLOR_SETTINGS.map((setting) => `
     <div class="themeModSetting themeModNoDivider">
-
-        <div class="themeModSettingText">
-            <div class="themeModSettingName">
-                ${setting.name}
-            </div>
-
-            <div class="themeModSettingDescription">
-                ${setting.description}
-            </div>
-        </div>
-
-        <label class="themeModToggle" style="margin-right: 10px;">
-            <input type="checkbox" id="${setting.toggleId}">
-            <span class="themeModToggleTrack">
-                <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                <span class="themeModToggleOption themeModToggleOn">ON</span>
-                <span class="themeModToggleThumb"></span>
-            </span>
-        </label>
-
+        ${settingTextHTML(`${setting.name}`, `${setting.description}`)}
+        ${modToggleHTML(`id="${setting.toggleId}"`, "margin-right: 10px;")}
         <input type="color" id="${setting.inputId}" value="${setting.defaultColor}">
-
     </div>
     ${gradientRowHTML(setting)}
     `).join("");
@@ -1034,7 +1097,7 @@ const BAR_COLOR_SETTINGS = [
 
 
 /* =========================================================
-   GRADIENTS (Colors panel, detailed mode)
+   GRADIENTS (Colors panel, detailed mode)   @gradients
    A few big background colors can blend into a second color.
    The gradient starts from the setting's own color (through its
    CSS variable), so it follows the color picker live. Anything
@@ -1095,33 +1158,20 @@ function gradientRowHTML(setting) {
 
     return `
     <div class="themeModSetting themeModNoDivider themeModGradientRow">
-
         <div class="themeModSettingText">
             <div class="themeModSettingName">
                 <i class="fas fa-level-up-alt fa-rotate-90"></i> Gradient: blends into
             </div>
-
             <div class="themeModSettingDescription">
                 Blends into a second color. The slider sets the direction.
             </div>
         </div>
-
         <div class="themeModGradientControls">
-            <label class="themeModToggle">
-                <input type="checkbox" id="${g.toggleId}">
-                <span class="themeModToggleTrack">
-                    <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                    <span class="themeModToggleOption themeModToggleOn">ON</span>
-                    <span class="themeModToggleThumb"></span>
-                </span>
-            </label>
-
+            ${modToggleHTML(`id="${g.toggleId}"`)}
             <input type="color" id="${g.inputId}" value="${g.defaultColor}">
-
             <input type="range" id="${g.angleId}" class="themeModRange" min="0" max="360" step="15" value="${g.defaultAngle}">
             <span id="${g.angleValueId}" class="themeModRangeValue">${angleLabel(g.defaultAngle)}</span>
         </div>
-
     </div>
     `;
 }
@@ -1219,35 +1269,16 @@ function setupGradientControls(dialog) {
 function buildBottomBarColorRowsHTML() {
     return BOTTOMBAR_COLOR_SETTINGS.map((setting) => `
     <div class="themeModSetting themeModNoDivider">
-
-        <div class="themeModSettingText">
-            <div class="themeModSettingName">
-                ${setting.name}
-            </div>
-
-            <div class="themeModSettingDescription">
-                ${setting.description}
-            </div>
-        </div>
-
-        <label class="themeModToggle" style="margin-right: 10px;">
-            <input type="checkbox" id="${setting.toggleId}">
-            <span class="themeModToggleTrack">
-                <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                <span class="themeModToggleOption themeModToggleOn">ON</span>
-                <span class="themeModToggleThumb"></span>
-            </span>
-        </label>
-
+        ${settingTextHTML(`${setting.name}`, `${setting.description}`)}
+        ${modToggleHTML(`id="${setting.toggleId}"`, "margin-right: 10px;")}
         <input type="color" id="${setting.inputId}" value="${setting.defaultColor}">
-
     </div>
     ${gradientRowHTML(setting)}
     `).join("");
 }
 
 /* =========================================================
-   SIMPLE COLORING
+   SIMPLE COLORING   @simplecoloring
    A handful of main colors that fill in the detailed ones.
    Saved separately from the detailed settings, so switching
    modes never erases a detailed theme.
@@ -1443,32 +1474,18 @@ function applySavedSimpleColorsIfActive() {
 function buildSimpleColorRowsHTML() {
     return SIMPLE_COLOR_SETTINGS.map((setting) => `
     <div class="themeModSetting themeModNoDivider">
-
-        <div class="themeModSettingText">
-            <div class="themeModSettingName">
-                ${setting.name}
-            </div>
-
-            <div class="themeModSettingDescription">
-                ${setting.description}
-            </div>
-        </div>
-
-        <label class="themeModToggle" style="margin-right: 10px;">
-            <input type="checkbox" id="${setting.toggleId}">
-            <span class="themeModToggleTrack">
-                <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                <span class="themeModToggleOption themeModToggleOn">ON</span>
-                <span class="themeModToggleThumb"></span>
-            </span>
-        </label>
-
+        ${settingTextHTML(`${setting.name}`, `${setting.description}`)}
+        ${modToggleHTML(`id="${setting.toggleId}"`, "margin-right: 10px;")}
         <input type="color" id="${setting.inputId}" value="${setting.defaultColor}">
-
     </div>
     ${gradientRowHTML(setting)}
     `).join("");
 }
+
+    /* =========================================================
+       INTERFACE + GENERAL COLOR PREVIEWS   @interface
+       Font size/weight, spacing, radius, Text 1/2, Selected and Hover previews.
+       ========================================================= */
 
     /* Each Interface setting only takes over FlockMod's own sizes
        while it's moved off its default (100% / Regular / 5px). */
@@ -1627,7 +1644,7 @@ function buildSimpleColorRowsHTML() {
 
 
     /* =========================================================
-       CUSTOM FONTS
+       CUSTOM FONTS   @fonts-notes
        ---------------------------------------------------------
        Font values (saved as flockmodCustomUIFont and in theme codes):
          "default"             FlockMod's own font
@@ -1642,7 +1659,7 @@ function buildSimpleColorRowsHTML() {
        ========================================================= */
 
     /* =========================================================
-       BACKGROUND IMAGES (Backgrounds tab)
+       BACKGROUND IMAGES (Backgrounds tab)   @backgrounds
        ---------------------------------------------------------
        Images are stored in this site's IndexedDB (like uploaded
        fonts) and never leave the browser. The look settings
@@ -1807,8 +1824,9 @@ function buildSimpleColorRowsHTML() {
         return new Promise((resolve, reject) => {
             const tx = db.transaction(BG_DB_STORE, mode);
             const request = action(tx.objectStore(BG_DB_STORE));
-            tx.oncomplete = () => { db.close(); resolve(request && request.result); };
-            tx.onerror = () => { db.close(); reject(tx.error); };
+            tx.oncomplete = () => { db.close(); resolve(request && request.result); if (mode === "readwrite") safeCopySoon(); };
+            tx.onerror = () => { db.close(); noteIfNoSpace(tx.error); reject(tx.error); };
+            tx.onabort = () => { db.close(); noteIfNoSpace(tx.error); reject(tx.error || new Error("aborted")); };   /* v1.6.9: a full disk aborts without an error event */
         });
     }
 
@@ -2178,25 +2196,14 @@ function buildSimpleColorRowsHTML() {
             <div class="themeModSubsectionTitle ${index ? "themeModSpacingSubsection" : ""}">
                 ${place.label}
             </div>
-
             <div class="themeModSetting themeModNoDivider">
                 <div class="themeModSettingText">
                     <div class="themeModSettingName">${place.label} Background Image</div>
                     <div class="themeModSettingDescription">${place.imageText}</div>
                 </div>
-
-                <label class="themeModToggle" style="margin-right: 10px;">
-                    <input type="checkbox" id="${p}Enabled">
-                    <span class="themeModToggleTrack">
-                        <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                        <span class="themeModToggleOption themeModToggleOn">ON</span>
-                        <span class="themeModToggleThumb"></span>
-                    </span>
-                </label>
-
+                ${modToggleHTML(`id="${p}Enabled"`, "margin-right: 10px;")}
                 <div class="themeModBgThumb" data-bg-thumb="${place.key}" title="No image yet"></div>
             </div>
-
             <div class="themeModBgButtons">
                 <button type="button" class="themeModButton" data-bg-upload="${place.key}">
                     <i class="fas fa-image"></i> Upload image
@@ -2206,9 +2213,7 @@ function buildSimpleColorRowsHTML() {
                 </button>
                 <input type="file" accept="image/*" data-bg-file="${place.key}" style="display: none;">
             </div>
-
             <div class="themeModBgStatus" data-bg-status="${place.key}" style="display: none;"></div>
-
             ${select(`${p}Fit`, "Fit", "Fill covers the whole area, Fit shows the whole image, Tile repeats it.",
                 [["cover", "Fill"], ["contain", "Fit"], ["tile", "Tile"]])}
             ${select(`${p}Shade`, "Shade", "Darken for dark themes, lighten for light ones.",
@@ -2353,7 +2358,7 @@ function buildSimpleColorRowsHTML() {
                     preview(c);
                     showStatus(c, "Image added! Adjust it below, then press Apply Changes.");
                 } catch (error) {
-                    showStatus(c, error.message || "That image couldn't be used.", "error");
+                    showStatus(c, isNoSpaceError(error) ? NO_SPACE_TEXT : (error.message || "That image couldn't be used."), "error");
                 }
             });
 
@@ -2410,7 +2415,7 @@ function buildSimpleColorRowsHTML() {
     }
 
     /* =========================================================
-       SLIDER THUMB SHAPES (Interface > Slider Thumbs)
+       SLIDER THUMB SHAPES (Interface > Slider Thumbs)   @thumbshapes
        The thumb is masked into a shape (keeps its color and the
        number inside). "contain" keeps the shape's proportions.
        OFF = normal thumbs, which Border Radius still rounds.
@@ -2527,7 +2532,7 @@ function buildSimpleColorRowsHTML() {
        anything else (flex rows, scroll areas) is left alone. */
 
     /* =========================================================
-       CHAT HIGHLIGHTS (v1.6.3, Interface > Chat Highlights)
+       CHAT HIGHLIGHTS (v1.6.3, Interface > Chat Highlights)   @chathighlights
        Lines that mention your name (or the extra words from Sounds >
        Your name mentioned) get a soft highlight, in chat (public,
        staff, any channel) and in Messenger. Your own messages are
@@ -2639,7 +2644,6 @@ function buildSimpleColorRowsHTML() {
 <div class="themeModSubsectionTitle themeModSpacingSubsection">
     Chat Highlights
 </div>
-
 <div class="themeModSetting themeModNoDivider">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Highlight mentions</div>
@@ -2647,14 +2651,7 @@ function buildSimpleColorRowsHTML() {
             Lines with your name light up in chat and Messenger. Add more words in Sounds &gt; Your name mentioned.
         </div>
     </div>
-    <label class="themeModToggle" style="margin-right: 10px;">
-        <input type="checkbox" id="themeModChatHighlight" data-default="true" checked>
-        <span class="themeModToggleTrack">
-            <span class="themeModToggleOption themeModToggleOff">OFF</span>
-            <span class="themeModToggleOption themeModToggleOn">ON</span>
-            <span class="themeModToggleThumb"></span>
-        </span>
-    </label>
+    ${modToggleHTML(`id="themeModChatHighlight" data-default="true" checked`, "margin-right: 10px;")}
     <input type="color" id="themeModChatHighlightColor" value="${HL_DEFAULT_COLOR}" data-default="${HL_DEFAULT_COLOR}" title="Highlight color">
 </div>`;
     }
@@ -2696,7 +2693,7 @@ function buildSimpleColorRowsHTML() {
 
 
     /* =========================================================
-       CHAT NOTIFICATIONS (v1.6.3, Interface > Chat Notifications)
+       CHAT NOTIFICATIONS (v1.6.3, Interface > Chat Notifications)   @chatoverlay
        New chat messages pop up as small cards on the side of the
        canvas AWAY from the sidebar, so you can draw with the chat
        closed. Hover the cards (or the pill) for a reply box and a
@@ -2891,11 +2888,6 @@ function buildSimpleColorRowsHTML() {
             .map((t) => t.getAttribute("name"));
         /* most recent first, then the rest in the chat's own order */
         return [...cnRecentPm.filter((c) => open.includes(c)), ...open.filter((c) => !cnRecentPm.includes(c))];
-    }
-
-    function cnHasUnread(channel) {
-        const t = cnTitleFor(channel);
-        return Boolean(t && t.querySelector(".channelIcons .badge"));
     }
 
     /* Opens FlockMod's chat (top bar button), optionally on a channel */
@@ -4532,7 +4524,7 @@ function buildSimpleColorRowsHTML() {
     }
 
     /* =========================================================
-       v1.6.7: REPLIES, REACTIONS, EDITS AND DELETES
+       v1.6.7: REPLIES, REACTIONS, EDITS AND DELETES   @chatoverlay-replies
        FlockMod's chat now gives every message line an id
        (.msgLine[data-id]) with its reply quote (.msgReply), its
        reactions (.msgReactions), "(edited)" and "Message deleted"
@@ -5659,36 +5651,6 @@ function buildSimpleColorRowsHTML() {
         }
     }
 
-    /* v1.6.5: fills in the picture on a card the activity bar made from
-       the words alone. Only the newest card from that person (last 15s). */
-    function cnAddPicture(kind, channel, user, lines) {
-        const view = cnCardView({ kind, channel, key: channel });
-        const entries = cnRecent.get(view) || [];
-        const srcs = lines.map((l) => l.querySelector?.(".msgText") || l);
-        const now = Date.now();
-
-        for (let i = entries.length - 1; i >= 0 && i >= entries.length - 6; i--) {
-            const e = entries[i];
-            if (e.own || e.event || e.user !== user) continue;
-            if (now - (e.at || 0) > 15000) return;
-            if ((e.srcs || []).some((s) => s.querySelector?.("img:not(.flagIcon)"))) return;   /* has it already */
-
-            e.srcs = srcs;
-            const card = cnStack?.querySelector(`.fmCnList > .fmCnCard[data-mid="${e.id}"]`);
-            const line = card?.querySelector(".fmCnText > .fmCnLine:last-child");
-            if (line) {
-                const time = line.querySelector(".fmCnEvTime");
-                [...line.childNodes].forEach((n) => { if (n !== time) n.remove(); });
-                cnRenderSrcs(srcs, line);
-                if (cnStack.classList.contains("fmCnOpen")) {
-                    const list = cnStack.querySelector(".fmCnList");
-                    if (list._fmFollow !== false) cnToBottom(list);
-                }
-            }
-            return;
-        }
-    }
-
     /* v1.6.5: the activity bar showed a picture-only message. Normally the
        chat's copy (with the picture) follows; if it never does (FlockMod
        doesn't always fill a closed chat), show the bar's copy instead of
@@ -6236,21 +6198,12 @@ function buildSimpleColorRowsHTML() {
     }
 
     function buildChatNotifRowsHTML() {
-        const toggle = (id, def) => `
-    <label class="themeModToggle" style="margin-right: 10px;">
-        <input type="checkbox" id="${id}" data-default="${def}"${def ? " checked" : ""}>
-        <span class="themeModToggleTrack">
-            <span class="themeModToggleOption themeModToggleOff">OFF</span>
-            <span class="themeModToggleOption themeModToggleOn">ON</span>
-            <span class="themeModToggleThumb"></span>
-        </span>
-    </label>`;
+        const toggle = (id, def) => modToggleHTML(`id="${id}" data-default="${def}"${def ? " checked" : ""}`, "margin-right: 10px;");
 
         return `
 <div class="themeModSubsectionTitle themeModSpacingSubsection">
     Chat Overlay
 </div>
-
 <div class="themeModSetting themeModNoDivider">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Chat overlay</div>
@@ -6260,7 +6213,6 @@ function buildSimpleColorRowsHTML() {
     </div>
     ${toggle("themeModChatNotif", true)}
 </div>
-
 <div class="themeModSetting themeModNoDivider">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Side</div>
@@ -6272,7 +6224,6 @@ function buildSimpleColorRowsHTML() {
         <option value="right">Right</option>
     </select>
 </div>
-
 <div class="themeModSetting themeModNoDivider">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Only while the chat is closed</div>
@@ -6280,7 +6231,6 @@ function buildSimpleColorRowsHTML() {
     </div>
     ${toggle("themeModChatNotifClosedOnly", true)}
 </div>
-
 <div class="themeModSetting themeModNoDivider">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Your cards on the right</div>
@@ -6288,7 +6238,6 @@ function buildSimpleColorRowsHTML() {
     </div>
     ${toggle("themeModChatNotifOwnRight", true)}
 </div>
-
 <div class="themeModSetting themeModNoDivider">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Size</div>
@@ -6299,7 +6248,6 @@ function buildSimpleColorRowsHTML() {
         <span id="themeModChatNotifSizeValue" class="themeModRangeValue">${CN_DEFAULTS.size}%</span>
     </div>
 </div>
-
 <div class="themeModSetting themeModNoDivider">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Stay on screen</div>
@@ -6310,7 +6258,6 @@ function buildSimpleColorRowsHTML() {
         <span id="themeModChatNotifStayValue" class="themeModRangeValue">${CN_DEFAULTS.stay}s</span>
     </div>
 </div>
-
 <div class="themeModSetting themeModNoDivider">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Try it</div>
@@ -6398,7 +6345,7 @@ function buildSimpleColorRowsHTML() {
 
 
     /* =========================================================
-       CLOCK + TIME ON FLOCKMOD + BREAK REMINDER (v1.6.3)
+       CLOCK + TIME ON FLOCKMOD + BREAK REMINDER (v1.6.3)   @clock
        A small clock next to the flower in the bottom bar. Click it
        for how long you've been on FlockMod. Time only counts while
        the FlockMod tab is in front (and, with "Active time only",
@@ -6656,7 +6603,7 @@ function buildSimpleColorRowsHTML() {
     }
 
     /* =========================================================
-       CHAT WINDOW TABS ON TOP (v1.6.7, idea by Anonymous)
+       CHAT WINDOW TABS ON TOP (v1.6.7, idea by Anonymous)   @chattabs
        FlockMod's chat window lists #public, #staff and PMs down
        the left side. This lays them out as tabs along the top of
        the window instead, giving the messages the full width.
@@ -6730,37 +6677,20 @@ function buildSimpleColorRowsHTML() {
 <div class="themeModSubsectionTitle themeModSpacingSubsection">
     Chat Window
 </div>
-
 <div class="themeModSetting themeModNoDivider">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Tabs on top</div>
         <div class="themeModSettingDescription">Shows #public, #staff and PMs as tabs along the top of FlockMod's chat window.</div>
     </div>
-    <label class="themeModToggle">
-        <input type="checkbox" id="themeModChatTopTabs" data-default="false">
-        <span class="themeModToggleTrack">
-            <span class="themeModToggleOption themeModToggleOff">OFF</span>
-            <span class="themeModToggleOption themeModToggleOn">ON</span>
-            <span class="themeModToggleThumb"></span>
-        </span>
-    </label>
+    ${modToggleHTML(`id="themeModChatTopTabs" data-default="false"`)}
 </div>
-
 <div class="themeModSetting themeModNoDivider">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Join the open tab</div>
         <div class="themeModSettingDescription">The open tab takes the messages' color, so it flows into them.</div>
     </div>
-    <label class="themeModToggle">
-        <input type="checkbox" id="themeModChatTabsJoin" data-default="true" checked>
-        <span class="themeModToggleTrack">
-            <span class="themeModToggleOption themeModToggleOff">OFF</span>
-            <span class="themeModToggleOption themeModToggleOn">ON</span>
-            <span class="themeModToggleThumb"></span>
-        </span>
-    </label>
+    ${modToggleHTML(`id="themeModChatTabsJoin" data-default="true" checked`)}
 </div>
-
 <div class="themeModSetting themeModNoDivider">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Tab stripe</div>
@@ -6806,15 +6736,7 @@ function buildSimpleColorRowsHTML() {
 
     /* ---- settings (Interface > Clock & Time) ---- */
     function buildClockRowsHTML() {
-        const toggle = (id, def) => `
-            <label class="themeModToggle">
-                <input type="checkbox" id="${id}" data-default="${def}"${def ? " checked" : ""}>
-                <span class="themeModToggleTrack">
-                    <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                    <span class="themeModToggleOption themeModToggleOn">ON</span>
-                    <span class="themeModToggleThumb"></span>
-                </span>
-            </label>`;
+        const toggle = (id, def) => modToggleHTML(`id="${id}" data-default="${def}"${def ? " checked" : ""}`);
         const row = (name, desc, control) => `
 <div class="themeModSetting themeModNoDivider">
     <div class="themeModSettingText">
@@ -6932,7 +6854,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
 
     /* =========================================================
-       ANIMATIONS (Animations tab)
+       ANIMATIONS (Animations tab)   @animations
        Everything is CSS. The script only switches classes on
        <html> and sets one speed variable, so an effect that is
        OFF costs nothing. Only cheap properties are animated
@@ -7011,25 +6933,15 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     }
 
     function animToggleHTML(id) {
-        return `
-            <label class="themeModToggle">
-                <input type="checkbox" id="${id}">
-                <span class="themeModToggleTrack">
-                    <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                    <span class="themeModToggleOption themeModToggleOn">ON</span>
-                    <span class="themeModToggleThumb"></span>
-                </span>
-            </label>`;
+        return modToggleHTML(`id="${id}"`);
     }
 
     function buildAnimationsPanelHTML() {
         return `
                         <div class="themeModSectionContent" data-theme-panel="animations">
-
                             <div class="themeModSubsectionTitle">
                                 Animations
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Enable animations</div>
@@ -7039,7 +6951,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                 </div>
                                 ${animToggleHTML("themeModAnimEnabled")}
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Speed</div>
@@ -7052,11 +6963,9 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                     <span id="themeModAnimSpeedValue" class="themeModRangeValue">1.0×</span>
                                 </div>
                             </div>
-
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
                                 Effects
                             </div>
-
                             ${ANIM_EFFECTS.map((effect) => `
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
@@ -7065,17 +6974,14 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                 </div>
                                 ${animToggleHTML(effect.toggleId)}
                             </div>`).join("")}
-
                             <div class="themeModLocalNote">
                                 <i class="fas fa-circle-info"></i>
                                 <span>Effects play once and stop, so drawing never slows down. They stay off if your computer's "reduce motion" setting is on.</span>
                             </div>
-
                             <div class="themeModReduceMotionNote themeModLocalNote" style="display: none;">
                                 <i class="fas fa-universal-access"></i>
                                 <span>Your computer's "reduce motion" setting is on, so animations are paused. The flower on the Enable customizations switch still shows, just without moving.</span>
                             </div>
-
                         </div>`;
     }
 
@@ -7174,7 +7080,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
 
     /* =========================================================
-       CELEBRATION EFFECTS (part of "Mod menu effects")
+       CELEBRATION EFFECTS (part of "Mod menu effects")   @celebrations
        Petal burst + pink glow on Apply, pink shimmer when a
        theme is loaded. The elements only exist for about a
        second and are removed afterwards.
@@ -7256,7 +7162,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     }
 
     /* =========================================================
-       MOD MENU SIZE + POSITION
+       MOD MENU SIZE + POSITION   @menusize
        Opens at a comfortable size (fitted to the window) and
        remembers where you last left it.
        ========================================================= */
@@ -7310,7 +7216,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
 
     /* =========================================================
-       SOUNDS (Sounds tab)
+       SOUNDS (Sounds tab)   @sounds
        Watches only the chat messages box and the Messenger
        conversation (nothing else on the page), and plays a sound
        on your computer when something happens. Built-in sounds are
@@ -7637,8 +7543,9 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
             return await new Promise((resolve, reject) => {
                 const tx = db.transaction(SOUND_DB_STORE, mode);
                 const request = action(tx.objectStore(SOUND_DB_STORE));
-                tx.oncomplete = () => resolve(request ? request.result : undefined);
-                tx.onerror = () => reject(tx.error);
+                tx.oncomplete = () => { resolve(request ? request.result : undefined); if (mode === "readwrite") safeCopySoon(); };
+                tx.onerror = () => { noteIfNoSpace(tx.error); reject(tx.error); };
+                tx.onabort = () => { noteIfNoSpace(tx.error); reject(tx.error || new Error("aborted")); };   /* v1.6.9: a full disk aborts without an error event */
             });
         } finally {
             db.close();
@@ -8107,30 +8014,19 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     }
 
     function soundToggleHTML(id) {
-        return `
-            <label class="themeModToggle">
-                <input type="checkbox" id="${id}">
-                <span class="themeModToggleTrack">
-                    <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                    <span class="themeModToggleOption themeModToggleOn">ON</span>
-                    <span class="themeModToggleThumb"></span>
-                </span>
-            </label>`;
+        return modToggleHTML(`id="${id}"`);
     }
 
     function buildSoundsPanelHTML() {
         return `
                         <div class="themeModSectionContent" data-theme-panel="sounds">
-
                             <div class="themeModLocalNote">
                                 <i class="fas fa-volume-up"></i>
                                 <span>To hear only the mod's sounds, turn off the matching tones in FlockMod's Configuration &gt; Settings &gt; Sounds. Otherwise you'll hear both.</span>
                             </div>
-
                             <div class="themeModSubsectionTitle">
                                 Sounds
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Enable sounds</div>
@@ -8138,7 +8034,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                 </div>
                                 ${soundToggleHTML("themeModSoundsEnabled")}
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Master volume</div>
@@ -8149,7 +8044,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                     <span id="themeModSoundsVolumeValue" class="themeModRangeValue">80%</span>
                                 </div>
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Quiet while drawing</div>
@@ -8157,7 +8051,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                 </div>
                                 ${soundToggleHTML("themeModSoundsQuietDrawing")}
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Extra mention words</div>
@@ -8165,11 +8058,9 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                 </div>
                                 <input type="text" id="themeModSoundsKeywords" class="themeModTextInput themeModSoundKeywords" placeholder="e.g. nene, nini" maxlength="120" spellcheck="false">
                             </div>
-
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
                                 Events
                             </div>
-
                             ${SOUND_EVENTS.map((ev) => `
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
@@ -8178,7 +8069,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                 </div>
                                 ${soundToggleHTML(`themeModSound${ev.key}Enabled`)}
                             </div>
-
                             <div class="themeModSetting themeModNoDivider themeModSoundRow">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">
@@ -8194,11 +8084,9 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                     </button>
                                 </div>
                             </div>`).join("")}
-
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
                                 Your Sounds
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Upload a sound</div>
@@ -8209,16 +8097,12 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                 </button>
                                 <input type="file" class="themeModSoundFile" accept=".mp3,.wav,.ogg,.m4a,audio/*" style="display: none;">
                             </div>
-
                             <div class="themeModFontStatus themeModSoundStatus" style="display: none;"></div>
-
                             <div class="themeModFontList themeModSoundList"></div>
-
                             <div class="themeModLocalNote">
                                 <i class="fas fa-circle-info"></i>
                                 <span>Sounds play only on your computer. Uploaded sounds stay in this browser, and nobody else hears them.</span>
                             </div>
-
                         </div>`;
     }
 
@@ -8378,7 +8262,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                 refreshSelects();
                 showStatus(`Added "${name}". Pick it in any sound list above.`);
             } catch (error) {
-                showStatus("Couldn't read that file as a sound. Try an .mp3, .wav or .ogg.", "error");
+                showStatus(isNoSpaceError(error) ? NO_SPACE_TEXT : "Couldn't read that file as a sound. Try an .mp3, .wav or .ogg.", "error");
             }
         });
 
@@ -8433,7 +8317,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
 
     /* =========================================================
-       REFERENCE IMAGES WINDOW
+       REFERENCE IMAGES WINDOW   @refwindow
        A floating window for reference pictures, opened from the
        bottom bar (next to the flower). Images are kept only in
        this browser (IndexedDB) and never touch FlockMod's board or
@@ -8489,8 +8373,9 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
             return await new Promise((resolve, reject) => {
                 const tx = db.transaction(REF_DB_STORE, mode);
                 const request = action(tx.objectStore(REF_DB_STORE));
-                tx.oncomplete = () => resolve(request ? request.result : undefined);
-                tx.onerror = () => reject(tx.error);
+                tx.oncomplete = () => { resolve(request ? request.result : undefined); if (mode === "readwrite") safeCopySoon(); };
+                tx.onerror = () => { noteIfNoSpace(tx.error); reject(tx.error); };
+                tx.onabort = () => { noteIfNoSpace(tx.error); reject(tx.error || new Error("aborted")); };   /* v1.6.9: a full disk aborts without an error event */
             });
         } finally {
             db.close();
@@ -8774,7 +8659,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                         </div>
                     </div>
                 </div>
-
                 <div class="themeModRefToolbar">
                     <button type="button" class="btn btn-default themeModRefBtn" data-ref="add" title="Add images (you can also drop or paste them)"><i class="fas fa-plus"></i></button>
                     <span class="themeModRefSeg" role="radiogroup" aria-label="View">
@@ -8794,7 +8678,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                     <button type="button" class="btn btn-default themeModRefBtn" data-ref="strip" title="Show all images"><i class="fas fa-th-large"></i></button>
                     <button type="button" class="btn btn-default themeModRefBtn" data-ref="remove" title="Remove this image"><i class="fas fa-trash-alt"></i></button>
                 </div>
-
                 <div class="themeModRefStage" tabindex="0">
                     <div class="themeModRefLayer">
                         <img class="themeModRefImg" alt="" draggable="false">
@@ -8811,12 +8694,9 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                     <button type="button" class="themeModRefNav themeModRefNext" data-ref="next" title="Next"><i class="fas fa-chevron-right"></i></button>
                     <div class="themeModRefToast"></div>
                 </div>
-
                 <div class="themeModRefStrip"></div>
-
                 <input type="file" class="themeModRefFile" accept="image/*" multiple style="display: none;">
             </div>
-
             <div class="dialogSize dsBar sbTop"></div>
             <div class="dialogSize dsBar sbBottom"></div>
             <div class="dialogSize dsBar sbLeft"></div>
@@ -8914,11 +8794,11 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
         /* ---------- showing images ---------- */
 
-        function showToast(message) {
+        function showToast(message, ms = 2600) {
             toast.textContent = message;
             toast.classList.add("visible");
             clearTimeout(toast._timer);
-            toast._timer = setTimeout(() => toast.classList.remove("visible"), 2600);
+            toast._timer = setTimeout(() => toast.classList.remove("visible"), ms);
         }
 
         function updateChrome() {
@@ -9075,6 +8955,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
             let added = 0;
             let failed = 0;
+            let noSpace = 0;   /* v1.6.9: the computer's disk is full */
 
             for (const file of images.slice(0, room)) {
                 try {
@@ -9087,7 +8968,11 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                     list.push(id);
                     added++;
                 } catch (error) {
-                    failed++;
+                    if (noteIfNoSpace(error)) {
+                        noSpace++;
+                    } else {
+                        failed++;
+                    }
                 }
             }
 
@@ -9109,11 +8994,15 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                 message += ` ${failed} couldn't be read.`;
             }
 
+            if (noSpace) {
+                message += ` Your computer is out of space, so ${noSpace > 1 ? `${noSpace} images weren't` : "the image wasn't"} saved. Free up some space (General > Storage has tips) and try again.`;
+            }
+
             if (images.length > room) {
                 message += ` Only ${REF_MAX_IMAGES} images fit, so ${images.length - room} were skipped.`;
             }
 
-            showToast(message.trim());
+            showToast(message.trim(), noSpace ? 8000 : 2600);
         }
 
         let removeArmed = 0;
@@ -9147,7 +9036,8 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                 /* already gone */
             }
 
-            list.splice(index, 1);
+            /* v1.6.9: from the saved list, so images another tab added stay */
+            list = getRefList().filter((x) => x !== id);
             setRefList(list);
             index = Math.min(index, Math.max(0, list.length - 1));
             await showCurrent();
@@ -9691,7 +9581,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                         /* already gone */
                     }
 
-                    list = list.filter((x) => x !== id);
+                    list = getRefList().filter((x) => x !== id);   /* v1.6.9: keep other tabs' images */
                     setRefList(list);
                     index = Math.min(index, Math.max(0, list.length - 1));
                     delete board.items[id];
@@ -10175,7 +10065,88 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
             }
         });
 
+        /* ---------- v1.6.9: other tabs + missing pictures ---------- */
+
+        /* The list changed in another FlockMod tab (or pictures came
+           back from the safety copy): show the same images here */
+        async function refsChanged(force) {
+            const fresh = getRefList();
+
+            if (!force && fresh.join("|") === list.join("|")) {
+                return;
+            }
+
+            const currentId = list[index];
+            list = fresh;
+            const at = list.indexOf(currentId);
+            index = at >= 0 ? at : Math.min(index, Math.max(0, list.length - 1));
+
+            /* where the other tab put new images on the board */
+            const saved = readRefBoard();
+            Object.keys(saved.items).forEach((id) => {
+                if (list.includes(id) && !board.items[id]) board.items[id] = saved.items[id];
+            });
+
+            if (force) {
+                boardClear();
+            }
+
+            await showCurrent();
+            renderStrip();
+
+            if (view.board) {
+                boardOpen();
+            }
+        }
+
+        const onRefStorage = (event) => {
+            if (event.key === REF_LIST_LS) refsChanged(false);
+        };
+        const onRefsRestored = () => refsChanged(true);
+        window.addEventListener("storage", onRefStorage);
+        window.addEventListener("fmRefsChanged", onRefsRestored);
+
+        /* Images whose picture is gone from this browser's storage (the
+           browser can clear it when space runs low) used to stay as
+           empty squares. Only removed when the storage could really be
+           checked, and only after the safety copy had its chance. */
+        async function dropMissingImages() {
+            if (!list.length) {
+                return;
+            }
+
+            const gone = [];
+
+            for (const id of getRefList()) {
+                try {
+                    if (!(await refDB("readonly", (store) => store.count(id)))) {
+                        gone.push(id);
+                    }
+                } catch (error) {
+                    return;   /* couldn't check: never drop anything */
+                }
+            }
+
+            if (!gone.length) {
+                return;
+            }
+
+            await refDB("readwrite", (store) => {
+                gone.forEach((id) => {
+                    store.delete(`${id}_t`);
+                    store.delete(`${id}_b`);
+                });
+                return null;
+            }).catch(() => {});
+
+            setRefList(getRefList().filter((id) => !gone.includes(id)));
+            await refsChanged(true);
+            showToast(`${gone.length} image${gone.length > 1 ? "s were" : " was"} cleared by your browser (it does this when space runs low) and couldn't be brought back, so ${gone.length > 1 ? "they were" : "it was"} taken off the list. Images you add now are kept safe.`, 9000);
+        }
+
         win._closeRef = () => {
+            window.removeEventListener("storage", onRefStorage);
+            window.removeEventListener("fmRefsChanged", onRefsRestored);
             win._closeTour?.();
             saveRect();
             saveRefView(view);
@@ -10203,7 +10174,11 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
             if (view.board) {
                 boardOpen();
             }
-        });
+        })
+            /* v1.6.9: then clear out pictures the browser lost for good */
+            .then(() => safeCopyReady())
+            .then(() => (win.isConnected ? dropMissingImages() : null))
+            .catch(() => {});
 
         /* Quick tour: asks the first time, the (i) button replays it */
         setupTour(win, {
@@ -10300,7 +10275,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     }
 
     /* =========================================================
-       POPUP DECORATIONS (Interface > Popup Decorations)
+       POPUP DECORATIONS (Interface > Popup Decorations)   @decorations
        Little ears / tails / stars / flowers drawn around every
        FlockMod popup. Each popup gets one small decoration box
        (pure SVG + CSS, clicks pass straight through). They move
@@ -10600,16 +10575,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                `<path d="M1.5 0 L${(len - 2).toFixed(1)} 0" class="fmdOs" stroke-width=".8"/></g>`;
     }
 
-    function decoButterfly() {
-        const wing = '<path d="M20 15 C14 3 3 1 2 8 C1 15 11 17 20 16Z" class="fmdM fmdO" stroke-width=".8"/>' +
-                     '<path d="M20 17 C13 18 6 23 8 28 C11 32 18 25 20 17Z" class="fmdD fmdO" stroke-width=".8"/>' +
-                     '<circle cx="8" cy="8" r="2.2" class="fmdS"/><circle cx="12" cy="25" r="1.3" class="fmdS"/>';
-        return `<g class="fmdWing">${wing}</g>` +
-               `<g transform="translate(40 0) scale(-1 1)"><g class="fmdWing">${wing}</g></g>` +
-               '<rect x="18.9" y="9" width="2.2" height="15" rx="1.1" class="fmdOf"/>' +
-               '<path d="M19.6 10 C18 5 16 4 14 3 M20.4 10 C22 5 24 4 26 3" class="fmdOs" stroke-width="1" stroke-linecap="round"/>';
-    }
-
     const DECO_HORN = { w: 24, h: 30, inset: 2,
         svg: '<path d="M3 30 C2 17 9 6 22 1 C15 9 12 18 15 30Z" class="fmdM fmdO" stroke-width="1.5" stroke-linejoin="round"/>' +
              '<path d="M22 1 C18 5 16 8 14.5 12 C16.5 10 18.5 9 19.5 9 C20.5 6 21.5 3.5 22 1Z" class="fmdS"/>' +
@@ -10669,11 +10634,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
             `<path d="M16.5 15.5 C17 13.5 19.5 13.5 20 15.5" class="${Os}" fill="none" stroke-width="1.1" stroke-linecap="round"/></g>`;
     };
     const decoRose = roseHeadSVG(false);
-
-    const decoStem =
-        '<path d="M8 0 C6 30 10 60 7 90 C6 105 8 118 8 130" class="fmdDs" stroke-width="2.4" stroke-linecap="round"/>' +
-        '<g class="fmdS"><path d="M7 22 L1 19 L6 26Z"/><path d="M9 48 L15 44 L10 52Z"/><path d="M7 74 L1 71 L6 78Z"/><path d="M8 102 L14 99 L9 106Z"/></g>' +
-        '<path d="M8 60 C14 54 16 60 14 64 C12 66 9 64 8 60Z" class="fmdD"/>';
 
     const decoJelly =
         '<g class="fmdBob"><path d="M4 18 Q4 3 18 3 Q32 3 32 18 Q28 16 25 18 Q22 16 18 18 Q14 16 11 18 Q8 16 4 18Z" class="fmdM fmdJellyBell"/>' +
@@ -11133,7 +11093,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     });
 
     /* =========================================================
-       v1.6.2: LUCKY DAYS + DARK MAID (designed by nene2nd)
+       v1.6.2: LUCKY DAYS + DARK MAID (designed by nene2nd)   @luckymaid
        b = bubble colors
        ========================================================= */
     /* puffy four-leaf clover (40x40) with a little x in the middle */
@@ -11666,15 +11626,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     /* ---- menu (Interface panel) ---- */
 
     function buildDecoRowsHTML() {
-        const toggle = (id) => `
-            <label class="themeModToggle">
-                <input type="checkbox" id="${id}">
-                <span class="themeModToggleTrack">
-                    <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                    <span class="themeModToggleOption themeModToggleOn">ON</span>
-                    <span class="themeModToggleThumb"></span>
-                </span>
-            </label>`;
+        const toggle = (id) => modToggleHTML(`id="${id}"`);
 
         const picker = (attr, key, label, value) => `
     <div class="themeModSetting themeModNoDivider themeModDecoColorRow" data-${attr}-row="${key}">
@@ -11686,7 +11638,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 <div class="themeModSubsectionTitle themeModSpacingSubsection">
     Popup Decorations
 </div>
-
 <div class="themeModSetting themeModNoDivider fmStyleRow">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Style</div>
@@ -11698,7 +11649,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         ${DECO_STYLE_CHOICES.map((k) => `<option value="${k}">${DECO_STYLES[k].label}</option>`).join("")}
     </select>
 </div>
-
 <div class="themeModDecoPreviewWrap">
     <div class="themeModDecoStage">
         <div class="themeModDecoPreview">
@@ -11708,7 +11658,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         </div>
     </div>
 </div>
-
 <div class="themeModSetting themeModNoDivider themeModDecoOptionRow">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Placement</div>
@@ -11716,7 +11665,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     </div>
     <select id="themeModDecoPlacement" class="themeModSelect"></select>
 </div>
-
 <div class="themeModSetting themeModNoDivider themeModDecoOptionRow">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Decoration Size</div>
@@ -11727,7 +11675,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         <span id="themeModDecoSizeValue" class="themeModRangeValue">100%</span>
     </div>
 </div>
-
 <div class="themeModSetting themeModNoDivider themeModDecoOptionRow">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Also on the mod menu</div>
@@ -11735,7 +11682,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     </div>
     ${toggle("themeModDecoMenu")}
 </div>
-
 <div class="themeModSetting themeModNoDivider themeModDecoOptionRow themeModDecoModeRow">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Decoration colors</div>
@@ -11747,11 +11693,9 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         <button type="button" role="radio" data-deco-mode="own">My own</button>
     </div>
 </div>
-
 <div class="themeModDecoColors">
     ${Object.keys(DECO_COLOR_DEFAULTS).map((key) => picker("deco-color", key, "", DECO_COLOR_DEFAULTS[key])).join("")}
 </div>
-
 <div class="themeModSetting themeModNoDivider themeModDecoOptionRow">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Title bar color</div>
@@ -11759,12 +11703,10 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     </div>
     ${toggle("themeModDecoFrame")}
 </div>
-
 <div class="themeModDecoSubColors themeModDecoTitleColors">
     ${picker("deco-frame-color", "title", "Title bar", DECO_FRAME_FALLBACK.title)}
     ${picker("deco-frame-color", "titleText", "Title text", DECO_FRAME_FALLBACK.titleText)}
 </div>
-
 <div class="themeModSetting themeModNoDivider themeModDecoOptionRow">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Border color</div>
@@ -11772,7 +11714,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     </div>
     ${toggle("themeModDecoFrameBorder")}
 </div>
-
 <div class="themeModDecoSubColors themeModDecoBorderColors">
     ${picker("deco-frame-color", "border", "Border", DECO_FRAME_FALLBACK.border)}
 </div>`;
@@ -12012,7 +11953,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
 
     /* =========================================================
-       CHAT BUBBLES (Interface > Chat Bubbles)
+       CHAT BUBBLES (Interface > Chat Bubbles)   @bubbles
        Restyles the public / staff chat (#chatMessages) on YOUR
        screen only. FlockMod marks your own messages with
        data-type="MYMSG", so no name guessing is needed.
@@ -12262,7 +12203,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     function applyBubbles(st) {
         liveBubbles = st;
         const root = document.documentElement;
-        const style = BUB_STYLES[st.style] || BUB_STYLES.none;
         const on = st.style !== "none";
 
         root.classList.toggle("fmBubOn", on);
@@ -12444,15 +12384,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     /* ---- menu (Interface panel) ---- */
 
     function buildBubbleRowsHTML() {
-        const toggle = (id, def) => `
-            <label class="themeModToggle">
-                <input type="checkbox" id="${id}" data-default="${def}"${def ? " checked" : ""}>
-                <span class="themeModToggleTrack">
-                    <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                    <span class="themeModToggleOption themeModToggleOn">ON</span>
-                    <span class="themeModToggleThumb"></span>
-                </span>
-            </label>`;
+        const toggle = (id, def) => modToggleHTML(`id="${id}" data-default="${def}"${def ? " checked" : ""}`);
 
         const groups = {};
         BUB_STYLE_CHOICES.forEach((k) => {
@@ -12475,7 +12407,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 <div class="themeModSubsectionTitle themeModSpacingSubsection">
     Chat Bubbles
 </div>
-
 <div class="themeModSetting themeModNoDivider fmStyleRow">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Bubble style</div>
@@ -12485,7 +12416,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     </div>
     <select id="themeModBubbleStyle" class="themeModSelect fmStyleHiddenSelect" data-default="none" tabindex="-1" aria-hidden="true">${options}</select>
 </div>
-
 <div class="themeModSetting themeModNoDivider">
     <div class="themeModSettingText">
         <div class="themeModSettingName"><i class="fas fa-link"></i> Match popups and bubbles</div>
@@ -12493,7 +12423,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     </div>
     ${toggle("themeModStyleMatch", true)}
 </div>
-
 <div class="themeModBubblePreviewWrap themeModBubbleOptionRow">
     <div class="themeModBubblePreview">
         ${msg(false, '<i class="fas fa-star themeModBubbleAnonStar"></i>Anonymous', ["hi nene!!! can we rp? match me with cat ears :3"])}
@@ -12502,7 +12431,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         ${msg(true, "nene2nd", ["what colors should we pick? :3"])}
     </div>
 </div>
-
 <div class="themeModSetting themeModNoDivider themeModBubbleOptionRow">
     <div class="themeModSettingText">
         <div class="themeModSettingName">My messages on the right</div>
@@ -12510,7 +12438,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     </div>
     ${toggle("themeModBubbleRight", true)}
 </div>
-
 <div class="themeModSetting themeModNoDivider themeModBubbleOptionRow">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Bubble everyone else</div>
@@ -12518,7 +12445,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     </div>
     ${toggle("themeModBubbleOthers", true)}
 </div>
-
 <div class="themeModSetting themeModNoDivider themeModBubbleOptionRow">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Bubble decorations</div>
@@ -12526,7 +12452,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     </div>
     ${toggle("themeModBubbleDeco", true)}
 </div>
-
 <div class="themeModSetting themeModNoDivider themeModBubbleOptionRow">
     <div class="themeModSettingText">
         <div class="themeModSettingName">Custom bubble colors</div>
@@ -12534,7 +12459,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     </div>
     ${toggle("themeModBubbleCustom", false)}
 </div>
-
 <div class="themeModBubbleColors">
     ${[["bg", "Bubble"], ["text", "Text"], ["border", "Border"]].map(([k, label]) => `
     <div class="themeModSetting themeModNoDivider themeModDecoColorRow">
@@ -12648,7 +12572,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
 
     /* =========================================================
-       SAFETY: TROLL DETECTION (Safety tab)
+       SAFETY: TROLL DETECTION (Safety tab)   @safety
        Purely local. Only READS what FlockMod already shows you:
        - user list: who is a guest (".rankUU") and the icon of the
          tool each person is holding
@@ -12755,8 +12679,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                     "fa-arrow-pointer", "fa-arrows-alt", "fa-up-down-left-right", "fa-expand-arrows-alt",
                     "fa-crop", "fa-crop-alt", "fa-crop-simple"]
     };
-
-    const TROLL_TOOL_NAMES = { eraser: "Eraser", fill: "Fill tool", selection: "Selection/move" };
 
     function readSavedTroll() {
         const st = { ...TROLL_DEFAULTS };
@@ -13470,16 +13392,12 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
         return `
                         <div class="themeModSectionContent" data-theme-panel="safety">
-
                             <div class="themeModSubsectionTitle">
                                 Troll Detection
                             </div>
-
                             ${row("themeModTrollEnabled", "Troll detection",
                                 "Turns a possible griefer's name red and can show a small warning.")}
-
                             ${row("themeModTrollGuestsOnly", "Guests only", "Only watch guests. OFF watches everyone except you.")}
-
                             <div class="themeModSetting themeModNoDivider themeModTrollSensRow">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Sensitivity</div>
@@ -13489,15 +13407,12 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                     ${Object.entries(TROLL_SENSITIVITY).map(([k, v]) => `<button type="button" role="radio" data-troll-sens="${k}">${v.label}</button>`).join("")}
                                 </div>
                             </div>
-
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
                                 Timing
                             </div>
-
                             ${range("themeModTrollFlagAfter", "Flag after",
                                 "How long they have to keep it up. Giant select-alls are flagged right away.",
                                 5, 80, 5, 15, "1.5s")}
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Stay red for</div>
@@ -13507,11 +13422,9 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                     ${TROLL_STAY_CHOICES.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}
                                 </select>
                             </div>
-
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
                                 Watch For
                             </div>
-
                             ${row("themeModTrollSelection", "Big selections",
                                 "Selecting most of the board (select-all-and-delete).")}
                             ${row("themeModTrollScribble", "Scribbling",
@@ -13522,14 +13435,11 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                             ${range("themeModTrollBigBrushPx", "Huge brush from", "On a normal-size board. Scales with the board's size.", 40, 140, 10, 140, "140px")}
                             ${row("themeModTrollBigText", "Huge text", "A very big text size, or text all over the board.")}
                             ${range("themeModTrollBigTextPx", "Huge text from", "On a normal-size board. Scales with the board's size.", 30, 140, 10, 100, "100px")}
-
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
                                 Warnings
                             </div>
-
                             ${row("themeModTrollPopup", "Warning popup", "A small note with their name.")}
                             ${row("themeModTrollWarnAgain", "Keep warning", "Warn again if someone already red keeps trolling.")}
-
                             <div class="themeModSetting">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Warn again after</div>
@@ -13539,7 +13449,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                     ${TROLL_POPUP_EVERY_CHOICES.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}
                                 </select>
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Highlight color</div>
@@ -13547,12 +13456,10 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                 </div>
                                 <input type="color" id="themeModTrollColor" value="#ff3b3b">
                             </div>
-
                             <div class="themeModLocalNote">
                                 <i class="fas fa-shield-alt"></i>
                                 <span>Only you see this, and nothing is sent to FlockMod. It's a best guess from people's cursors, so please check before acting. For a sound, turn on "Possible griefer" in Sounds.</span>
                             </div>
-
                         </div>`;
     }
 
@@ -13663,7 +13570,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     }
 
     /* =========================================================
-       STREAMER MODE (Advanced tab)  v1.6.8
+       STREAMER MODE (Advanced tab)  v1.6.8   @streamer
        Hides private things on YOUR screen while you record or
        stream: FlockMod's chat, PM windows, the chat overlay, the
        activity bar's message text and other people's names.
@@ -14050,16 +13957,12 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
         return `
                         <div class="themeModSectionContent" data-theme-panel="advanced">
-
                             <div class="themeModSubsectionTitle">
                                 Streamer Mode
                             </div>
-
                             ${row("themeModStreamOn", "Streamer mode",
                                 "Hide private stuff while you record. You can also turn it on in Tools, next to the flower.", false)}
-
                             <div class="fmGroupLabel">Hide while on</div>
-
                             ${row("themeModStreamChat", "Public &amp; staff chat", "Blurs FlockMod's chat window.", true)}
                             ${row("themeModStreamPm", "PM windows", "Blurs the Messenger window.", true)}
                             ${row("themeModStreamOverlay", "Hide chat overlay", "Pings and a small unread count stay.", true)}
@@ -14068,16 +13971,13 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                             ${row("themeModStreamCanvasNames", "Names on the canvas", "Blurs other people's name tags on the board. Yours stays.", true)}
                             ${row("themeModStreamPeek", "Peek on hover", "Hover a blurred spot to read it.", true)}
                             ${row("themeModStreamBadge", "Streamer badge", "Small pink reminder in the top bar.", true)}
-
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
                                 Drawing Guides
                             </div>
-
                             ${row("themeModGuidesOn", "Drawing guides",
                                 "A ruler, perspective points and a grid over the canvas. Also in Tools, next to the flower.", false)}
                             ${row("themeModGuidesHorizon", "Horizon line", "A dashed line through your perspective points.", true)}
                             ${row("themeModGuidesRemember", "Remember my guides", "Keeps your points where you left them.", true)}
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Line color</div>
@@ -14085,7 +13985,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                 </div>
                                 <input type="color" id="themeModGuidesColor" value="${GUIDES_SETTINGS_DEFAULTS.color}" data-default="${GUIDES_SETTINGS_DEFAULTS.color}">
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Line strength</div>
@@ -14096,7 +13995,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                     <span id="themeModGuidesStrengthValue" class="themeModRangeValue">${GUIDES_SETTINGS_DEFAULTS.strength}%</span>
                                 </div>
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Lines per point</div>
@@ -14108,12 +14006,10 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                     <option value="many">Many</option>
                                 </select>
                             </div>
-
                             <div class="themeModLocalNote">
                                 <i class="fas fa-eye-slash"></i>
                                 <span>Only changes what your screen shows. Nothing is sent to FlockMod, guides are never part of your drawing, and other people still see the room as normal.</span>
                             </div>
-
                         </div>`;
     }
 
@@ -14222,7 +14118,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     }
 
     /* =========================================================
-       DRAWING GUIDES (Tools tray + Advanced tab)  v1.6.8
+       DRAWING GUIDES (Tools tray + Advanced tab)  v1.6.8   @guides
        A ruler, 1/2/3-point perspective and a square grid drawn over
        the canvas. Only on YOUR screen: one SVG placed inside
        FlockMod's .boardContainer (over the layers, like FlockMod's
@@ -14873,6 +14769,11 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         return `On: ${GUIDES_MODE_NAMES[guides.mode] || "2-point"}`;
     }
 
+    /* =========================================================
+       SLIDER THUMB SHAPES: setup   @thumbshapes-setup
+       Wires the thumb shape controls.
+       ========================================================= */
+
     function setupThumbShape(dialog) {
         const toggle = dialog.querySelector("#themeModThumbShapeEnabled");
         const select = dialog.querySelector("#themeModThumbShape");
@@ -14924,6 +14825,11 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
         dialog.querySelector(".closeButton").addEventListener("click", applySavedThumbShape);
     }
+
+    /* =========================================================
+       CUSTOM FONTS: library + loading   @fonts
+       Google Fonts by name and uploaded font files.
+       ========================================================= */
 
     const FONT_LIBRARY_LS = "flockmodFontLibrary";
     const FONT_DB_NAME = "flockmodThemeModFonts";
@@ -14991,8 +14897,9 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         return new Promise((resolve, reject) => {
             const tx = db.transaction(FONT_DB_STORE, mode);
             const request = action(tx.objectStore(FONT_DB_STORE));
-            tx.oncomplete = () => { db.close(); resolve(request && request.result); };
-            tx.onerror = () => { db.close(); reject(tx.error); };
+            tx.oncomplete = () => { db.close(); resolve(request && request.result); if (mode === "readwrite") safeCopySoon(); };
+            tx.onerror = () => { db.close(); noteIfNoSpace(tx.error); reject(tx.error); };
+            tx.onabort = () => { db.close(); noteIfNoSpace(tx.error); reject(tx.error || new Error("aborted")); };   /* v1.6.9: a full disk aborts without an error event */
         });
     }
 
@@ -15276,7 +15183,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                 fontLoadCache.delete(value);
                 await addFont(value, `Added "${fontValueLabel(value)}".`);
             } catch (error) {
-                showStatus("That font file couldn't be read. It may be damaged.", "error");
+                showStatus(isNoSpaceError(error) ? NO_SPACE_TEXT : "That font file couldn't be read. It may be damaged.", "error");
             }
         });
 
@@ -15323,6 +15230,11 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
         renderList();
     }
+
+    /* =========================================================
+       APPLY SAVED SETTINGS   @loadsaved
+       Puts saved fonts, sizes and text/selected/hover colors back on load.
+       ========================================================= */
 
     function applySavedFont() {
         const savedFont =
@@ -15426,6 +15338,11 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         }
     }
 
+    /* =========================================================
+       MOD MENU BUTTON (the flower)   @flowerbutton
+       Adds the flower button to the bottom bar.
+       ========================================================= */
+
     function addModButton() {
         const bottomBar = document.querySelector(
             "#bottombar > nav > div > ul:nth-child(3)"
@@ -15482,7 +15399,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
 
     /* =========================================================
-       THEMES: share codes, saved themes, presets
+       THEMES: share codes, saved themes, presets   @themes
        ---------------------------------------------------------
        A "theme" is every look-related setting (not the on/off
        "Enable customizations" switch). In a code each setting is
@@ -15751,7 +15668,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     }
 
     /* =========================================================
-       v1.6.3: BACKGROUND IMAGES SAVED WITH YOUR THEMES
+       v1.6.3: BACKGROUND IMAGES SAVED WITH YOUR THEMES   @themeimages
        Saved themes (My Themes) can keep a copy of your background
        images, so loading a theme brings its pictures back. Each
        picture is stored once ("lib:<fingerprint>" in the background
@@ -15814,7 +15731,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     }
 
     /* =========================================================
-       v1.6.3: SOUNDS SAVED WITH YOUR THEMES
+       v1.6.3: SOUNDS SAVED WITH YOUR THEMES   @themesounds
        Saved themes (My Themes) can keep your sound picks (which sound
        each event plays, on/off and its volume), so loading a theme
        brings its sounds back. Your main Sounds switch, main volume and
@@ -15875,7 +15792,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         const keep = themeSoundIdsInUse();
         getSoundLibrary().forEach((f) => keep.add(f.id));
         const keys = await soundDB("readonly", (st) => st.getAllKeys()).catch(() => []);
-        const stale = (keys || []).filter((k) => typeof k === "string" && !keep.has(k));
+        const stale = (keys || []).filter((k) => typeof k === "string" && !keep.has(k) && k !== SAFE_COPY_MARK);
         if (stale.length) {
             await soundDB("readwrite", (st) => { stale.forEach((k) => st.delete(k)); return null; }).catch(() => {});
         }
@@ -16007,7 +15924,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     }
 
     /* =========================================================
-       THEME CARDS (v1.6.6, Themes tab)
+       THEME CARDS (v1.6.6, Themes tab)   @themecards
        A theme card is a picture of a theme that also carries its
        theme code, so a theme can be shared as an image.
 
@@ -17484,7 +17401,7 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
     }
 
     /* =========================================================
-       THEME PACKS (v1.6.6, Themes tab)
+       THEME PACKS (v1.6.6, Themes tab)   @themepacks
        One file (.flocktheme) with a saved theme AND its background
        pictures and custom sounds, to send to someone (Discord etc).
 
@@ -18338,8 +18255,8 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                     }
                 } catch (error) {
                     buttons.forEach((b) => { b.disabled = false; });
-                    showStatus(error && error.name === "QuotaExceededError"
-                        ? "Not enough space to add this pack. Nothing was changed."
+                    showStatus(isNoSpaceError(error)
+                        ? "Your computer is out of space, so this pack couldn't be added. Nothing was changed. Free up some space (General > Storage has tips) and try again."
                         : "Couldn't add the pack. Nothing was changed.", "error");
                 }
             };
@@ -18350,6 +18267,11 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
 
         return { make, load, close };
     }
+
+    /* =========================================================
+       THEMES TAB: panel wiring   @themes-panel
+       Saved list, share codes, presets buttons.
+       ========================================================= */
 
     function setupThemesPanel(dialog) {
         const panel = dialog.querySelector('[data-theme-panel="themes"]');
@@ -18589,7 +18511,9 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                 try {
                     entry.images = await snapshotBgImages();
                 } catch (error) {
-                    showStatus("Couldn't copy your background images, so this theme is saved without them.", "error");
+                    showStatus(isNoSpaceError(error)
+                        ? "Your computer is out of space, so this theme is saved without its background images. Free up some space (General > Storage has tips) and save it again to keep them."
+                        : "Couldn't copy your background images, so this theme is saved without them.", "error");
                 }
             }
 
@@ -18855,6 +18779,11 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
         renderSavedList();
     }
 
+    /* =========================================================
+       MOD MENU BUILDER   @buildmenu
+       createModMenu(): makes every panel's HTML and wires the color controls and Simple coloring.
+       ========================================================= */
+
     function createModMenu() {
         if (document.querySelector(MOD_DIALOG_SELECTOR)) {
             return document.querySelector(MOD_DIALOG_SELECTOR);
@@ -18880,7 +18809,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                             <span>Theme Mod Menu</span>
                             <span class="themeModTitleVersion">v${getModVersion()}</span>
                         </div>
-
                         <div class="dialogTitleButtons">
                             <div style="text-align: right;">
                                 <a href="#" class="btn btn-md closeButton" title="Close">
@@ -18890,222 +18818,100 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                         </div>
                     </div>
                 </div>
-
                 <div class="themeModContent">
-
                     <div class="themeModSidebar">
-
                         <button class="themeModSidebarItem active" data-theme-section="general">
                             General
                         </button>
-
                         <button class="themeModSidebarItem" data-theme-section="interface">
                             Interface
                         </button>
-
                         <button class="themeModSidebarItem" data-theme-section="colors">
                             Colors
                         </button>
-
                         <button class="themeModSidebarItem" data-theme-section="themes">
                             Themes
                         </button>
-
                         <button class="themeModSidebarItem" data-theme-section="animations">
                             Animations
                         </button>
-
                         <button class="themeModSidebarItem" data-theme-section="sounds">
                             Sounds
                         </button>
-
                         <button class="themeModSidebarItem" data-theme-section="safety">
                             Safety
                         </button>
-
                         <button class="themeModSidebarItem" data-theme-section="backgrounds">
                             Backgrounds
                         </button>
-
                         <button class="themeModSidebarItem" data-theme-section="advanced">
                             Advanced
                         </button>
-
                         <div class="themeModSidebarFill"></div>
-
                     </div>
-
                     <div class="themeModMainColumn">
-
                     <div class="themeModPanel">
-
                         <div class="themeModPanelHeader">
-
                             <div class="themeModSectionTitle">
                                 General
                             </div>
-
                             <!-- Filled in by setupJumpNavAndSearch() with one chip per subsection -->
                             <div class="themeModJumpBar"></div>
-
                             <button type="button" class="themeModPanelHelp" title="Quick tour of this tab" aria-label="Quick tour of this tab">
                                 <i class="fas fa-info-circle"></i>
                             </button>
-
                             <div class="themeModSearch">
                                 <button type="button" class="themeModSearchButton" title="Search settings">
                                     <i class="fas fa-search"></i>
                                 </button>
                                 <input type="text" class="themeModSearchInput" placeholder="Search settings..." spellcheck="false">
                             </div>
-
                         </div>
-
                         <div class="themeModSectionsScroll">
-
                         <div class="themeModSectionContent" data-theme-panel="general">
-
                             <div class="themeModSetting">
-
-                                <div class="themeModSettingText">
-                                    <div class="themeModSettingName">
-                                        Enable customizations
-                                    </div>
-
-                                    <div class="themeModSettingDescription">
-                                        Turn your FlockMod customizations on or off.
-                                    </div>
-                                </div>
-
+                                ${settingTextHTML(`Enable customizations`, `Turn your FlockMod customizations on or off.`)}
                                 <label class="themeModToggle">
-
                                     <input type="checkbox" id="themeModEnabled">
-
                                     <span class="themeModToggleTrack">
                                         <span class="themeModToggleOption themeModToggleOff">
                                             OFF
                                         </span>
-
                                         <span class="themeModToggleOption themeModToggleOn">
                                             ON
                                         </span>
-
                                         <span class="themeModToggleThumb"></span>
                                     </span>
-
                                 </label>
-
                             </div>
-
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
                                 Options
                             </div>
-
                             <div class="themeModSetting">
-
-                                <div class="themeModSettingText">
-                                    <div class="themeModSettingName">
-                                        Simple coloring
-                                    </div>
-
-                                    <div class="themeModSettingDescription">
-                                        Theme with just a few main colors. Your detailed colors are kept for later.
-                                    </div>
-                                </div>
-
-                                <label class="themeModToggle">
-                                    <input type="checkbox" id="themeModSimpleMode">
-                                    <span class="themeModToggleTrack">
-                                        <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                                        <span class="themeModToggleOption themeModToggleOn">ON</span>
-                                        <span class="themeModToggleThumb"></span>
-                                    </span>
-                                </label>
-
+                                ${settingTextHTML(`Simple coloring`, `Theme with just a few main colors. Your detailed colors are kept for later.`)}
+                                ${modToggleHTML(`id="themeModSimpleMode"`)}
                             </div>
-
                             <div class="themeModSetting">
-
-                                <div class="themeModSettingText">
-                                    <div class="themeModSettingName">
-                                        Ask before closing
-                                    </div>
-
-                                    <div class="themeModSettingDescription">
-                                        A reminder to apply if you close the menu with unsaved changes. Saves right away.
-                                    </div>
-                                </div>
-
-                                <label class="themeModToggle">
-                                    <input type="checkbox" id="themeModAskClose">
-                                    <span class="themeModToggleTrack">
-                                        <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                                        <span class="themeModToggleOption themeModToggleOn">ON</span>
-                                        <span class="themeModToggleThumb"></span>
-                                    </span>
-                                </label>
-
+                                ${settingTextHTML(`Ask before closing`, `A reminder to apply if you close the menu with unsaved changes. Saves right away.`)}
+                                ${modToggleHTML(`id="themeModAskClose"`)}
                             </div>
-
                             <div class="themeModSetting">
-
-                                <div class="themeModSettingText">
-                                    <div class="themeModSettingName">
-                                        Lite mode
-                                    </div>
-
-                                    <div class="themeModSettingDescription">
-                                        For slower computers: turns off animations, background images and gradients. Your settings for them are kept. Saves right away.
-                                    </div>
-                                </div>
-
-                                <label class="themeModToggle">
-                                    <input type="checkbox" id="themeModLiteMode">
-                                    <span class="themeModToggleTrack">
-                                        <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                                        <span class="themeModToggleOption themeModToggleOn">ON</span>
-                                        <span class="themeModToggleThumb"></span>
-                                    </span>
-                                </label>
-
+                                ${settingTextHTML(`Lite mode`, `For slower computers: turns off animations, background images and gradients. Your settings for them are kept. Saves right away.`)}
+                                ${modToggleHTML(`id="themeModLiteMode"`)}
                             </div>
-
                             <div class="themeModSetting">
-
-                                <div class="themeModSettingText">
-                                    <div class="themeModSettingName">
-                                        Menu text size
-                                    </div>
-
-                                    <div class="themeModSettingDescription">
-                                        Bigger or smaller words in the mod's windows. FlockMod itself doesn't change. Saves right away.
-                                    </div>
-                                </div>
-
+                                ${settingTextHTML(`Menu text size`, `Bigger or smaller words in the mod's windows. FlockMod itself doesn't change. Saves right away.`)}
                                 <div class="themeModRangeControl themeModMenuTextControl">
                                     <input type="range" id="themeModMenuTextSize" class="themeModRange" min="${MENU_TEXT_MIN}" max="${MENU_TEXT_MAX}" step="5" value="${MENU_TEXT_DEFAULT}" data-default="${MENU_TEXT_DEFAULT}" aria-label="Menu text size">
                                     <span id="themeModMenuTextSizeValue" class="themeModRangeValue">${MENU_TEXT_DEFAULT}%</span>
                                     <button type="button" class="themeModMenuTextReset" title="Back to 100%" aria-label="Menu text size back to 100%" hidden><i class="fas fa-undo-alt"></i></button>
                                 </div>
-
                             </div>
-
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
                                 Tour &amp; Updates
                             </div>
-
                             <div class="themeModSetting">
-
-                                <div class="themeModSettingText">
-                                    <div class="themeModSettingName">
-                                        Quick tour
-                                    </div>
-
-                                    <div class="themeModSettingDescription">
-                                        A short walkthrough of the basics. Show welcome brings back the first popup.
-                                    </div>
-                                </div>
-
+                                ${settingTextHTML(`Quick tour`, `A short walkthrough of the basics. Show welcome brings back the first popup.`)}
                                 <div class="themeModTourButtons">
                                     <button type="button" class="themeModButton themeModTourWelcomeButton" title="Show the welcome popup that asks if you'd like a tour">
                                         <i class="fas fa-hand-sparkles"></i> Show welcome
@@ -19114,21 +18920,16 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                         <i class="fas fa-play"></i> Replay tour
                                     </button>
                                 </div>
-
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
-
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">
                                         Version
                                     </div>
-
                                     <div class="themeModSettingDescription">
                                         You're running FlockTheme <b>v${getModVersion()}</b>. Checking only talks to GitHub.
                                     </div>
                                 </div>
-
                                 <div class="themeModBackupButtons">
                                     <button type="button" class="themeModButton themeModWhatsNewButton">
                                         <i class="fas fa-seedling"></i> What's new
@@ -19137,50 +18938,17 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                         <i class="fas fa-sync-alt"></i> Check for updates
                                     </button>
                                 </div>
-
                             </div>
-
                             <div class="themeModUpdateStatus" style="display: none;"></div>
-
                             <div class="themeModSetting themeModNoDivider">
-
-                                <div class="themeModSettingText">
-                                    <div class="themeModSettingName">
-                                        Check for updates automatically
-                                    </div>
-
-                                    <div class="themeModSettingDescription">
-                                        Once a day at most. A pink dot on the flower button means an update is out.
-                                    </div>
-                                </div>
-
-                                <label class="themeModToggle">
-                                    <input type="checkbox" id="themeModAutoUpdate">
-                                    <span class="themeModToggleTrack">
-                                        <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                                        <span class="themeModToggleOption themeModToggleOn">ON</span>
-                                        <span class="themeModToggleThumb"></span>
-                                    </span>
-                                </label>
-
+                                ${settingTextHTML(`Check for updates automatically`, `Once a day at most. A pink dot on the flower button means an update is out.`)}
+                                ${modToggleHTML(`id="themeModAutoUpdate"`)}
                             </div>
-
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
                                 Backup
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
-
-                                <div class="themeModSettingText">
-                                    <div class="themeModSettingName">
-                                        Full backup file
-                                    </div>
-
-                                    <div class="themeModSettingDescription">
-                                        Saves everything (themes, settings, images, sounds, fonts) to one file you can load on another computer.
-                                    </div>
-                                </div>
-
+                                ${settingTextHTML(`Full backup file`, `Saves everything (themes, settings, images, sounds, fonts) to one file you can load on another computer.`)}
                                 <div class="themeModBackupButtons">
                                     <button type="button" class="themeModButton themeModBackupSave">
                                         <i class="fas fa-download"></i> Save backup
@@ -19190,32 +18958,45 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                     </button>
                                     <input type="file" class="themeModBackupFile" accept=".json,application/json" style="display: none;">
                                 </div>
-
                             </div>
-
                             <div class="themeModBackupStatus" style="display: none;"></div>
-
                             <div class="themeModLocalNote">
                                 <i class="fas fa-circle-info"></i>
                                 <span>The backup file stays on your computer. Nothing is uploaded. Loading one replaces everything the mod has saved in this browser.</span>
                             </div>
-
+                            <div class="themeModSubsectionTitle themeModSpacingSubsection">
+                                Storage
+                            </div>
+                            <div class="themeModSetting themeModNoDivider">
+                                ${settingTextHTML(`Space used`, `What FlockTheme keeps in this browser, added up from the real file sizes.`)}
+                                <div class="themeModBackupButtons">
+                                    <button type="button" class="themeModButton fmStorageRefresh">
+                                        <i class="fas fa-sync-alt"></i> Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="fmStorageMeter"></div>
+                            <details class="fmStorageTips">
+                                <summary>How to free up space</summary>
+                                <ul>
+                                    <li><b>On your computer:</b> run Disk Cleanup (Start menu), empty the Recycle Bin, or turn on Storage Sense in Settings > System > Storage.</li>
+                                    <li><b>In Chrome:</b> delete only "Cached images and files".</li>
+                                    <li class="fmStorageTipDanger"><b>Don't delete "Cookies and other site data"</b> for FlockMod: it erases everything FlockTheme saved. If you ever need to, save a backup first (General > Backup) and load it afterwards.</li>
+                                    <li><b>In the mod:</b> remove references, backgrounds, sounds, fonts or saved themes you don't use. Save a backup first.</li>
+                                </ul>
+                            </details>
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
                                 Help
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
-
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">
                                         Links
                                     </div>
-
                                     <div class="themeModSettingDescription">
                                         Get the latest version, read the instructions, or let me, <span class="themeModCreatorName">nene2nd</span>, know about a bug.
                                     </div>
                                 </div>
-
                                 <div class="themeModBackupButtons">
                                     <a class="themeModButton themeModLinkButton" href="${UPDATE_REPO ? `https://github.com/${UPDATE_REPO}` : "#"}" target="_blank" rel="noopener noreferrer">
                                         <i class="fab fa-github"></i> GitHub page
@@ -19224,13 +19005,10 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                         <i class="fas fa-bug"></i> Report a bug
                                     </a>
                                 </div>
-
                             </div>
-
                             <div class="themeModSubsectionTitle themeModSpacingSubsection fmNoCard">
                                 Thank You
                             </div>
-
                             <div class="themeModThanks">
                                 <span class="themeModThanksFlower" aria-hidden="true"></span>
                                 <span class="themeModThanksPetal themeModThanksPetal1" aria-hidden="true"></span>
@@ -19244,44 +19022,18 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                 </p>
                                 <p class="themeModThanksSign">&ndash; <span class="themeModCreatorName">nene2nd</span></p>
                             </div>
-
                         </div>
-
                         <div class="themeModSectionContent" data-theme-panel="interface">
-
                             <div class="themeModSubsectionTitle">
                                 Font
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
-
-                                <div class="themeModSettingText">
-                                    <div class="themeModSettingName">
-                                        UI Font
-                                    </div>
-
-                                    <div class="themeModSettingDescription">
-                                        The font FlockMod uses.
-                                    </div>
-                                </div>
-
+                                ${settingTextHTML(`UI Font`, `The font FlockMod uses.`)}
                                 <!-- Options are filled in by buildFontOptionsHTML() -->
                                 <select id="themeModUIFont" class="themeModSelect" data-default="default"></select>
-
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
-
-                                <div class="themeModSettingText">
-                                    <div class="themeModSettingName">
-                                        Add a custom font
-                                    </div>
-
-                                    <div class="themeModSettingDescription">
-                                        Type a font name from fonts.google.com, or upload a font file.
-                                    </div>
-                                </div>
-
+                                ${settingTextHTML(`Add a custom font`, `Type a font name from fonts.google.com, or upload a font file.`)}
                                 <div class="themeModFontAddControls">
                                     <div class="themeModSaveRow">
                                         <input type="text" class="themeModTextInput themeModGoogleFontName" placeholder="e.g. Poppins" maxlength="40" spellcheck="false">
@@ -19292,31 +19044,15 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                     </button>
                                     <input type="file" class="themeModFontFile" accept=".ttf,.otf,.woff,.woff2" style="display: none;">
                                 </div>
-
                             </div>
-
                             <div class="themeModFontStatus" style="display: none;"></div>
-
                             <div class="themeModFontList"></div>
-
                             <div class="themeModLocalNote">
                                 <i class="fas fa-circle-info"></i>
                                 <span>Uploaded fonts stay in this browser only. Nobody else sees them.</span>
                             </div>
-
-
                             <div class="themeModSetting themeModNoDivider">
-
-                                <div class="themeModSettingText">
-                                    <div class="themeModSettingName">
-                                        UI Font Size
-                                    </div>
-
-                                    <div class="themeModSettingDescription">
-                                        How big FlockMod's text is.
-                                    </div>
-                                </div>
-
+                                ${settingTextHTML(`UI Font Size`, `How big FlockMod's text is.`)}
                                 <div class="themeModRangeControl">
                                     <input
                                         type="range"
@@ -19327,7 +19063,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                         step="1"
                                         value="100"
                                     >
-
                                     <span
                                         id="themeModUIFontSizeValue"
                                         class="themeModRangeValue"
@@ -19335,46 +19070,21 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
                                         100%
                                     </span>
                                 </div>
-
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
-
-                                <div class="themeModSettingText">
-                                    <div class="themeModSettingName">
-                                        UI Font Weight
-                                    </div>
-
-                                    <div class="themeModSettingDescription">
-                                        How bold FlockMod's text is.
-                                    </div>
-                                </div>
-
+                                ${settingTextHTML(`UI Font Weight`, `How bold FlockMod's text is.`)}
                                 <select id="themeModUIFontWeight" class="themeModSelect">
                                     <option value="regular">Regular</option>
                                     <option value="medium">Medium</option>
                                     <option value="semibold">Semibold</option>
                                     <option value="bold">Bold</option>
                                 </select>
-
                             </div>
-
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
     Spacing
 </div>
-
 <div class="themeModSetting">
-
-    <div class="themeModSettingText">
-        <div class="themeModSettingName">
-            UI Spacing
-        </div>
-
-        <div class="themeModSettingDescription">
-            How roomy or compact FlockMod looks.
-        </div>
-    </div>
-
+    ${settingTextHTML(`UI Spacing`, `How roomy or compact FlockMod looks.`)}
     <div class="themeModRangeControl">
         <input
             type="range"
@@ -19385,7 +19095,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
             step="1"
             value="100"
         >
-
         <span
             id="themeModUISpacingValue"
             class="themeModRangeValue"
@@ -19393,21 +19102,9 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
             100%
         </span>
     </div>
-
 </div>
-
 <div class="themeModSetting themeModNoDivider">
-
-    <div class="themeModSettingText">
-        <div class="themeModSettingName">
-            Border Radius
-        </div>
-
-        <div class="themeModSettingDescription">
-            How round corners are. 5 = FlockMod's own.
-        </div>
-    </div>
-
+    ${settingTextHTML(`Border Radius`, `How round corners are. 5 = FlockMod's own.`)}
     <div class="themeModRangeControl">
         <input
             type="range"
@@ -19418,7 +19115,6 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
             step="1"
             value="5"
         >
-
         <span
             id="themeModUIRadiusValue"
             class="themeModRangeValue"
@@ -19426,263 +19122,111 @@ ${row("Break reminder", "A gentle nudge to stretch and rest your eyes.",
             Default
         </span>
     </div>
-
 </div>
-
 <div class="themeModSubsectionTitle themeModSpacingSubsection">
     Slider Thumbs
 </div>
-
 <div class="themeModSetting themeModNoDivider">
-
-    <div class="themeModSettingText">
-        <div class="themeModSettingName">
-            Custom Thumb Shape
-        </div>
-
-        <div class="themeModSettingDescription">
-            Turns slider and switch thumbs into shapes like hearts, stars or cats.
-        </div>
-    </div>
-
-    <label class="themeModToggle" style="margin-right: 10px;">
-        <input type="checkbox" id="themeModThumbShapeEnabled">
-        <span class="themeModToggleTrack">
-            <span class="themeModToggleOption themeModToggleOff">OFF</span>
-            <span class="themeModToggleOption themeModToggleOn">ON</span>
-            <span class="themeModToggleThumb"></span>
-        </span>
-    </label>
-
+    ${settingTextHTML(`Custom Thumb Shape`, `Turns slider and switch thumbs into shapes like hearts, stars or cats.`)}
+    ${modToggleHTML(`id="themeModThumbShapeEnabled"`, "margin-right: 10px;")}
     <select id="themeModThumbShape" class="themeModSelect themeModThumbSelect" data-default="heart">
         ${buildThumbShapeOptionsHTML()}
     </select>
-
     <span class="themeModThumbPreview" title="Preview"></span>
-
 </div>
-
 <div class="themeModSetting themeModNoDivider">
-
-    <div class="themeModSettingText">
-        <div class="themeModSettingName">
-            Shape Size
-        </div>
-
-        <div class="themeModSettingDescription">
-            Makes shaped thumbs bigger.
-        </div>
-    </div>
-
+    ${settingTextHTML(`Shape Size`, `Makes shaped thumbs bigger.`)}
     <div class="themeModRangeControl">
         <input type="range" id="themeModThumbShapeSize" class="themeModRange" min="100" max="150" step="5" value="100">
         <span id="themeModThumbShapeSizeValue" class="themeModRangeValue">100%</span>
     </div>
-
 </div>
-
 ${buildDecoRowsHTML()}
-
 ${buildBubbleRowsHTML()}
-
 ${buildChatHighlightRowsHTML()}
-
 ${buildChatNotifRowsHTML()}
-
 ${buildChatWindowRowsHTML()}
-
 ${buildClockRowsHTML()}
-
         </div>
-
                         <div
                             class="themeModSectionContent"
                             data-theme-panel="colors"
                         >
-
     <div class="themeModSimpleColors">
-
         <div class="themeModSubsectionTitle">
             Simple Colors
         </div>
-
         ${buildSimpleColorRowsHTML()}
-
     </div>
-
     <div class="themeModDetailedColors">
-
     <div class="themeModLocalNote" title="Some colors have a Gradient option. It only shows while that color is ON, and only in detailed mode (Simple coloring turns gradients off). Sidebar gradients stretch across the whole sidebar instead of restarting in each section. A background image sits on top of the gradient and covers it (the gradient only shows through see-through parts of the image), and sidebar sections drop their gradient while the sidebar image is see-through, so the image still shows through them. Slider fills and switches use Accent 1's gradient too.">
         <i class="fas fa-circle-info"></i>
         <span>Click a section title to fold it. Gradient buttons only work in detailed mode. Hover here for more about gradients.</span>
     </div>
-
     <div class="themeModSubsectionTitle">
         General
     </div>
-
     <div class="themeModSetting themeModNoDivider">
-
-        <div class="themeModSettingText">
-            <div class="themeModSettingName">
-                Text Color 1
-            </div>
-
-            <div class="themeModSettingDescription">
-                Headings and section titles.
-            </div>
-        </div>
-
-        <label class="themeModToggle" style="margin-right: 10px;">
-            <input type="checkbox" id="themeModText1ColorEnabled">
-            <span class="themeModToggleTrack">
-                <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                <span class="themeModToggleOption themeModToggleOn">ON</span>
-                <span class="themeModToggleThumb"></span>
-            </span>
-        </label>
-
+        ${settingTextHTML(`Text Color 1`, `Headings and section titles.`)}
+        ${modToggleHTML(`id="themeModText1ColorEnabled"`, "margin-right: 10px;")}
         <input type="color" id="themeModUIText1Color" value="#ffffff">
-
     </div>
-
     <div class="themeModSetting themeModNoDivider">
-
-        <div class="themeModSettingText">
-            <div class="themeModSettingName">
-                Text Color 2
-            </div>
-
-            <div class="themeModSettingDescription">
-                Most other text. Chat, usernames and the FlockMod title aren't changed.
-            </div>
-        </div>
-
-        <label class="themeModToggle" style="margin-right: 10px;">
-            <input type="checkbox" id="themeModText2ColorEnabled">
-            <span class="themeModToggleTrack">
-                <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                <span class="themeModToggleOption themeModToggleOn">ON</span>
-                <span class="themeModToggleThumb"></span>
-            </span>
-        </label>
-
+        ${settingTextHTML(`Text Color 2`, `Most other text. Chat, usernames and the FlockMod title aren't changed.`)}
+        ${modToggleHTML(`id="themeModText2ColorEnabled"`, "margin-right: 10px;")}
         <input type="color" id="themeModUIText2Color" value="#ffffff">
-
     </div>
-
     <div class="themeModSetting themeModNoDivider">
-
-        <div class="themeModSettingText">
-            <div class="themeModSettingName">
-                Selected Colors
-            </div>
-
-            <div class="themeModSettingDescription">
-                Selected layers, tools and rows. OFF = FlockMod's look.
-            </div>
-        </div>
-
-        <label class="themeModToggle" style="margin-right: 10px;">
-            <input type="checkbox" id="themeModSelectedColorEnabled" data-default="true">
-            <span class="themeModToggleTrack">
-                <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                <span class="themeModToggleOption themeModToggleOn">ON</span>
-                <span class="themeModToggleThumb"></span>
-            </span>
-        </label>
-
+        ${settingTextHTML(`Selected Colors`, `Selected layers, tools and rows. OFF = FlockMod's look.`)}
+        ${modToggleHTML(`id="themeModSelectedColorEnabled" data-default="true"`, "margin-right: 10px;")}
         <input type="color" id="themeModUISelectedColor" value="#4f5156">
-
     </div>
-
     <div class="themeModSetting themeModNoDivider">
-
-        <div class="themeModSettingText">
-            <div class="themeModSettingName">
-                Hover Colors
-            </div>
-
-            <div class="themeModSettingDescription">
-                Hover states everywhere. OFF = FlockMod's look.
-            </div>
-        </div>
-
-        <label class="themeModToggle" style="margin-right: 10px;">
-            <input type="checkbox" id="themeModHoverColorEnabled" data-default="true">
-            <span class="themeModToggleTrack">
-                <span class="themeModToggleOption themeModToggleOff">OFF</span>
-                <span class="themeModToggleOption themeModToggleOn">ON</span>
-                <span class="themeModToggleThumb"></span>
-            </span>
-        </label>
-
+        ${settingTextHTML(`Hover Colors`, `Hover states everywhere. OFF = FlockMod's look.`)}
+        ${modToggleHTML(`id="themeModHoverColorEnabled" data-default="true"`, "margin-right: 10px;")}
         <input type="color" id="themeModUIHoverColor" value="#4f5156">
-
     </div>
-
         <div class="themeModSubsectionTitle themeModSpacingSubsection">
         Sidebar
     </div>
-
     ${buildSidebarColorRowsHTML()}
-
     <div class="themeModSubsectionTitle themeModSpacingSubsection">
         Top Bar
     </div>
-
         ${buildTopBarColorRowsHTML()}
-
     <div class="themeModSubsectionTitle themeModSpacingSubsection">
         Bottom Bar
     </div>
-
     ${buildBottomBarColorRowsHTML()}
-
     <div class="themeModSubsectionTitle themeModSpacingSubsection">
         Popups &amp; Menus
     </div>
-
     ${buildSidebarColorRowsHTML(POPUP_COLOR_SETTINGS)}
-
     <div class="themeModSubsectionTitle themeModSpacingSubsection">
         Chat
     </div>
-
     ${buildSidebarColorRowsHTML(CHAT_COLOR_SETTINGS)}
-
     <div class="themeModSubsectionTitle themeModSpacingSubsection">
         Chat Overlay
     </div>
-
     ${buildSidebarColorRowsHTML(CHATNOTIF_COLOR_SETTINGS)}
-
     </div><!-- closes themeModDetailedColors -->
-
     <!-- v1.6: Canvas stays visible in simple AND detailed coloring -->
     <div class="themeModSubsectionTitle themeModSpacingSubsection">
         Canvas
     </div>
-
     ${buildCanvasRowsHTML()}
-
 </div>
-
                         <div class="themeModSectionContent" data-theme-panel="themes">
-
                             <div class="themeModThemeStatus" style="display: none;"></div>
-
                             <div class="themeModUndoRow" style="display: none;">
                                 <span><i class="fas fa-undo-alt"></i> Changed your mind about the last theme you loaded?</span>
                                 <button type="button" class="themeModButton themeModUndoButton">Undo</button>
                             </div>
-
                             <div class="themeModSubsectionTitle">
                                 Share
                             </div>
-
                             <div class="fmGroupLabel">Share your theme</div>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Theme code</div>
@@ -19692,9 +19236,7 @@ ${buildClockRowsHTML()}
                                 </div>
                                 <button type="button" class="themeModButton themeModExportButton">Copy code</button>
                             </div>
-
                             <textarea class="themeModCodeBox themeModExportCode" readonly style="display: none;"></textarea>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Theme card</div>
@@ -19704,7 +19246,6 @@ ${buildClockRowsHTML()}
                                 </div>
                                 <button type="button" class="themeModButton themeModMakeCardButton" id="themeModMakeCard">Make card</button>
                             </div>
-
                             <div class="themeModCardPanel" style="display: none;">
                                 <div class="themeModCardHead">
                                     <span class="themeModCardTitle"><i class="fas fa-image"></i> Theme card</span>
@@ -19732,7 +19273,6 @@ ${buildClockRowsHTML()}
                                 </div>
                                 <div class="themeModCardNote"></div>
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Theme pack</div>
@@ -19742,9 +19282,7 @@ ${buildClockRowsHTML()}
                                 </div>
                                 <button type="button" class="themeModButton themeModGoMyThemes"><i class="fas fa-bookmark"></i> My Themes</button>
                             </div>
-
                             <div class="fmGroupLabel">Get a theme</div>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Load a theme</div>
@@ -19757,10 +19295,8 @@ ${buildClockRowsHTML()}
                                     <button type="button" class="themeModButton themeModImportButton">Import</button>
                                 </div>
                             </div>
-
                             <textarea class="themeModCodeBox themeModImportCode" placeholder="FMTHEME1:... or paste a theme card" spellcheck="false"></textarea>
                             <input type="file" class="themeModCardFile" accept="image/png,image/*,.flocktheme" style="display: none;">
-
                             <div class="themeModPackPanel" style="display: none;">
                                 <div class="themeModCardHead">
                                     <span class="themeModCardTitle"><i class="fas fa-box-open"></i> <span class="themeModPackTitle">Theme pack</span></span>
@@ -19768,11 +19304,9 @@ ${buildClockRowsHTML()}
                                 </div>
                                 <div class="themeModPackBody"></div>
                             </div>
-
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
                                 My Themes
                             </div>
-
                             <div class="themeModSetting themeModNoDivider">
                                 <div class="themeModSettingText">
                                     <div class="themeModSettingName">Save current theme</div>
@@ -19785,87 +19319,59 @@ ${buildClockRowsHTML()}
                                     <button type="button" class="themeModButton themeModSaveButton">Save</button>
                                 </div>
                             </div>
-
                             <label class="themeModSaveImagesRow">
                                 <input type="checkbox" id="themeModSaveImages" checked>
                                 Include my background images (kept on this computer, not in theme codes)
                             </label>
-
                             <label class="themeModSaveImagesRow">
                                 <input type="checkbox" id="themeModSaveSounds" checked>
                                 Include my sounds (kept on this computer, not in theme codes)
                             </label>
-
                             <div class="themeModSavedList"></div>
-
                             <div class="themeModSubsectionTitle themeModSpacingSubsection">
                                 Presets
                             </div>
-
                             <div class="themeModSettingDescription themeModPresetNote">
                                 Presets set your simple colors (Calm Night also sets the canvas).
                                 Background images stay on top of them, so turn those off in Backgrounds to see a preset fully.
                             </div>
-
                             <div class="themeModPresetGrid">
                                 ${buildPresetCardsHTML()}
                             </div>
-
                         </div>
-
 ${buildAnimationsPanelHTML()}
-
 ${buildSoundsPanelHTML()}
-
 ${buildSafetyPanelHTML()}
-
                         <div class="themeModSectionContent" data-theme-panel="backgrounds">
-
                             <div class="themeModLocalNote">
                                 <i class="fas fa-circle-info"></i>
                                 <span>Images stay in this browser only. Nobody else sees them, and they aren't in share codes.</span>
                             </div>
-
                             ${buildBackgroundRowsHTML()}
-
                         </div>
-
 ${buildAdvancedPanelHTML()}
-
                         </div><!-- closes themeModSectionsScroll -->
-
                     </div><!-- closes themeModPanel -->
-
                     <div class="themeModActions">
-
                         <!-- Only shown in Colors while simple mode is on (see CSS) -->
                         <button type="button" class="themeModCopyToDetailed" title="Turn your simple colors into detailed ones, so you can fine-tune them">
                             <i class="fas fa-layer-group"></i> Copy to detailed
                         </button>
-
                         <span class="themeModActionsNote"></span>
-
                         <button type="button" class="themeModResetButton" title="Resets every page of the mod to default (saved themes are kept)">
                             <i class="fas fa-undo-alt"></i> Reset all
                         </button>
-
                         <button type="button" class="themeModApplyButton">
                             Apply Changes
                         </button>
-
                     </div>
-
                     </div><!-- closes themeModMainColumn -->
-
                 </div><!-- closes themeModContent -->
-
             </div>
-
             <div class="dialogSize dsBar sbTop"></div>
             <div class="dialogSize dsBar sbBottom"></div>
             <div class="dialogSize dsBar sbLeft"></div>
             <div class="dialogSize dsBar sbRight"></div>
-
             <div class="dialogSize dsCorner sbTopLeft"></div>
             <div class="dialogSize dsCorner sbTopRight"></div>
             <div class="dialogSize dsCorner sbBottomLeft"></div>
@@ -20755,6 +20261,7 @@ const advancedControls = setupAdvancedPanel(dialog);
         setupUpdateCheck(dialog);
 
         setupBackup(dialog);
+        setupStorageMeter(dialog);   /* v1.6.9 */
 
         setupWhatsNew(dialog);
 
@@ -20762,7 +20269,7 @@ const advancedControls = setupAdvancedPanel(dialog);
     }
 
     /* =========================================================
-       SUBSECTION RESETS (Colors + Interface panels)
+       SUBSECTION RESETS (Colors + Interface panels)   @resets
        Every subsection title gets a small reset button. It puts
        only that subsection's controls back to their defaults and
        previews them. Nothing is saved until Apply Changes, and
@@ -20872,7 +20379,7 @@ const advancedControls = setupAdvancedPanel(dialog);
     }
 
     /* =========================================================
-       STYLE PICKERS (Interface > Popup Decorations / Chat Bubbles)
+       STYLE PICKERS (Interface > Popup Decorations / Chat Bubbles)   @stylepickers
        Tiles instead of long dropdowns. The dropdowns are still
        there (hidden) and still hold the value, so Apply, theme
        codes, backups, resets and search all work like before.
@@ -21194,7 +20701,7 @@ const advancedControls = setupAdvancedPanel(dialog);
     }
 
     /* =========================================================
-       VERSION + UPDATE CHECK (General panel)
+       VERSION + UPDATE CHECK (General panel)   @updates
        The version comes from manifest.json, so bumping "version"
        there is all a release needs. "Check for updates" reads the
        manifest.json on GitHub and compares. It only goes online
@@ -21478,7 +20985,7 @@ const advancedControls = setupAdvancedPanel(dialog);
     }
 
     /* =========================================================
-       WHAT'S NEW CARD
+       WHAT'S NEW CARD   @whatsnew-card
        Shown inside the mod menu (so it moves and resizes with it).
        After an update it pops up once on its own; brand-new users
        get the tour prompt instead and never see it on first open.
@@ -21642,7 +21149,7 @@ const advancedControls = setupAdvancedPanel(dialog);
     }
 
     /* =========================================================
-       NEW-FEATURE DOTS (v1.6.3)
+       NEW-FEATURE DOTS (v1.6.3)   @newdots
        After an update, a pink dot marks each new thing (the
        CHANGELOG's "spots") and the tab it's on. Opening that tab
        counts as seen: the tab's dot goes right away, the dots
@@ -21762,7 +21269,7 @@ const advancedControls = setupAdvancedPanel(dialog);
     }
 
     /* =========================================================
-       FULL BACKUP FILE (General panel)
+       FULL BACKUP FILE (General panel)   @backup
        Everything the mod keeps: every localStorage key starting
        with "flockmod" plus the four file databases (background
        images, sounds, reference images, fonts). Files are stored
@@ -22249,7 +21756,7 @@ const advancedControls = setupAdvancedPanel(dialog);
                 try {
                     const db = await getDB(d.name);
                     const keys = await idbRequest(db, d.store, "readonly", (store) => store.getAllKeys());
-                    const stale = (keys || []).filter((key) => !inBackup.get(d.name).has(JSON.stringify(key)));
+                    const stale = (keys || []).filter((key) => key !== SAFE_COPY_MARK && !inBackup.get(d.name).has(JSON.stringify(key)));
 
                     if (stale.length) {
                         await idbRequest(db, d.store, "readwrite", (store) => {
@@ -22261,6 +21768,7 @@ const advancedControls = setupAdvancedPanel(dialog);
             }
         } finally {
             opened.forEach((db) => db.close());
+            safeCopySoon();   /* v1.6.9: refresh the safety copy */
         }
     }
 
@@ -22297,6 +21805,558 @@ const advancedControls = setupAdvancedPanel(dialog);
     }
 
     keepModStorage();
+
+    /* =========================================================
+       SAFETY COPY OF YOUR FILES (v1.6.9)   @safecopy
+       Chrome can quietly empty a site's file storage (IndexedDB)
+       when the computer is low on space, but it keeps the settings
+       (localStorage). That made reference images (and could make
+       background pictures, sounds and fonts) vanish, leaving empty
+       spots behind. Now every stored file also gets a copy in the
+       extension's own storage (chrome.storage.local), which the
+       browser never clears to make space. If a file database comes
+       back emptied, the files are put back from that copy.
+       How it knows "emptied by the browser" from "you removed it":
+       each database keeps a tiny marker (SAFE_COPY_MARK). Removing
+       files never touches it; only the whole database being wiped
+       does. All tabs share the copy, one tab updates it at a time.
+       Everything stays on this computer. Nothing goes online.
+       ========================================================= */
+
+    const SAFE_COPY_MARK = "__fmSafeCopyMark";
+    const SAFE_COPY_LOCK = "flockmodSafeCopy";
+    let safeCopyOff = false;       /* extension storage unavailable (or the mod was reloaded) */
+    let safeCopyTimer = 0;
+    let safeCopyJob = null;
+    let safeCopyAgain = false;
+    let safeCopyFirst = null;      /* the run at page load (things wait on it briefly) */
+
+    function safeCopyStorage() {
+        try {
+            return !safeCopyOff && typeof chrome !== "undefined" && chrome.storage && chrome.storage.local
+                ? chrome.storage.local
+                : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    const safeCopyIndexKey = (dbName) => `fmsc:index:${dbName}`;
+    const safeCopyFileKey = (dbName, enc) => `fmsc:f:${dbName}:${enc}`;
+
+    async function safeCopyGet(key) {
+        const store = safeCopyStorage();
+        if (!store) throw new Error("no extension storage");
+        const got = await store.get(key);
+        return got ? got[key] : undefined;
+    }
+
+    async function safeCopySet(items) {
+        const store = safeCopyStorage();
+        if (!store) throw new Error("no extension storage");
+        await store.set(items);
+    }
+
+    async function safeCopyRemove(keys) {
+        const store = safeCopyStorage();
+        if (store && keys.length) await store.remove(keys);
+    }
+
+    /* One database: put back what the browser removed, copy new
+       files, forget files you removed. Returns how many came back. */
+    async function safeCopySyncDB(d) {
+        const db = await d.open();
+        let restored = 0;
+
+        try {
+            const keys = (await idbRequest(db, d.store, "readonly", (s) => s.getAllKeys())) || [];
+            const hasMark = keys.some((k) => k === SAFE_COPY_MARK);
+            const inDB = new Set(keys.filter((k) => k !== SAFE_COPY_MARK).map((k) => JSON.stringify(k)));
+            const index = await safeCopyGet(safeCopyIndexKey(d.name));
+            const copied = new Set(index && Array.isArray(index.keys) ? index.keys : []);
+
+            /* No marker but we did copy it before = the browser emptied it */
+            if (!hasMark && index && index.seeded) {
+                for (const enc of copied) {
+                    if (inDB.has(enc)) continue;
+                    const packed = await safeCopyGet(safeCopyFileKey(d.name, enc));
+                    if (packed === undefined) continue;
+                    await idbRequest(db, d.store, "readwrite", (s) => s.put(unpackValue(packed), JSON.parse(enc)));
+                    inDB.add(enc);
+                    restored++;
+                }
+            }
+
+            if (!hasMark) {
+                await idbRequest(db, d.store, "readwrite", (s) => s.put(1, SAFE_COPY_MARK));
+            }
+
+            /* New files: copy them (one at a time, so memory stays low) */
+            for (const enc of [...inDB]) {
+                if (copied.has(enc)) continue;
+                const value = await idbRequest(db, d.store, "readonly", (s) => s.get(JSON.parse(enc)));
+
+                if (value === undefined) {
+                    inDB.delete(enc);
+                    continue;
+                }
+
+                await safeCopySet({ [safeCopyFileKey(d.name, enc)]: await packValue(value) });
+                copied.add(enc);
+            }
+
+            /* Files you removed: drop their copies */
+            await safeCopyRemove([...copied].filter((enc) => !inDB.has(enc)).map((enc) => safeCopyFileKey(d.name, enc)));
+            await safeCopySet({ [safeCopyIndexKey(d.name)]: { seeded: true, keys: [...inDB] } });
+        } finally {
+            db.close();
+        }
+
+        return restored;
+    }
+
+    /* After files came back: show them again everywhere */
+    function safeCopyAfterRestore(restored) {
+        if (!restored || !Object.keys(restored).length) {
+            return restored;
+        }
+
+        noteStorageEvent({ clearedAt: Date.now(), restored: Object.values(restored).reduce((a, b) => a + b, 0) });
+
+        try {
+            if (restored[REF_DB_NAME] && !getRefList().length) {
+                /* settings were cleared too: rebuild the reference list */
+                safeCopyRebuildRefList();
+            }
+
+            bgBlobCache.clear();
+            loadSavedCustomizations();
+            window.dispatchEvent(new CustomEvent("fmRefsChanged"));
+        } catch (error) { /* showing them again is best-effort */ }
+
+        return restored;
+    }
+
+    async function safeCopyRebuildRefList() {
+        try {
+            const keys = await refDB("readonly", (s) => s.getAllKeys());
+            const ids = (keys || []).filter((k) => typeof k === "string" && k !== SAFE_COPY_MARK && !/_[tb]$/.test(k)).sort();
+
+            if (ids.length && !getRefList().length) {
+                setRefList(ids.slice(0, REF_MAX_IMAGES));
+                window.dispatchEvent(new CustomEvent("fmRefsChanged"));
+            }
+        } catch (error) { /* nothing to rebuild */ }
+    }
+
+    function safeCopyRun() {
+        if (!safeCopyStorage()) {
+            return Promise.resolve({});
+        }
+
+        if (safeCopyJob) {
+            safeCopyAgain = true;
+            return safeCopyJob;
+        }
+
+        const work = async () => {
+            const restored = {};
+
+            for (const d of getBackupDatabases()) {
+                try {
+                    const n = await safeCopySyncDB(d);
+                    if (n) restored[d.name] = n;
+                } catch (error) {
+                    /* the mod was reloaded/updated while this tab stayed open */
+                    if (/context invalidated|no extension storage/i.test(String(error && error.message))) {
+                        safeCopyOff = true;
+                        break;
+                    }
+
+                    noteIfNoSpace(error);
+                }
+            }
+
+            return restored;
+        };
+
+        /* only one tab works on the copy at a time */
+        const run = navigator.locks && navigator.locks.request
+            ? navigator.locks.request(SAFE_COPY_LOCK, work)
+            : work();
+
+        safeCopyJob = run
+            .then(safeCopyAfterRestore)
+            .catch(() => ({}))
+            .finally(() => {
+                safeCopyJob = null;
+
+                if (safeCopyAgain) {
+                    safeCopyAgain = false;
+                    safeCopySoon();
+                }
+            });
+
+        return safeCopyJob;
+    }
+
+    /* Called after any file is saved or removed (batched) */
+    function safeCopySoon(delay = 2500) {
+        if (safeCopyOff) return;
+        clearTimeout(safeCopyTimer);
+        safeCopyTimer = setTimeout(safeCopyRun, delay);
+    }
+
+    /* Waits for the page-load check, but never more than a few seconds */
+    function safeCopyReady() {
+        return Promise.race([
+            safeCopyFirst || Promise.resolve(),
+            new Promise((resolve) => setTimeout(resolve, 5000))
+        ]).catch(() => {});
+    }
+
+    function setupSafeCopy() {
+        safeCopyFirst = safeCopyRun();
+
+        /* every few minutes too, in case something was missed */
+        setInterval(() => {
+            if (!document.hidden) safeCopySoon(0);
+        }, 5 * 60 * 1000);
+    }
+
+    /* =========================================================
+       SETTINGS FOLLOW ACROSS TABS (v1.6.9)   @tabsync
+       Many people keep FlockMod open in more than one tab. All tabs
+       already share the same saved settings, but a tab only read
+       them when it loaded. Now, when you Apply (or load a theme,
+       switch streamer mode...) in one tab, your other FlockMod tabs
+       pick it up by themselves. A tab with the mod menu open waits
+       until you close it, so your unsaved changes there aren't
+       touched. Window spots, timers and lists that only matter to
+       one tab are skipped.
+       ========================================================= */
+
+    const TAB_SYNC_SKIP = /^flockmod(TimeStats|MenuRect|MenuLastPlace|MenuFoldedSections|RefRect|RefIndex|RefList|RefView|RefBoard|RefTourSeen|TourSeen|LastSeenVersion|LastUpdateCheck|LatestKnownVersion|UpdateDotSeen|NewSpots|NewSpotsVersion|ThemeUndo|ThemeUndoImages|ThemeUndoSounds|SavedThemes|CardMadeBy|ChatNotifWidth|ChatNotifHidden|ChatNotifDebug|GuidesBarPos|GuidesPoints|StorageEvents)$/;
+    let tabSyncPending = false;
+    let tabSyncTimer = 0;
+
+    function tabSyncApply() {
+        clearTimeout(tabSyncTimer);
+
+        if (!tabSyncPending) {
+            return;
+        }
+
+        /* mod menu open here, or tab in the background: try again later */
+        if (document.querySelector(MOD_DIALOG_SELECTOR) || document.hidden) {
+            tabSyncTimer = setTimeout(tabSyncApply, 1000);
+            return;
+        }
+
+        tabSyncPending = false;
+
+        try {
+            loadSavedCustomizations();
+        } catch (error) { /* the next change tries again */ }
+    }
+
+    function setupTabSync() {
+        /* "storage" only fires for changes made in OTHER tabs */
+        window.addEventListener("storage", (event) => {
+            if (event.storageArea !== window.localStorage || !event.key || !event.key.startsWith("flockmod") || TAB_SYNC_SKIP.test(event.key)) {
+                return;
+            }
+
+            tabSyncPending = true;
+            clearTimeout(tabSyncTimer);
+            tabSyncTimer = setTimeout(tabSyncApply, 400);
+        });
+
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden && tabSyncPending) {
+                tabSyncApply();
+            }
+        });
+    }
+
+    /* =========================================================
+       STORAGE METER (v1.6.9, General)   @storagemeter
+       Shows how much space FlockTheme keeps in this browser, by
+       kind. The numbers are real file sizes added up from what's
+       stored (nothing is estimated). A web page can't see how much
+       free space your disk has, so instead of guessing, the meter
+       shows real problems the mod ran into: a save that failed
+       because the disk was full, or Chrome clearing the mod's files
+       to make space (and how many the safety copy put back).
+       Measured only when General is opened or Refresh is pressed.
+       ========================================================= */
+
+    const STORAGE_EVENTS_LS = "flockmodStorageEvents";
+
+    function readStorageEvents() {
+        try {
+            const e = JSON.parse(window.localStorage.getItem(STORAGE_EVENTS_LS) || "{}");
+            return e && typeof e === "object" ? e : {};
+        } catch (error) {
+            return {};
+        }
+    }
+
+    function noteStorageEvent(patch) {
+        try {
+            window.localStorage.setItem(STORAGE_EVENTS_LS, JSON.stringify({ ...readStorageEvents(), ...patch }));
+        } catch (error) { /* storage full: nothing more we can do here */ }
+    }
+
+    /* Called wherever a save can fail; only "out of space" errors count */
+    function noteIfNoSpace(error) {
+        if (/quota/i.test(String(error && (error.name || "") + " " + (error.message || "")))) {
+            noteStorageEvent({ noSpaceAt: Date.now() });
+            return true;
+        }
+
+        return false;
+    }
+
+    /* "Out of space" errors, for the messages people see */
+    function isNoSpaceError(error) {
+        return /quota/i.test(String(error && (error.name || "") + " " + (error.message || "")));
+    }
+
+    const NO_SPACE_TEXT = "Your computer is out of space, so this couldn't be saved. Free up some space (General > Storage has tips) and try again.";
+
+    /* Files your settings use that aren't in this browser anymore
+       (cleared by the browser and not in the safety copy). Only
+       reported when the storage could really be checked. */
+    async function findMissingFiles() {
+        const missing = [];
+        const has = async (dbCall, key) => Boolean(await dbCall("readonly", (s) => s.count(key)));
+
+        for (const place of BACKGROUND_PLACES) {
+            if (readBgSettings(place).Enabled && !(await has(bgDB, place.key))) {
+                missing.push(`${place.label} background`);
+            }
+        }
+
+        for (const f of getSoundLibrary()) {
+            if (!(await has(soundDB, f.id))) missing.push(`sound "${f.name}"`);
+        }
+
+        for (const value of getFontLibrary()) {
+            if (value.startsWith("upload:") && !(await has(fontDB, fontValueLabel(value)))) {
+                missing.push(`font "${fontValueLabel(value)}"`);
+            }
+        }
+
+        let refs = 0;
+        for (const id of getRefList()) {
+            if (!(await has(refDB, id))) refs++;
+        }
+        if (refs) missing.push(`${refs} reference image${refs > 1 ? "s" : ""}`);
+
+        return missing;
+    }
+
+    function fmtBytes(n) {
+        if (!Number.isFinite(n) || n < 1024) return `${Math.max(0, Math.round(n || 0))} B`;
+        if (n < 1024 * 1024) return `${(n / 1024).toFixed(n < 10 * 1024 ? 1 : 0)} KB`;
+        if (n < 1024 * 1024 * 1024) return `${(n / 1024 / 1024).toFixed(n < 10 * 1024 * 1024 ? 1 : 0)} MB`;
+        return `${(n / 1024 / 1024 / 1024).toFixed(2)} GB`;
+    }
+
+    /* Size of one stored value: files by their real size */
+    function storedSize(value) {
+        if (value instanceof Blob) return value.size;
+        if (value instanceof ArrayBuffer) return value.byteLength;
+        if (ArrayBuffer.isView(value)) return value.byteLength;
+        if (typeof value === "string") return value.length * 2;
+        if (Array.isArray(value)) return value.reduce((n, v) => n + storedSize(v), 0);
+        if (value && typeof value === "object") return Object.values(value).reduce((n, v) => n + storedSize(v), 0);
+        return 8;
+    }
+
+    /* Adds up one database with a cursor (files aren't loaded, only their sizes read) */
+    async function measureDB(d) {
+        const db = await d.open();
+
+        try {
+            return await new Promise((resolve, reject) => {
+                const tx = db.transaction(d.store, "readonly");
+                const req = tx.objectStore(d.store).openCursor();
+                const out = { bytes: 0, keys: [] };
+
+                req.onsuccess = () => {
+                    const cursor = req.result;
+                    if (!cursor) return;
+                    if (cursor.key !== SAFE_COPY_MARK) {
+                        out.bytes += storedSize(cursor.value);
+                        out.keys.push(JSON.stringify(cursor.key));
+                    }
+                    cursor.continue();
+                };
+                tx.oncomplete = () => resolve(out);
+                tx.onerror = () => reject(tx.error);
+                tx.onabort = () => reject(tx.error);
+            });
+        } finally {
+            db.close();
+        }
+    }
+
+    async function measureModStorage() {
+        const kinds = [
+            { id: "refs", name: "Reference images", db: REF_DB_NAME },
+            { id: "bg", name: "Background pictures", db: BG_DB_NAME },
+            { id: "sounds", name: "Sounds", db: SOUND_DB_NAME },
+            { id: "fonts", name: "Fonts", db: FONT_DB_NAME }
+        ];
+        const dbs = new Map(getBackupDatabases().map((d) => [d.name, d]));
+        const result = { kinds: [], total: 0, copy: null, copyComplete: true };
+
+        for (const k of kinds) {
+            let m = { bytes: 0, keys: [] };
+            let failed = false;
+
+            try {
+                m = await measureDB(dbs.get(k.db));
+            } catch (error) {
+                failed = true;
+            }
+
+            result.kinds.push({ ...k, bytes: m.bytes, failed });
+            result.total += m.bytes;
+
+            /* is every file in the safety copy? */
+            if (!failed && safeCopyStorage()) {
+                try {
+                    const index = await safeCopyGet(safeCopyIndexKey(k.db));
+                    const copied = new Set(index && Array.isArray(index.keys) ? index.keys : []);
+                    if (m.keys.some((key) => !copied.has(key))) result.copyComplete = false;
+                } catch (error) {
+                    result.copyComplete = false;
+                }
+            }
+        }
+
+        /* settings, themes, lists (localStorage keeps text as 2 bytes per letter) */
+        let settings = 0;
+        const ls = window.localStorage;
+        for (let i = 0; i < ls.length; i++) {
+            const key = ls.key(i);
+            if (key && key.startsWith("flockmod")) settings += (key.length + (ls.getItem(key) || "").length) * 2;
+        }
+        result.kinds.push({ id: "settings", name: "Settings + saved themes", bytes: settings, failed: false });
+        result.total += settings;
+
+        /* the safety copy, as the extension storage reports it */
+        const store = safeCopyStorage();
+        if (store && typeof store.getBytesInUse === "function") {
+            try {
+                result.copy = await store.getBytesInUse(null);
+            } catch (error) {
+                result.copy = null;
+            }
+        }
+
+        try {
+            result.missing = await findMissingFiles();
+        } catch (error) {
+            result.missing = [];   /* couldn't check: say nothing rather than guess */
+        }
+
+        try {
+            result.persisted = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : false;
+        } catch (error) {
+            result.persisted = false;
+        }
+
+        return result;
+    }
+
+    function setupStorageMeter(dialog) {
+        const box = dialog.querySelector(".fmStorageMeter");
+        const refresh = dialog.querySelector(".fmStorageRefresh");
+
+        if (!box || !refresh) {
+            return;
+        }
+
+        const day = (t) => new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+        let busy = false;
+
+        const draw = (r) => {
+            const shown = r.kinds.filter((k) => k.bytes > 0 || k.id !== "settings");
+            const bar = r.total
+                ? shown.filter((k) => k.bytes > 0).map((k) => `<span class="fmStorageSeg fmStorage-${k.id}" style="flex-grow: ${k.bytes};" title="${k.name}: ${fmtBytes(k.bytes)}"></span>`).join("")
+                : "";
+
+            const rows = shown.map((k) => `
+                <div class="fmStorageRow">
+                    <span class="fmStorageDot fmStorage-${k.id}"></span>
+                    <span class="fmStorageName">${k.name}</span>
+                    <span class="fmStorageSize">${k.failed ? "couldn't read" : fmtBytes(k.bytes)}</span>
+                </div>`).join("");
+
+            let copyText;
+            if (!safeCopyStorage()) {
+                copyText = `Safety copy is off in this tab. Reload FlockMod to turn it back on.`;
+            } else if (safeCopyJob || !r.copyComplete) {
+                copyText = `Safety copy is being made${r.copy !== null ? ` (${fmtBytes(r.copy)} so far)` : ""}.`;
+            } else {
+                copyText = `Safety copy is up to date${r.copy !== null ? ` (${fmtBytes(r.copy)})` : ""}.`;
+            }
+
+            const ev = readStorageEvents();
+            const notes = [];
+            const recent = (t) => t && Date.now() - t < 14 * 86400000;
+
+            const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+            if (r.missing && r.missing.length) {
+                const many = r.missing.length > 1;
+                notes.push(`<div class="fmStorageNote fmStorageDanger"><i class="fas fa-exclamation-circle"></i><span><b>Missing:</b> ${r.missing.map(esc).join(", ")}. Your browser cleared ${many ? "these" : "this"} to make space and ${many ? "they" : "it"} couldn't be brought back. Add ${many ? "them" : "it"} again to use ${many ? "them" : "it"}.</span></div>`);
+            }
+
+            if (recent(ev.noSpaceAt)) {
+                notes.push(`<div class="fmStorageNote fmStorageWarn"><i class="fas fa-exclamation-triangle"></i><span>On ${day(ev.noSpaceAt)}, something couldn't be saved because your computer was out of space. Freeing up disk space fixes it.</span></div>`);
+            }
+
+            if (recent(ev.clearedAt)) {
+                notes.push(`<div class="fmStorageNote fmStorageWarn"><i class="fas fa-exclamation-triangle"></i><span>On ${day(ev.clearedAt)}, Chrome cleared FlockTheme's files because space was low. The safety copy put ${ev.restored || 0} back. Your disk may be getting full.</span></div>`);
+            }
+
+            box.innerHTML = `
+                <div class="fmStorageTotal"><b>${fmtBytes(r.total)}</b> used by FlockTheme</div>
+                <div class="fmStorageBar">${bar}</div>
+                <div class="fmStorageRows">${rows}</div>
+                <div class="fmStorageCopy"><i class="fas fa-shield-alt"></i> ${copyText}</div>
+                ${notes.join("")}`;
+        };
+
+        const measure = async () => {
+            if (busy) return;
+            busy = true;
+            refresh.disabled = true;
+            box.classList.add("fmStorageBusy");
+
+            try {
+                draw(await measureModStorage());
+            } catch (error) {
+                box.innerHTML = `<div class="fmStorageNote">Couldn't measure right now. Try Refresh in a moment.</div>`;
+            } finally {
+                busy = false;
+                refresh.disabled = false;
+                box.classList.remove("fmStorageBusy");
+            }
+        };
+
+        refresh.addEventListener("click", measure);
+        dialog.querySelector('.themeModSidebarItem[data-theme-section="general"]')?.addEventListener("click", measure);
+
+        if (dialog.querySelector('.themeModSidebarItem[data-theme-section="general"].active')) {
+            measure();
+        }
+    }
 
     function setupBackup(dialog) {
         const saveButton = dialog.querySelector(".themeModBackupSave");
@@ -22463,7 +22523,7 @@ const advancedControls = setupAdvancedPanel(dialog);
     }
 
     /* =========================================================
-       QUICK TOUR (sakura pink)
+       QUICK TOUR (sakura pink)   @tour
        The first time the mod menu opens, a small card docked on
        top of it asks if you'd like a tour. The tour is 6 short
        steps shown in a card beside the menu (or on top of it when
@@ -23116,6 +23176,11 @@ const advancedControls = setupAdvancedPanel(dialog);
         }
     }
 
+    /* =========================================================
+       MOD MENU WINDOW   @menuwindow
+       Dragging, resizing and the close button.
+       ========================================================= */
+
     function setupDragging(dialog) {
         const titleBar =
             dialog.querySelector(
@@ -23650,7 +23715,7 @@ const advancedControls = setupAdvancedPanel(dialog);
 
 
     /* =========================================================
-       COLORS PANEL LAYOUT (cards, folding, aligned controls,
+       COLORS PANEL LAYOUT (cards, folding, aligned controls,   @menulayout
        Gradient pills, group labels) + "Unsaved changes" note.
        Purely visual: it only adds classes and a few small
        elements around the existing rows, so every setting,
@@ -23970,6 +24035,11 @@ const advancedControls = setupAdvancedPanel(dialog);
 
         refresh();
     }
+
+    /* =========================================================
+       MOD MENU GUARDS + GENERAL SWITCHES   @guards
+       Unsaved-changes card, Reset-all guard, Lite mode, menu text size, remember place, unsaved note.
+       ========================================================= */
 
     /* v1.6.2: "You didn't apply your changes!" card. Closing the menu
        (X or the flower button) with unsaved changes asks first:
@@ -24297,7 +24367,7 @@ const advancedControls = setupAdvancedPanel(dialog);
 
 
     /* =========================================================
-       JUMP CHIPS + SEARCH (in the section title row)
+       JUMP CHIPS + SEARCH (in the section title row)   @search
        Chips are built from whatever .themeModSubsectionTitle
        elements the open panel has, so new subsections show up
        automatically. Search looks through every panel.
@@ -24633,6 +24703,11 @@ const advancedControls = setupAdvancedPanel(dialog);
         buildChips();
     }
 
+    /* =========================================================
+       MOD MENU OPEN/CLOSE + LOADING   @menunav
+       Tab navigation, opening/closing the menu, loading everything saved.
+       ========================================================= */
+
     function setupSidebarNavigation(dialog) {
         const sidebarButtons =
             dialog.querySelectorAll(
@@ -24799,7 +24874,7 @@ const advancedControls = setupAdvancedPanel(dialog);
     }
 
     /* =========================================================
-       KEYBOARD SHIELD
+       KEYBOARD SHIELD   @keyshield
        FlockMod listens for hotkeys on the whole page (T = text
        tool, etc). This catches every key event that happens
        inside the mod menu first (capture phase on window, which
@@ -24900,11 +24975,18 @@ const advancedControls = setupAdvancedPanel(dialog);
         }, true);
     }
 
+    /* =========================================================
+       STARTUP   @startup
+       initialize() and the half-second loop. Anything that runs on its own starts here.
+       ========================================================= */
+
     function initialize() {
         setupKeyboardShield();
         setupSoundUnlock();
         setupSoundActivityTracking();
         loadSavedCustomizations();
+        setupSafeCopy();      /* v1.6.9: safety copy of stored files */
+        setupTabSync();       /* v1.6.9: settings follow across tabs */
 
         addModButton();
 
